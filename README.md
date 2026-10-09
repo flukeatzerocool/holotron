@@ -1,3 +1,17 @@
+# Holotron
+
+> **Holotron** is a fork of [GAMEOTRON](https://github.com/gameotron/gameotron)
+> for the Gameotron Game Jam. It keeps GAMEOTRON's phase order and mandatory
+> approval gate intact and **additively** integrates the
+> [Holonovel](https://github.com/flukeatzerocool/holonovel) world-model server
+> as an MCP dependency to make generated game worlds validated and reproducible.
+>
+> Upstream license: **PolyForm Noncommercial License 1.0.0** — see `LICENSE.md`.
+> The fork and any published output remain noncommercial. Upstream copyright
+> notices are preserved.
+
+---
+
 # GAMEOTRON
 
 **Turn ideas into playable browser game concepts.**
