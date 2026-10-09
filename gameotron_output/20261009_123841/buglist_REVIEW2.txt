@@ -1,0 +1,235 @@
+BUGLIST — static re-review (REVIEW2) of The Everything Button (index.html)
+Reviewer: review_agent | Target: gameotron_output/20261009_123841/index.html | GDD: gdd.md
+Prior buglist verified against: buglist_REVIEW1.txt
+Date: 2026-10-09
+
+============================================================
+PRIOR FIX VERIFICATION (all confirmed present in the current file)
+============================================================
+- [FIXED] Pause-safe game clock — gameNow() (index.html:694-697) subtracts G.pauseOffset and the
+  in-progress pause span; used by token bornAt (:920), token expiry (:1350), routeToken remain (:934),
+  charge (:1139,:1326) and drawTokens arc/trail (:1668,:1678). Pause sets G.pauseStart (:1259), resume folds
+  the span into G.pauseOffset (:1262). Token timers no longer advance while paused. CONFIRMED.
+- [FIXED] RESET DATA input lock — askConfirm() sets confirmLockUntil = performance.now()+400 (:1237) and both
+  confirmYes/confirmNo onclick handlers bail before it elapses (:1239,:1243). Normal tap cannot auto-accept.
+  CONFIRMED (residual long-press caveat noted below as LOW).
+- [FIXED] Invisible SOCKET gated in Zone 1 — socketActive() (:699) = zone>1 || totalRolls>=4, used by
+  insideAnyPad() (:978) and drawPads() (:1605). CONFIRMED.
+- [FIXED] HOW TO PLAY from Game Over / Victory — goBack() restores GAME_OVER / VICTORY (:778);
+  'howto' stores G.prevScreen = G.state (:1253). CONFIRMED.
+- [FIXED] Blueprint perks in startRun() — G.chargeSpeed (1+min(0.4,bp*0.08)) and G.grabBonus
+  (min(0.3,bp*0.06)) set at (:816-817) and consumed at (:1326,:920). CONFIRMED.
+- [FIXED] Auto-target assist — gMove() acquires a token within max(64, tokenR*2.6) while pointer held and not
+  charging (:1149-1160). CONFIRMED.
+- [FIXED] Chained tokens Zone 2+ — doRoll() sets G.chainPending=0.45 after 5 zone rolls (:904-906);
+  update() spawns the second token (:1356-1365). CONFIRMED.
+- [FIXED] Junk near-miss +50 on edge discard — junk edge branch computes remain and awards +50/popup/sfx
+  (:944-951). CONFIRMED.
+- [FIXED] Combo applied pre-increment (first route = x1) (:990-991); dead `var c` removed; advanceZone no
+  longer resets G.over; endRunToTitle clears arrays; HUD value-cached; Music.stop on toggle-off/hidden;
+  NEW BEST uses strict > via G.newBest. CONFIRMED.
+- Static syntax check: `node --check` on the extracted script passes. No parse errors.
+
+============================================================
+NEW / REMAINING ISSUES
+============================================================
+
+[MEDIUM] BACK from a Pause submenu unpauses the music while still on the PAUSE screen
+  Location: index.html:776-777 (goBack), index.html:1259-1260 (pause action), index.html:1574-1575 (drawPads irrelevant)
+  Explanation: Opening HOW TO PLAY or SETTINGS from the Pause menu keeps Audio.paused = true (correct). But the
+  BACK button calls goBack(), whose PAUSE branch unconditionally invokes Audio.setPaused(false) and then
+  showScreen('PAUSE'). The game is still paused, yet the music bus ramps back to full volume and the bed plays
+  behind the paused playfield. GDD §7 requires Pause to "freeze the game clock, token timers, and audio music
+  bed". Only RESUME should un-pause audio, and RESUME itself already calls Audio.setPaused(false) (:1263).
+  Fix approach: Remove the Audio.setPaused(false) calls from goBack(); re-assert Audio.setPaused(true) when
+  returning to PAUSE, so audio state is owned by the pause/resume actions only.
+
+[MEDIUM] Combo x8 milestone (+150) is awarded on every correct route while the combo sits at x8
+  Location: index.html:991 (cap), index.html:1028-1031 (milestone)
+  Explanation: correctRoute() caps the combo with `G.combo = Math.min(8, G.combo + 1)`, so once the combo
+  reaches 8 it remains 8. The milestone check `if (G.combo === 8) { addScore(150); ... }` therefore fires on
+  the completing route AND on every subsequent correct route for as long as the chain survives, producing an
+  unbounded score faucet. GDD §4.3 defines this as a one-time "Combo chain completion (combo reaches x8) +150".
+  Fix approach: Track a boolean (e.g. G.combo8Awarded) reset when the combo resets, and grant the +150 only on
+  the transition 7 -> 8.
+
+[MEDIUM] Transient input state (charging / grabbed / pointerActive) is not cleared on pause, so resuming after
+         a mid-gesture auto-pause can fire a phantom roll or swallow the first input
+  Location: index.html:1100-1118 (pointerActive), index.html:1138-1141 (charging), index.html:1258-1263
+            (pause/resume), index.html:1304-1311 (visibilitychange auto-pause)
+  Explanation: `pause` sets G.pauseStart and shows the Pause screen but leaves G.charging/G.grabbed and the
+  module-level pointerActive flag as they were. When the game auto-pauses on visibilitychange while the player
+  is holding to charge (:1305-1306), the release that happens while hidden is either not delivered or arrives
+  with G.state already 'PAUSE' (handleUp only dispatches gUp when state === 'GAMEPLAY', :1118). On return and
+  RESUME, G.charging is still true with no live pointer, so the next pointerup that is not a token grab calls
+  doRoll() (:1170-1173) at an unintended charge tier. Likewise pointerActive can remain true across the pause,
+  so the first genuine touchstart after resume is discarded by the `if (pointerActive) return;` guard (:1178)
+  before that release triggers the phantom roll. Fix approach: On entering PAUSE, clear G.charging=false,
+  G.charge=0, G.grabbed=null, pointerActive=false, activeTouchId=null (and release any dragged token back to
+  snapBack), so no gesture state survives a pause.
+
+============================================================
+[LOW] Title "demo roll" sound plays twice for a single canvas tap
+  Location: index.html:1104-1107 (handleDown), index.html:1294-1295 (document pointerdown delegate)
+  Explanation: A tap on the decorative title canvas fires the canvas pointer handler (handleDown → title_demo_roll)
+  AND the document-level pointerdown delegate's fallback (title_demo_roll), retriggering the same SFX twice on
+  both touch and mouse. Buttons are unaffected (the delegate returns early for data-action).
+  Fix approach: Guard the demo roll so it is triggered in only one place (e.g. drop the fallback in the
+  document delegate and let handleDown own it, or vice-versa).
+
+[LOW] Junk Near-Miss window is 0.4 s but GDD §4.4 specifies 0.3 s for edge discard
+  Location: index.html:944-945 (nmwJ = 0.4 + blueprints ? 0.4 : 0)
+  Explanation: The spec gives a distinct "final 0.3 s" window for flick-discarding Junk, while correct/enemy
+  routes use 0.4 s. The junk branch reuses the 0.4 s constant, making junk near-misses easier than documented
+  and inconsistent with the other triggers.
+  Fix approach: Use a dedicated 0.3 s base for the junk branch (still widened by the Blueprints module).
+
+[LOW] Zone 1 "one token at a time" is not enforced
+  Location: index.html:870-907 (doRoll), index.html:909-925 (spawnToken)
+  Explanation: gDown() only grabs a token when the press is within grabR (~64 px); a token that has snapped
+  back sits ~buttonR*1.25 px above the button centre, just outside a 64 px grab radius. Tapping the button
+  centre therefore starts a second charge and a second token while the first is still alive, contradicting
+  GDD §2.3/§4.4 ("One token at a time" in Zone 1). With account blueprints the grab radius grows and the
+  behaviour flips, which is inconsistent.
+  Fix approach: In doRoll(), ignore/queue the roll if G.tokens.length > 0 while G.zone === 1 (or while
+  !G.endless and zone 1).
+
+[LOW] Endless mode restarts at Zone 1 instead of continuing the ramp
+  Location: index.html:1251-1252 (endless action), index.html:804-821 (startRun)
+  Explanation: "PLAY ENDLESS MODE" calls startRun(true), which resets G.zone = 1. GDD §4.3 describes endless as
+  "zones continue with capped linear ramp", not a fresh Zone 1. The flag only disables the victory check.
+  Fix approach: Accept a starting zone for endless (e.g. startRun(true, 6)) or keep zone 5's difficulty as the
+  endless baseline.
+
+[LOW] High-contrast accessibility toggle still absent
+  Location: index.html:210-228 (Settings), index.html:360/1277 (settings object)
+  Explanation: GDD §5 and §8 (Screen 5) require a "Reduced-flash / high-contrast toggle". Only Reduced Flash
+  exists; there is no high-contrast mode, so the accessibility requirement is only half met.
+  Fix approach: Add a persisted highContrast setting and apply a high-contrast CSS class/outline treatment.
+
+[LOW] Local `var Audio` shadows the built-in window.Audio constructor
+  Location: index.html:379
+  Explanation: The IIFE declares an object named Audio while using window.AudioContext (aliased to AC). It works
+  because AudioContext is aliased, but the shadowing is fragile for future edits and confuses tooling.
+  Fix approach: Rename the local object (Sound/Sfx) and update its ~40 references, or rename the context alias.
+
+[LOW] Extensive magic numbers with no named constants
+  Location: index.html:713 (300 particle cap), 726 (100 confetti cap), 871-872 (tier seconds), 997-998/1000
+            (score values), 1008/944 (near-miss windows), 1034 (shake), etc.
+  Explanation: Balance values, caps and tuning constants remain inlined throughout, making later tuning
+  error-prone and obscuring intent (GDD §10.2 warns about pooled caps/balancing).
+  Fix approach: Hoist tuning constants into a CONFIG block (PARTICLE_CAP, CONFETTI_CAP, SCORE_*, TIER_SECONDS,
+  NEAR_MISS_WINDOW, ...).
+
+[LOW] Dead resume branch on the pause button
+  Location: index.html:767-768 (pauseBtn display), index.html:1298-1302 (pauseBtn handler)
+  Explanation: pauseBtn.style.display is 'block' only when G.state === 'GAMEPLAY', so the `else if
+  (G.state === 'PAUSE') performAction('resume')` branch can never be reached while the button is hidden.
+  Fix approach: Remove the dead branch (resume is handled by the Pause menu RESUME button), or show the button
+  in PAUSE if the toggle behaviour is intended.
+
+[LOW] chainPending is not reset when a zone advances
+  Location: index.html:1069-1082 (advanceZone), index.html:1356-1365 (update spawn)
+  Explanation: advanceZone() resets G.zoneRolls but leaves G.chainPending untouched, so a chain queued at the
+  end of one zone can spawn ~0.45 s into the next zone. startRun() clears it, but the per-zone transition
+  does not.
+  Fix approach: Set G.chainPending = 0 in advanceZone().
+
+[LOW] Active tokens are not repositioned on resize / orientationchange
+  Location: index.html:641-659 (resize), index.html:908-925 (spawnToken target coords)
+  Explanation: resize() recomputes button/pad/token anchors, but tokens already on screen keep their absolute
+  x/y/tx/ty, so after an orientation change a token can be left misplaced relative to the button/pads and the
+  SOCKET target.
+  Fix approach: On resize, recompute each token's target (tx/ty) and clamp it into the new viewport, or pause
+  and re-place tokens.
+
+[LOW] RESET DATA confirm lock is a fixed 400 ms wall-clock window
+  Location: index.html:1231-1246 (askConfirm / confirmLockUntil)
+  Explanation: The auto-accept guard compares performance.now() against a 400 ms deadline. A slow release
+  (long-press on RESET DATA longer than 400 ms) lets the synthesised compatibility click land after the lock
+  expires; if the YES button happens to sit under the finger, the confirm can still accept itself. The fix
+  should be gesture-based rather than time-based.
+  Fix approach: Arm the YES/CANCEL handlers only on the first pointerdown that occurs after the overlay is
+  shown (e.g. ignore clicks until a fresh pointerdown/pointerup pair lands inside the overlay).
+
+[LOW] No-op statement in snapBack()
+  Location: index.html:983
+  Explanation: `tk.x = tk.x; // keep` is a no-op self-assignment with a comment; harmless but misleading.
+  Fix approach: Delete the line (and the stale comment).
+
+[LOW] Token grab radius grows very large on desktop, inconsistent across devices
+  Location: index.html:920 (grabR = max(64, tokenR*1.9) * (1+grabBonus)), index.html:1151 (acquireR tokenR*2.6)
+  Explanation: On a 1080-tall desktop tokenR ≈ 73, so grabR ≈ 139 px and acquireR ≈ 190 px, versus ~64 px on a
+  375-wide phone. Acquisition feel is dramatically device-dependent (prior LOW was only partially addressed by
+  the max(64, ...) floor, which does nothing on large screens). GDD §3.2 specifies "~64 px radius".
+  Fix approach: Clamp the upper bound (e.g. clamp(tokenR*1.9, 64, 96)) or use a fixed CSS-px acquisition radius.
+
+[LOW] SOCKET pad can overlap the HUD on very short landscape viewports
+  Location: index.html:654 (zonesPos.socket = buttonY - buttonR*2.35), index.html:19-22 (HUD)
+  Explanation: On a very short landscape window (e.g. 800x400) the SOCKET pad top edge (~47 px) rises into the
+  fixed HUD/stability bar area, partially occluding the pad label/border.
+  Fix approach: Derive the SOCKET y from max(HUD height + padHalf, buttonY - buttonR*2.35) or hide the HUD
+  STABILITY element when space is tight.
+
+============================================================
+VERIFIED (no issue found on re-scan)
+  - All 7 screens present and reachable: Title, Pause, How To Play, Gameplay, Settings, Game Over, Victory;
+    state transitions and BACK routing consistent with GDD §7/§8.
+  - Both input schemes wired through the shared handleDown/Move/Up abstraction (touchstart/move/end/cancel +
+    mousedown/mousemove/mouseup/mouseleave); pointerActive + activeTouchId prevent multi-touch corruption.
+  - Core loop intact: tap-hold charge (0-1/1-2/2-3 s tiers, capped per zone) → release roll → drag token to
+    VAULT/SOCKET/CANNON; outcomes only resource/upgrade/enemy/junk; no nested mini-games.
+  - Difficulty: scripted first roll = resource; Zone 1 lifetime 3.0 s and T1-only; wrong route free in Zones 1-2,
+    -4 in Zones 3+; enemy expiry -12; linear lifetime (−0.3/zone), meter (+2/zone) and enemy share ramp.
+  - Scoring/economy: near-miss +50 (correct, enemy, junk), Zone Bonus +100×zone, jackpot +200 (Zone 5/T3),
+    Hot Cannon +10, combo multiplier applied pre-increment (x1 first route).
+  - Game feel present AND gateable: particles/confetti/popups/shake/hit-stop early-return on
+    window.flags.juiceEnabled; doFlash also respects reducedFlash; particle cap 300 / confetti cap 100.
+  - Robustness: no unguarded token dereference, weightedPick bounded, Music.tick guarded, no division by zero,
+    localStorage wrapped in try/catch, RESET DATA clears all teb_* keys, resize/orientationchange relayout.
+  - viewport meta present; canvas DPR-clamped and full-viewport; touch-action:none + user-select:none;
+    pads ≥96 px and button ≥88 px on tested sizes (finger-sized).
+
+TOTALS: C=0 H=0 M=3 L=14
+
+============================================================
+FIXED BUGS (bugfix_agent pass — REVIEW2)
+============================================================
+- [MEDIUM] BACK from a Pause submenu unpauses the music while still on the PAUSE screen — RESOLVED via
+  goBack() (:776-777): removed both Audio.setPaused(false) calls and replaced them with Audio.setPaused(true)
+  for the two branches that route to PAUSE. Audio state is now owned solely by pause/resume (RESUME still
+  calls Audio.setPaused(false) at :1274). Verified touch + mouse: both use the shared pointerdown delegate.
+- [MEDIUM] Combo x8 milestone (+150) repeats on every correct route once combo reaches 8 — RESOLVED via new
+  G.combo8Awarded flag: initialised false in startRun() (:811), reset on every combo reset in wrongRoute()
+  (:1045) and expireToken() (:1087), and the milestone now awards only on the transition into 8 via
+  `if (G.combo === 8 && !G.combo8Awarded) { G.combo8Awarded = true; ... }` (:1029-1033). Input-scheme
+  independent.
+- [MEDIUM] Transient input state not cleared on pause → phantom roll / swallowed first input — RESOLVED via
+  the 'pause' action (:1260-1271): on entering PAUSE it now clears G.charging/G.charge, releases any dragged
+  token (G.grabbed=null, dragging=false, snapped to its rest tx/ty without a spurious MISS popup),
+  and resets pointerActive/activeTouchId. Covers both the Pause button and the visibilitychange auto-pause,
+  which funnel through performAction('pause'). Verified touch + mouse: a stale release now no-ops and the
+  next genuine pointerdown is accepted.
+
+VALIDATION
+- Extracted the single inline <script> and ran `node --check`: passes, no parse errors.
+- No regression to prior HIGH fixes: pause-safe clock (gameNow/pauseOffset/pauseStart) untouched — 'pause'
+  still sets G.pauseStart and 'resume' still folds the span into G.pauseOffset; RESET DATA confirm lock
+  (confirmLockUntil / askConfirm) untouched.
+- index.html line count: 1819 → 1830 (+11 lines).
+
+UNFIXED BUGS (out of scope for this pass)
+- [UNFIXED][LOW] Title "demo roll" double SFX | Not requested; LOW severity.
+- [UNFIXED][LOW] Junk near-miss window 0.4s vs GDD 0.3s | Not requested; LOW.
+- [UNFIXED][LOW] Zone 1 "one token at a time" not enforced | Not requested; LOW.
+- [UNFIXED][LOW] Endless mode restarts at Zone 1 | Not requested; LOW.
+- [UNFIXED][LOW] High-contrast accessibility toggle absent | Not requested; LOW.
+- [UNFIXED][LOW] Local `var Audio` shadows window.Audio | Not requested; LOW.
+- [UNFIXED][LOW] Magic numbers without named constants | Not requested; LOW.
+- [UNFIXED][LOW] Dead resume branch on pause button | Not requested; LOW.
+- [UNFIXED][LOW] chainPending not reset on zone advance | Not requested; LOW.
+- [UNFIXED][LOW] Tokens not repositioned on resize | Not requested; LOW.
+- [UNFIXED][LOW] RESET DATA confirm lock fixed 400ms wall-clock | Not requested; LOW.
+- [UNFIXED][LOW] No-op `tk.x = tk.x` in snapBack() | Not requested; LOW.
+- [UNFIXED][LOW] Token grab radius grows too large on desktop | Not requested; LOW.
+- [UNFIXED][LOW] SOCKET pad can overlap HUD on short landscape | Not requested; LOW.

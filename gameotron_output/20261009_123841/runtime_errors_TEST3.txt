@@ -1,0 +1,155 @@
+========================================================================
+RUNTIME ERRORS / FAILED MECHANICS — The Everything Button  [TEST 3 / FINAL REGRESSION]
+File under test : /home/fluke/Holotron/gameotron_output/20261009_123841/index.html
+Test run        : 2026-10-09 13:47:51
+Agent           : puppeteer_agent  (Playwright Firefox, headless)
+Server          : http://127.0.0.1:8899/index.html  (python3 -m http.server)
+Harness         : playwright-cli run-code --filename=/tmp/opencode/suites3.js
+Viewports       : 1920x1080 (mouse), 800x600 (mouse), 375x667 (real touch ctx)
+Scenarios       : 3 viewport suites + forced Game Over + forced Victory
+Prior reports   : runtime_errors_TEST1.txt, runtime_errors_TEST2.txt
+========================================================================
+
+[134751] CONSOLE ERRORS .......... NONE
+       0 console.error messages captured across all 5 runs
+       (3 viewports + forced Game Over + forced Victory).
+[134751] UNCAUGHT EXCEPTIONS ..... NONE
+       0 pageerror events; window.__errs (error / unhandledrejection collectors
+       installed via addInitScript) empty on every run.
+[134751] CRASHES ON LOAD .......... NONE
+       Canvas initialised and rendered on all 3 viewports; non-background pixel
+       sampling: 3932/4156 (1920x1080), 927/962 (800x600), 1877/2006 (375x667).
+
+------------------------------------------------------------------------
+FAILED INTERACTION MECHANICS
+------------------------------------------------------------------------
+[134751] NONE. 142/142 executable checks passed in every run.
+
+------------------------------------------------------------------------
+THE THREE REQUESTED REGRESSION CHECKS
+------------------------------------------------------------------------
+
+[134751] CHECK 2 — Pause -> SETTINGS / HOW TO PLAY -> BACK, music stays paused.
+        CONFIRMED on all three viewports.
+
+        Method: the WebAudio gain graph was instrumented (AudioContext.prototype
+        .createGain + AudioParam.prototype hooks). Gain node index 1 is the
+        game's musicBus (index 0 master, index 1 musicBus, index 2 sfxBus,
+        index 3 hum), and Audio.applyGains() commands the music bus through
+        linearRampToValueAtTime(m) where m = (musicOn && !paused) ? 0.30 : 0.
+
+        Evidence (identical on 1920x1080, 800x600, 375x667):
+          music_playing_in_gameplay              PASS  musicBus commanded gain=0.3
+          pause_button_opens_pause               PASS  screenPause
+          music_paused_on_pause                  PASS  musicBus commanded gain=0
+          pause_settings_opens                   PASS  screenSettings
+          music_still_paused_in_settings         PASS  gain=0
+          pause_settings_back_returns_pause      PASS  screenPause
+          music_still_paused_after_settings_back PASS  gain=0
+          pause_howto_opens                      PASS  screenHowTo
+          music_still_paused_in_howto            PASS  gain=0
+          pause_howto_back_returns_pause         PASS  screenPause
+          music_still_paused_after_howto_back    PASS  gain=0
+          no_music_resume_behind_pause           PASS  ramp values since pause=[0,0]
+          resume_returns_gameplay                PASS  null
+          music_resumes_after_resume             PASS  musicBus commanded gain=0.3
+
+        The only music-bus ramp commands issued between pausing and resuming
+        were the two 0-value commands from goBack() re-asserting setPaused(true)
+        ([0,0]); no 0.30 command was issued while the playfield was paused, so
+        music does NOT resume behind the paused playfield.
+
+[134751] CHECK 3 — Combo x8 +150 milestone does not repeatedly award.
+        CONFIRMED on all three viewports.
+
+        Method: Math.random pinned to 0.05 -> weightedPick() always returns the
+        first key ('resource'), so every roll is a routable resource token.
+        Seven consecutive correct routes raise the combo 1..8; the +150 is
+        awarded exactly on the route that reaches x8 (guarded by
+        G.combo8Awarded, index.html:1029-1033). Three further correct routes at
+        x8 were then executed and their score deltas recorded.
+
+        Evidence:
+          1920x1080 : pre-x8 gains 10,20,30,40,49,58,210 ; post-x8 gains 277,91,81  (min 81)
+          800x600   : pre-x8 gains 10,20,30,40,49,58,210 ; post-x8 gains 277,89,80  (min 80)
+          375x667   : pre-x8 gains 10,20,30,40,49,59,209 ; post-x8 gains 277,92,79  (min 79)
+
+        A repeatedly-awarded milestone would inject +150 into EVERY post-x8
+        route, forcing each gain >= 10*8+150 = 230. The observed minimum gain is
+        79-81 (the plain x8 resource route), so the +150 fired at most once.
+        Final scores 865-866 after 10 routes, combo still x8 -> no runaway score.
+        No console error during the sequence.
+
+[134751] CHECK 4 — Pause mid-charge / mid-drag, then resume:
+        no phantom roll and first real input accepted. CONFIRMED on all 3 viewports.
+
+        Method: the real #pauseBtn pointerdown handler was invoked
+        (performAction('pause')) while a canvas gesture was still held, then the
+        held pointer was released, then RESUME was tapped.
+
+        mid-charge (hold 450 ms, pause, release, resume):
+          pause_during_charge_opens              PASS  screenPause
+          pause_during_charge_no_phantom_roll    PASS  score 870->870 (no roll on release)
+          pause_during_charge_resume_still_no_roll PASS score after resume=870
+          pause_during_charge_first_input_accepted PASS score 870->945/945/945
+        -> pause clears G.charging/G.charge/pointerActive, so the held pointer is
+           discarded; the first fresh hold-release after resume routes normally.
+
+        mid-drag (grab token, drag 40 % toward VAULT, pause, release, resume):
+          pause_during_drag_opens                PASS  screenPause
+          pause_during_drag_no_phantom_route     PASS  score 950->950 (no route fired)
+          pause_during_drag_first_input_accepted PASS  score 950->1025/1025/1026
+        -> pause drops G.grabbed and re-parks the token; releasing the pointer
+           routes nothing. After resume the surviving token is still grabbable
+           and the first real drag routes it (score up).
+
+        Note: the sample uses a <=2-point tolerance on the mid-drag "no route"
+        check because the HUD score eases toward the true value while momentum
+        decays; the raw first run showed exactly +4 (946->950) which was display
+        easing, not a route — a real phantom route would move the score by the
+        x8 route value (79-277).
+
+------------------------------------------------------------------------
+CHECK 5 — Core loop on all viewports
+------------------------------------------------------------------------
+[134751] CONFIRMED. On each viewport a real hold -> release -> drag-to-VAULT
+        produced a genuine state change:
+          core_loop_hold_release_drag_scores  PASS  score 0->10, combo x1->x2, zone 1/5
+        (mouse on 1920x1080 / 800x600, real synthetic TouchEvent on 375x667).
+
+------------------------------------------------------------------------
+CHECK 6 — Re-navigate all screens
+------------------------------------------------------------------------
+[134751] CONFIRMED. Title -> HowTo -> Title -> Settings (Reduced Flash toggle,
+        credits, RESET DATA confirm gate) -> Title -> Gameplay -> Pause ->
+        SETTINGS -> Pause -> HOW TO PLAY -> Pause -> RESUME -> Pause (music/sfx
+        toggles) -> GO BACK TO START MENU confirm -> Title. Game Over and
+        Victory were reached in forced, deterministic runs and their stat
+        panels rendered. No navigation dead-ends, no console errors.
+
+------------------------------------------------------------------------
+VIEWPORT-SPECIFIC ISSUES
+------------------------------------------------------------------------
+[134751] 1920x1080  — none
+[134751] 800x600    — none
+[134751] 375x667    — none
+[134751] Game Over (1280x800, forced, RNG 0.95) — none
+[134751] Victory   (1280x800, forced, RNG 0.10) — none
+
+------------------------------------------------------------------------
+NON-ISSUES OBSERVED (expected behaviour, not bugs)
+------------------------------------------------------------------------
+[134751] Server log shows only the browser-default 404 for /favicon.ico; no
+        game asset requests and no missing-resource errors.
+[134751] WebAudio ran without console errors in headless Firefox; audio resumes
+        inside user gestures, so no autoplay exceptions. The audio graph was
+        successfully instrumented on all three viewports.
+[134751] Forced Game Over stability trace 100 88 76 64 52 40 28 16 4 0
+        (exactly 12 per enemy expiry) — correct damage mechanics.
+[134751] Forced Victory reached after 60 routes; stats "4660 FINAL SCORE /
+        25s TIME / x8 BEST COMBO / 0 JACKPOTS / 0 ENEMIES DEFEATED".
+
+========================================================================
+VERDICT: CLEAN. 0 CRITICAL / HIGH / MEDIUM / LOW runtime findings.
+         All three requested regression checks CONFIRMED. No new errors.
+========================================================================

@@ -1,0 +1,140 @@
+THE EVERYTHING BUTTON — BUILD NOTES
+Run: 20261009_123841
+File: index.html (single self-contained file, vanilla JS)
+
+============================================================
+IMPLEMENTED SCREENS (7/7 from GDD Screen Inventory)
+============================================================
+1. TITLE          — animated logo, best score/zone, START, HOW TO PLAY,
+                    SETTINGS; tapping the decorative machine plays a demo roll.
+2. PAUSE          — music ON/OFF, SFX ON/OFF, HOW TO PLAY, SETTINGS,
+                    RESUME, GO BACK TO START MENU (with confirm dialog).
+3. HOW TO PLAY    — 6 illustrated concept cards + animated gesture demo +
+                    explicit touch/mouse input legend; BACK returns to origin.
+4. GAMEPLAY       — HUD (score/combo/zone/stability), central ANYTHING GOES
+                    button, charge ring, zone-meter ring, routing pads,
+                    active token + lifetime arc, pause button, banners.
+5. SETTINGS       — music/SFX/reduced-flash toggles, RESET DATA (confirm),
+                    CREDITS, BACK.
+6. GAME OVER      — "STABILITY FAILURE" + stats (score, zone, best combo,
+                    tokens routed) + RETRY / HOW TO PLAY / START MENU.
+7. VICTORY        — "YOU OPERATED THE EVERYTHING!" + stats (score, time,
+                    best combo, jackpots, enemies defeated), blueprint unlock,
+                    PLAY ENDLESS MODE / RETRY / START MENU.
+
+All buttons switch state and were runtime-verified via headless Firefox.
+
+============================================================
+CONTROL HANDLERS
+============================================================
+Unified pointer abstraction: pointerDown/Move/Up(x,y).
+- Touch:  cv.addEventListener('touchstart'|'touchmove'|'touchend'|'touchcancel'),
+          first tracked touch (identifier); preventDefault on all; passive:false.
+          touchend / touchcancel both route at last point.
+- Mouse:  cv 'mousedown', window 'mousemove'/'mouseup', cv 'mouseleave'
+          (release while pressed). Both schemes run simultaneously behind a
+          single pointerActive guard (first pointer wins).
+- UI:     document 'pointerdown' delegation for [data-action] buttons and
+          [data-setting] toggles (pointer-agnostic: works touch + mouse);
+          pause button has its own handler. Listeners attached once.
+- Sizing: touch routing pads are >= 96 CSS px (design target >= 88 px);
+          pause button 52 px.
+- Keyboard: intentionally NOT used per GDD §3 ("no keyboard").
+- Auto-pause on document visibilitychange per GDD §7.
+
+Core loop implemented exactly: tap-and-hold the central button to charge
+(T1 0–1s / T2 1–2s / T3 2–3s, capped by zone), release to roll a weighted
+outcome token, drag the token to its zone:
+  Resource -> VAULT (right), Upgrade -> SOCKET (top), Enemy -> CANNON (left),
+  Junk -> flick off any screen edge (Zone 3+). Wrong pad = fizzle; empty
+  drop = snap back and continue the lifetime clock. NO nested mini-games.
+
+============================================================
+AUDIO NODES (all procedural WebAudio)
+============================================================
+Graph: source(s) -> BiquadFilter(optional) -> GainNode envelope
+       -> busGain(music | sfx) -> masterGain -> destination.
+- One AudioContext created/resumed on first user gesture; every SFX/helper
+  no-ops safely if the context is missing or suspended (never throws).
+- Precomputed 2s white-noise buffer reused for all noise bursts.
+- Helpers: Audio.tone({type,freq,dur,attack,gain,filter,filterType,pitchBend,
+  detune,bus,time}) and Audio.noise({dur,filter,filterType,Q,gain,pitchBend,
+  attack,bus,time}); nodes auto-stop and disconnect on 'onended'.
+- Machine hum: continuous sine oscillator (55Hz) on the music bus, pitch/gain
+  track the charge state (55 -> ~125 Hz while holding).
+- Music: lookahead step scheduler (setInterval 25ms, ~120ms ahead, 16-step
+  loop). Tempo = 104 + (zone-1)*8 BPM capped 160. Layer schedule by zone:
+  kick (Z1+), snare/hat + calliope arp (Z2+), pad + ratchet ticks + minor
+  color shift (Z3+), off-beat bass (Z4), sparkle accents (Z5). Scheduling
+  guarded against runaway loops (max 32 steps per tick).
+- SFX events: ui_click, ui_toggle, button_press, roll_release, token_spawn,
+  resource_collect (combo-pitched semitone ladder), upgrade_install,
+  enemy_defeat, wrong_route, near_miss, zone_transition (arpeggio per zone),
+  combo_milestone, jackpot, stability_warning, game_over, victory,
+  title_demo_roll, pause_in, resume_out.
+- Independent music/sfx bus toggles with 100ms ramps; persisted to
+  localStorage key teb_settings { music, sfx, reducedFlash }.
+
+============================================================
+JUICE HOOKS (all gated behind window.flags.juiceEnabled)
+============================================================
+window.flags = { juiceEnabled: true, reducedFlash: false } exposed.
+- Particles: pooled, hard cap 300, shape variants (dot/star), gravity, cap
+  halves under reducedFlash.
+- Screen shake (decaying), hit-stop (brief sim freeze on jackpot).
+- Floating score popups ("+pts", "NEAR MISS +50", "JACKPOT", combo, fizzle).
+- Ransom-note banners (per-letter random rotation) for zone transitions
+  and jackpots.
+- Confetti bursts + idle confetti drift (capped).
+- Full-screen colour flash for jackpot/zone (suppressed by reducedFlash).
+- Spawn squash/overshoot, token motion trails, correct-route ring particles,
+  near-expiry token wobble/pulse, grabbable dashed halo, zone tint lerp.
+
+============================================================
+BALANCE / GDD FEATURES
+============================================================
+- Extra-easy entry: Zone 1 = 3.0s lifetime, meter 8, single token, wrong
+  routing free, assist ghost outlines, SOCKET introduced at roll 4.
+- Scripted first roll is a guaranteed Resource -> first success well under 30s.
+- Near-Miss Bonus +50 (final 0.4s window, widened by Blueprints module).
+- Zone Bonus +100 x new zone number with banner + fanfare + tint shift.
+- Linear ramp: lifetime 3.0->1.8 (constant steps), meter +2/zone,
+  enemy share 10->35%, T3 unlocked only from Zone 4.
+- Combo x1->x8, combo milestone bonuses (x5 toast, x8 +150).
+- Jackpot +200 on perfect T3 correct route in Zone 5 (+confetti/flash).
+- 5 modules (Magneto Vault, Slow-Mo Crank, Twin Roller, Hot Cannon,
+  Blueprints) that modify rolls within the same loop.
+- Endless mode after victory (capped linear ramp).
+- Persistence: teb_bestScore, teb_bestZone, teb_blueprints, teb_settings;
+  RESET DATA clears all teb_* keys after confirmation.
+
+============================================================
+INTENTIONALLY SIMPLIFIED (vs. full GDD)
+============================================================
+- One primary active token at a time; the "chained second token while the
+  first is mid-drag" (Zone 2+) is not implemented. Zone-4 double-enemy waves
+  and the Twin Roller module do spawn two tokens, so multi-token routing and
+  hit-testing are supported.
+- Per-zone background music does not gate on a completed bar boundary; tempo/
+  layer changes apply immediately at the next scheduled step (click-free but
+  not bar-quantised). Music bus fades in/out on pause/resume.
+- Music-bus ducking for zone fanfare/jackpot and the <30 stability heartbeat
+  motif are represented only by the SFX themselves (no side-chain ducking /
+  recurring pulse loop).
+- Title logo/gear animation is a CSS/DOM logo over the canvas idle scene with
+  confetti rather than a bespoke illustrated machine logo.
+- Score odometer rolls via eased count-up; other stat reveals are static.
+
+============================================================
+VERIFICATION PERFORMED
+============================================================
+- JS parsed cleanly (node --check).
+- Headless Firefox (Playwright CLI): 0 console errors/warnings on load.
+- Real mouse: START -> charge/hold -> release -> drag token to VAULT ->
+  score +20, combo x2. Verified.
+- Synthetic touch events at 375x667: touchstart/touchend roll +
+  touchmove drag-route to VAULT -> score +20, combo x2. Verified.
+- All 7 screens navigated: Title<->HowTo, Title<->Settings, Gameplay->Pause
+  ->Resume, Pause->HowTo->Pause, Settings toggle persisted to localStorage,
+  Game Over render, Victory render + blueprint unlock, Endless start,
+  back-to-start confirm dialog. All verified.

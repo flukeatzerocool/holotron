@@ -1,0 +1,158 @@
+========================================================================
+TEST REPORT — The Everything Button  [TEST 2 / post-fix regression run]
+File under test : /home/fluke/Holotron/gameotron_output/20261009_123841/index.html
+Test run        : 2026-10-09 13:32:24
+Agent           : puppeteer_agent (Playwright Firefox, headless)
+Harness         : playwright-cli run-code, http://127.0.0.1:8899/index.html
+Viewports       : 1920x1080 (mouse), 800x600 (mouse), 375x667 (real touch)
+Purpose         : verify the two prior HIGH fixes + check for regressions
+========================================================================
+
+SUMMARY
+  Viewport     Mobile  Tests  Pass  Fail  Console err  Verdict
+  1920x1080    no        27    27     0      0       PASS
+  800x600      no        27    27     0      0       PASS
+  375x667      yes       27    27     0      0       PASS
+  Game Over    (forced)     2     2     0      0       PASS
+  Victory      (forced)     3     3     0      0       PASS
+
+  Total 86 checks, 86 pass, 0 fail, 0 console errors / 0 uncaught exceptions.
+  Verdict: CLEAN. Both prior HIGH bugs CONFIRMED FIXED. No new errors.
+
+------------------------------------------------------------------------
+DETAIL — 1920x1080 (desktop mouse)   27/27 PASS
+------------------------------------------------------------------------
+ [PASS] load_no_crash                        canvas backing 1920x1080
+ [PASS] canvas_renders                       3932/4156 sampled px differ from bg
+ [PASS] title_screen_active                  screenTitle
+ [PASS] title_howto_opens                    screenHowTo
+ [PASS] title_howto_back_returns_title       screenTitle
+ [PASS] title_settings_opens                 screenSettings
+ [PASS] settings_reducedflash_toggle         OFF->ON
+ [PASS] settings_credits_present             credits render
+ [PASS] resetdata_confirm_stays_open         overlay active=true
+ [PASS] resetdata_not_auto_executed          teb_bestScore=12345
+ [PASS] resetdata_deliberate_yes_executes    overlay=false key=null
+ [PASS] settings_back_returns_title          screenTitle
+ [PASS] start_enters_gameplay                active=null hud=true
+ [PASS] core_loop_scores                     score 0->10, combo x1->x2, zone 1/5
+ [PASS] pause_button_opens_pause             screenPause
+ [PASS] pause_holds_screen_5s                still screenPause
+ [PASS] pause_token_alive_after_resume       stability 100%->100%->100%; score 10->60 after routing surviving enemy
+ [PASS] pause_no_stability_loss              stability after resume+routing = 100% (expiry would have shown 88%)
+ [PASS] resume_returns_gameplay              null
+ [PASS] pause_reopen                         screenPause
+ [PASS] pause_music_toggle                   ON->OFF
+ [PASS] pause_music_toggle_restore           ON
+ [PASS] pause_sfx_toggle                     ON->OFF
+ [PASS] pause_howto_opens                    screenHowTo
+ [PASS] pause_howto_back_returns_pause       screenPause
+ [PASS] backtostart_shows_confirm            overlay active=true
+ [PASS] backtostart_confirm_returns_title    screenTitle
+ console errors: none
+
+------------------------------------------------------------------------
+DETAIL — 800x600 (desktop mouse)   27/27 PASS
+------------------------------------------------------------------------
+ [PASS] load_no_crash                        canvas backing 800x600
+ [PASS] canvas_renders                       927/962 sampled px differ from bg
+ [PASS] title_screen_active                  screenTitle
+ [PASS] title_howto_opens                    screenHowTo
+ [PASS] title_howto_back_returns_title       screenTitle
+ [PASS] title_settings_opens                 screenSettings
+ [PASS] settings_reducedflash_toggle         OFF->ON
+ [PASS] settings_credits_present             credits render
+ [PASS] resetdata_confirm_stays_open         overlay active=true
+ [PASS] resetdata_not_auto_executed          teb_bestScore=12345
+ [PASS] resetdata_deliberate_yes_executes    overlay=false key=null
+ [PASS] settings_back_returns_title          screenTitle
+ [PASS] start_enters_gameplay                active=null hud=true
+ [PASS] core_loop_scores                     score 0->10, combo x1->x2, zone 1/5
+ [PASS] pause_button_opens_pause             screenPause
+ [PASS] pause_holds_screen_5s                still screenPause
+ [PASS] pause_token_alive_after_resume       stability 100%->100%->100%; score 10->60 after routing surviving enemy
+ [PASS] pause_no_stability_loss              stability after resume+routing = 100% (expiry would have shown 88%)
+ [PASS] resume_returns_gameplay              null
+ [PASS] pause_reopen                         screenPause
+ [PASS] pause_music_toggle                   ON->OFF
+ [PASS] pause_music_toggle_restore           ON
+ [PASS] pause_sfx_toggle                     ON->OFF
+ [PASS] pause_howto_opens                    screenHowTo
+ [PASS] pause_howto_back_returns_pause       screenPause
+ [PASS] backtostart_shows_confirm            overlay active=true
+ [PASS] backtostart_confirm_returns_title    screenTitle
+ console errors: none
+
+------------------------------------------------------------------------
+DETAIL — 375x667 (mobile real touch)   27/27 PASS
+------------------------------------------------------------------------
+ [PASS] load_no_crash                        canvas backing 750x1334
+ [PASS] canvas_renders                       1877/2006 sampled px differ from bg
+ [PASS] title_screen_active                  screenTitle
+ [PASS] title_howto_opens                    screenHowTo
+ [PASS] title_howto_back_returns_title       screenTitle
+ [PASS] title_settings_opens                 screenSettings
+ [PASS] settings_reducedflash_toggle         OFF->ON
+ [PASS] settings_credits_present             credits render
+ [PASS] resetdata_confirm_stays_open         overlay active=true
+ [PASS] resetdata_not_auto_executed          teb_bestScore=12345
+ [PASS] resetdata_deliberate_yes_executes    overlay=false key=null
+ [PASS] settings_back_returns_title          screenTitle
+ [PASS] start_enters_gameplay                active=null hud=true
+ [PASS] core_loop_scores                     score 0->10, combo x1->x2, zone 1/5
+ [PASS] pause_button_opens_pause             screenPause
+ [PASS] pause_holds_screen_5s                still screenPause
+ [PASS] pause_token_alive_after_resume       stability 100%->100%->100%; score 10->60 after routing surviving enemy
+ [PASS] pause_no_stability_loss              stability after resume+routing = 100% (expiry would have shown 88%)
+ [PASS] resume_returns_gameplay              null
+ [PASS] pause_reopen                         screenPause
+ [PASS] pause_music_toggle                   ON->OFF
+ [PASS] pause_music_toggle_restore           ON
+ [PASS] pause_sfx_toggle                     ON->OFF
+ [PASS] pause_howto_opens                    screenHowTo
+ [PASS] pause_howto_back_returns_pause       screenPause
+ [PASS] backtostart_shows_confirm            overlay active=true
+ [PASS] backtostart_confirm_returns_title    screenTitle
+ console errors: none
+
+------------------------------------------------------------------------
+DETAIL — FORCED GAME OVER (1280x800, deterministic enemy RNG)   2/2 PASS
+------------------------------------------------------------------------
+ [PASS] game_over_reached            screen=screenGameOver after 10 rolls; stability 100% 88% 76% 64% 52% 40% 28% 16% 4% 0%
+ [PASS] game_over_stats_render       0SCORE1ZONE REACHEDx1BEST COMBO0TOKENS ROUTED
+ console errors: none
+
+------------------------------------------------------------------------
+DETAIL — FORCED VICTORY (1280x800, deterministic resource RNG)   3/3 PASS
+------------------------------------------------------------------------
+ [PASS] victory_reached              screen=screenVictory after 60 routes
+ [PASS] victory_stats_render         6760FINAL SCORE26sTIMEx8BEST COMBO0JACKPOTS0ENEMIES DEFEATED
+ [PASS] victory_blueprint_render     New blueprint installed to your machine! (Blueprints: 1)
+ console errors: none
+
+------------------------------------------------------------------------
+RENDER / HIT-DETECTION VERIFICATION (explicit prompt requirement)
+------------------------------------------------------------------------
+ • Canvas ANYTHING GOES button: tap-hold-release at the computed
+   (buttonX, buttonY) spawned a token on every viewport -> pointer
+   hit-detection at calculated coordinates works (mouse + touch).
+ • Token drag: drop inside the computed VAULT pad routed the token and
+   changed real state (score 0->10, combo x1->x2) on all 3 viewports.
+ • Enemy routing post-pause: drop inside CANNON awarded +50 (x2 combo),
+   proving the survivor token was real and grabbable on all viewports.
+ • DOM buttons: real mouse click (desktop) and real touch tap (mobile)
+   fired the delegated handler for START, PAUSE, RESUME, toggles,
+   HOW TO PLAY, SETTINGS, BACK and both confirm dialogs.
+ • Mobile overlap retargeting condition verified present (see
+   runtime_errors_TEST2.txt, HIGH-1) yet the confirm now correctly waits.
+
+------------------------------------------------------------------------
+REGRESSION VERDICT ON THE TWO PRIOR HIGH BUGS
+------------------------------------------------------------------------
+ [FIXED] HIGH-1 mobile RESET DATA confirm auto-accept (375x667)
+ [FIXED] HIGH-2 pause does not freeze token timers (all viewports)
+ No CRITICAL / HIGH / MEDIUM runtime findings remain in this run.
+
+========================================================================
+END OF REPORT
+========================================================================

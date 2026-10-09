@@ -1,0 +1,58 @@
+JUICE REPORT — The Everything Button
+Target: /home/fluke/Holotron/gameotron_output/20261009_123841/index.html
+Pass:    juice_agent (surgical, additives only)
+Flags:   all additions gated by window.flags.juiceEnabled; full-screen effects
+         suppressed/halved under window.flags.reducedFlash.
+Result:  SYNTAX OK (node --check on extracted <script>); no existing feature removed.
+
+JUICE FEATURES ADDED:
+
+- [PARTICLES] Ambient zone motes — drifting tinted specks rise from VAULT/SOCKET/CANNON.
+    ambientMote() — line ~764
+    emission in update() — line ~1413 (interval 0.18-0.5s, cap 140 concurrent, halved on reducedFlash)
+
+- [PARTICLES] Expanding ring-burst / shockwave (reuses pooled particle array, new 'ring' shape).
+    ringBurst() — line ~754 ; rendered in drawParticles() — line ~1835
+    triggers: correct route line ~1060, enemy defeat line ~1061 (larger ring), junk near-miss line ~1001,
+    correct-route near-miss line ~1070
+
+- [HIT-STOP] Expanded triggers (was jackpot-only). All <= 5 frames.
+    enemy defeat 0.05s — line ~1061
+    wrong route (fizzle) 0.03s — line ~1107
+    player stability damage 0.06s — line ~1116
+
+- [SCREEN TRANSITIONS] State-change fade veil (dark navy, 0.22s ease-out), skips reducedFlash.
+    #juiceVeil CSS — line ~148 ; DOM node — line ~157
+    screenFade() — line ~775 ; invoked at end of showScreen() — line ~815
+
+- [VISUAL FEEDBACK] HUD combo scale-punch + damage red edge vignette.
+    #hudCombo.punch + @keyframes comboPunch CSS — line ~151-152
+    retrigger in updateHUD() — line ~910
+    damage vignette pulse in draw() — line ~1555 ; state G.damagePulse set in damage() — line ~1116
+
+- [ANIMATION EASING] Roll-release squash-and-stretch on the machine dome/ring.
+    G.machinePunch set in doRoll() — line ~928 ; applied in drawMachine() — line ~1619
+
+- [POPUPS] Guard: hard cap of 8 simultaneous popups (spec limit) — addPopup() line ~717
+
+  Field additions to G: ambTimer, machinePunch, damagePulse (reset in startRun).
+
+SKIPPED:
+- [SCREEN SHAKE]         Already implemented and well-covered (player hit, jackpot,
+                         heavy kill, near-miss, zone transition) — no change needed.
+- [SCORE/TEXT POPUPS]    Core system already exists (+pts, NEAR MISS, COMBO x5/x8,
+                         JACKPOT, EXPIRED, UPGRADE). Only added the 8-cap guard.
+- [MOTION/CAMERA]        N/A — fixed single-screen game with no scrolling camera.
+- [SOUND COMPLEMENT]     Low impact; existing SFX already paired 1:1 with visual
+                         feedback, so an extra visual "sound indicator" would bloat.
+- [CONFETTI/BANNER/FLASH/GLOW] Already present and sufficient — not duplicated.
+
+INTEGRATION NOTES:
+- Particles pooled in existing G.particles (300 hard cap); ambient emitter self-caps
+  at 140 and emits 1 at a time — well under 50 concurrent per emitter.
+- Shake untouched at 2-6px magnitudes with existing 0.85-equivalent decay.
+- Hit-stop values 0.03-0.06s (2-4 frames), jackpot 0.08s (5 frames) — within limit.
+- reducedFlash honored: ambient emission thinned, vignette and state veil skipped.
+- No existing function, array, CSS class, or effect was removed or rewritten;
+  edits are insertions plus two one-line state resets.
+- Line count: 1832 -> 1921 (+89).

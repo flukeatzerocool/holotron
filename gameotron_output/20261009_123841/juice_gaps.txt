@@ -1,0 +1,28 @@
+JUICE GAP ANALYSIS — The Everything Button
+Target: index.html (1832 lines pre-pass)
+Flags: window.flags = { juiceEnabled: true, reducedFlash: false }
+
+EXISTING (do not duplicate):
+- [P] Particle system (spawnParticles/drawParticles), 300 cap, reducedFlash halving
+- [P] Confetti burst + idle confetti drift
+- [P] Token drag trail (position history)
+- [S] Screen shake (shake(), canvas translate, G.shake)
+- [H] Hit-stop (hitStop(), G.hitStop) — only wired to jackpot
+- [T] Floating popups (addPopup/drawPopups) — no on-screen cap
+- [V] Full-screen flash, pad glow, charge-ring glow, token glow, springy token spawn
+- [V] Banner (per-letter rotate), HUD score odometer roll
+- [T] CSS platform transitions only; no state-change fade
+
+GAPS (by priority):
+1. [Particles]       Ambient zone motes / vault sparkle — MISSING (planned in visual_direction §161-166)
+2. [Particles]       Correct-route ring-burst + near-miss shockwave — MISSING (visual_direction §162,164)
+3. [Hit-Stop]        Underused: only jackpot; no feedback on enemy defeat / damage / fizzle
+4. [Transitions]     No state-change fade veil — screens hard-cut
+5. [VisualFeedback]  No HUD combo scale-punch; no damage vignette pulse
+6. [AnimEasing]      No roll-release squash-and-stretch; machine feels static on press
+7. [Popups]          No 8-on-screen cap (spec requires max 8)
+8. [Motion/Camera]   N/A — fixed single-screen, no camera to smooth
+9. [SoundComplement] Low value; audio already paired with visuals (skip)
+
+SELECTED THIS RUN (5 categories, max 5): 1/2 Particles, 3 Hit-Stop, 4 Transitions,
+5 Visual Feedback, 6 Animation Easing (+ popup cap guard #7).

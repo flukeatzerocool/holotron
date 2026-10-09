@@ -1,0 +1,213 @@
+AUDIO DIRECTION FOR: The Everything Button
+
+===========================================================
+1. THREE AUDIO DIRECTION CONCEPTS
+===========================================================
+
+--- Concept A: "Carnival Factory" (toy-machine carnival-electro) ---
+Style:      Upbeat carnival-electro / 8-bit big-top hybrid. Bouncy square/saw
+            leads over a driving four-on-the-floor kick, with calliope-like
+            arpeggios and gear-ratchet percussion. A continuous low machine hum
+            (sine + detuned saw) runs underneath everything and rises in pitch
+            during button charge.
+Instrumentation (all synthesized): square lead, detuned saw pads, triangle
+            bass, noise-based snare/hat, filtered noise "gear ticks", calliope
+            arpeggio, low sine hum.
+Mood:       Cheerful, chaotic, slightly unhinged — a prize machine that is
+            having too much fun dispensing the universe. Bright and inviting
+            for beginners, escalating to manic by Zone 5.
+Fit:        Directly matches §5's "carnival-bright toy-machine aesthetic" and
+            §6's "upbeat carnival-electro bed." The charge-tied hum satisfies
+            the GDD's explicit requirement that the button's hum track charge.
+            Tempo/layer step per zone gives the required linear intensity ramp.
+
+--- Concept B: "Overclocked Arcade" (synthwave / arcade chiptune) ---
+Style:      Retro synthwave arcade pulse. Pulsing saw bassline, gated pad
+            chords, chiptune leads, hard electronic drums. Cold neon feel.
+Instrumentation: saw bass, gated pads, pulse-wave lead, noise drums, ping SFX.
+Mood:       Sleek, fast, confident, slightly sinister. High-energy but cool
+            rather than warm.
+Fit:        Matches "Overclocked" zone naming and the arcade hybrid genre, but
+            its cool neon mood conflicts with the GDD's explicitly warm
+            carnival palette (#FF4757/#FFA502) and "toy-machine" shape language.
+            Also undersells the comedy/meta-humor of the "ANYTHING GOES" gag.
+
+--- Concept C: "Workshop Idle" (lo-fi chill / cozy incremental) ---
+Style:      Mellow lo-fi loop with soft Rhodes, brushed percussion, and warm
+            sub-bass. Relaxed tempo with gentle jazz extensions.
+Instrumentation: Rhodes electric piano, upright sub-bass, brushed noise hats,
+            soft pad, occasional bell.
+Mood:       Calm, cozy, ambient, non-intrusive. Good for long idle sessions.
+Fit:        Suits incremental players' long-tail sessions and the meta-progression
+            layer, but it is tonally wrong for an arcade tap-hold-drag game with
+            1.8 s token lifetimes and jackpot confetti in Zone 5. No room for the
+            charge-tied drama the GDD requires. Risk of the game feeling lifeless.
+
+===========================================================
+2. SELECTION NOTE (transparent reasoning)
+===========================================================
+Selection: CONCEPT A — "Carnival Factory".
+
+Scoring (1-5 each, weighted to the GDD's stated priorities):
+
+  Criterion (weight)               A     B     C
+  ------------------------------------------------
+  Theme fit — "Anything Goes" (25%) 5     4     3
+  GDD Audio Spec match (§6)   (25%) 5     4     2
+  Visual palette coherence (§5)(20%) 5    3     3
+  Genre/audience fit          (20%) 4     4     3
+  Escalation headroom (zones) (10%) 5     4     2
+  ------------------------------------------------
+  Weighted total                    4.85  3.85  2.70
+
+Why A wins:
+- It is the only concept that satisfies every explicit sentence in GDD §6:
+  "looping upbeat carnival-electro bed," a per-zone added layer/tempo notch, and
+  a button hum "tied to the charge state." B and C each miss at least one.
+- It reconciles the game's two tonal halves — beginner-friendly warmth (Zone 1)
+  and manic challenge (Zone 5) — through a single linearly escalating arrangement,
+  which is exactly the GDD's "learn → challenge" curve expressed in sound.
+- Carnival timbres (calliope, ratchets, machine hum) sonically mirror the
+  chunky chrome-and-gears toy machine described in §5, so audio and visuals sell
+  the same fiction instead of competing.
+
+Residual from B/C folded into A:
+- B's arcade pulse supplies Zone 4-5's "Overclocked" energy (tighter drums,
+  faster arp) rather than a separate style.
+- C's warmth is kept as A's Zone 1 palette (softer lead, slower tempo, sparse
+  percussion) so the game never feels harsh to a first-timer.
+
+===========================================================
+MUSIC
+===========================================================
+A looping, upbeat CARNIVAL-FACTORY ELECTRO bed — think a joyous prize machine
+staffed by slightly unhinged robots. Foundation is a 4/4 electro pulse with a
+triangle/sine bass and noise-based kick/snare/hat. Over it sits a bright square
+lead trading phrases with a calliope-style arpeggio (fast ascending/descending
+runs), colored by detuned saw pads. A constant low "machine hum" (sine + gently
+detuned saw, ~55 Hz) underlies the mix; when the player holds the ANYTHING GOES
+button, that hum rises in pitch and adds a gain wobble so the machine audibly
+"charges up." Gear-ratchet ticks (bandpass-filtered noise bursts) faintly mark
+beats, reinforcing the mechanical fiction.
+
+Intensity is LINEAR across the five zones, one notch per zone:
+  Zone 1 "The Warm-Up"  — 104 BPM, bass + soft lead only, sparse percussion,
+                          warm and forgiving.
+  Zone 2 "Getting Weird"— 112 BPM, add hat + calliope arpeggio.
+  Zone 3 "Anything Goes"— 120 BPM, add pads + ratchet ticks, minor color shift.
+  Zone 4 "Overclocked"  — 128 BPM, add off-beat bass stabs + snare fills.
+  Zone 5 "The Everything"—136 BPM, full arrangement, busier arpeggio, brighter
+                          lead; a fifth layer of high sparkle accents.
+  Endless mode continues the same +8 BPM-per-zone step, capped at 160 BPM.
+
+Zone transitions do not hard-cut: the current loop bar finishes, the new tempo
+and layer fade in over ~1.5 s under the zone-transition fanfare (fanfare ducks
+music per §6 mix rules). Jackpots briefly duck the music ~−6 dB and layer a
+triumphant major jingle. On stability < 30, the music bed high-passes and a
+heartbeat pulse (two soft thumps) emerges; on Game Over the bed stops for the
+sad-trombone stinger.
+
+===========================================================
+SOUND EFFECTS
+===========================================================
+Every SFX is a short synthesized envelope (oscillator + noise + filter) defined
+per event. "Bus" = sfx bus unless noted.
+
+- button_press (thunk + charge whir): On pointer down inside the button core.
+  Soft mechanical thunk (low sine thump, 90 ms) + a rising charge whir whose
+  pitch/gain tracks hold duration continuously (loopable saw w/ lowpass sweep).
+- roll_release (slot clatter + gear ticks): On release of the button. Burst of
+  bandpass-filtered noise clatter (slot reels) and 3-5 gear-ratchet ticks,
+  pitch-bending down as the outcome token pops out.
+- token_spawn (springy pop): On token appearance. Short pitch-up blip (15 ms
+  triangle) + tiny noise transient; reinforces the squash-and-stretch spawn.
+- resource_collect (coin chime): Correct Resource routed to VAULT. Bright
+  two-note coin chime (sine/bell FM); STARTING PITCH RISES ONE SEMITONE PER
+  COMBO STEP so combo build is audibly rewarding (x1 C5 → x8 C6).
+- upgrade_install (socket clack + shimmer): Correct Upgrade routed to SOCKET.
+  Snappy wooden clack (filtered square click) followed by a sci-fi shimmer
+  (ascending high FM/wavetable sweep, ~300 ms).
+- enemy_defeat (cartoon splat/pop): Correct Enemy routed to CANNON. Squashed
+  noise "splat" (fast pitch-down) + a bright pop; adds a +10 coin tick when the
+  Hot Cannon module is active.
+- wrong_route (gentle sad-trombone blip): Wrong zone or expired token. Soft,
+  never harsh descending "wah-wah" blip (filtered saw, 250 ms, low volume);
+  intentionally comedic to match "never harsh" in GDD §6.
+- near_miss (klaxon jingle + applause): Routing within the final 0.4 s window
+  (or enemy near expiry, or junk edge-flick in final 0.3 s). Distinct two-tone
+  klaxon (high, urgent but friendly) layered over a light synthesized applause
+  burst; fires with the "NEAR MISS +50" popup.
+- zone_transition (rising arpeggio fanfare): On entering each new zone. Fast
+  ascending major arpeggio fanfare; transposed ONE SEMITONE HIGHER PER ZONE
+  (Zone 1 root → Zone 5 root+4), with a brief duck of the music bus.
+- combo_milestone (chain chime): On combo reaching x5 and x8. Bright ascending
+  bell cluster; plays over the resource chime.
+- jackpot (triumphant jingle + confetti sparkle): Perfect T3 hold + correct
+  route in Zone 5 (or later zones in endless). Music ducks ~−6 dB; a multi-note
+  triumphant brass-ish jingle (stacked saws + octave lead) plus a shimmering
+  high sparkle and one full-screen power chord. Pairs with the confetti burst.
+- stability_warning (low warning thrum): On any Stability loss. Low pulsing
+  thrum (sub sine + noise, ~180 ms); pitch and urgency scale with the size of
+  the loss. Below 30 Stability, a recurring heartbeat pulse (two soft thumps)
+  plays on a slow loop until recovery or death.
+- game_over (sad-trombone stinger): Stability hits 0. Descending pitch-bend
+  trombone figure (filtered saw with vibrato) ~1.2 s; music bed stops first.
+- victory (explosive fanfare): Zone 5 meter completes. Extended major fanfare
+  (stacked saws, bell accents, rising run) ~2.5 s; confetti-sparkle tail.
+- ui_click (soft tick): Menu button presses (Title/Pause/Settings/How-To).
+  Short, quiet sine tick — subtle, no fatigue across repeated taps.
+- ui_toggle (switch snap): Music/SFX/Reduced-flash toggles. Crisp two-part
+  click; when turning MUSIC on, a short level-confirm chord plays if enabled.
+- title_demo_roll (harmless mini-roll): Tapping the decorative Title button.
+  A condensed, quieter roll_release + a single coin plink — the "delightful
+  micro-interaction" from GDD §8 Screen 1.
+- pause_in / resume_out (soft whoosh): Entering/leaving Pause. Quick filtered
+  noise whoosh; pause additionally pitch-downs the music bed and freezes it
+  (per §7), SFX already in flight allowed to finish.
+
+SFX MIX RULES
+- SFX bus ducks ~−4 dB for the duration of zone_transition and jackpot; music
+  bus ducks ~−6 dB for jackpot.
+- Combo-pitched resource chimes keep their own headroom so the pitch ladder
+  stays legible over music.
+- All warning/klaxon SFX capped below music peaks so they inform without alarm.
+
+===========================================================
+TECHNICAL APPROACH
+===========================================================
+- Single self-contained index.html; NO external audio assets. All sound is
+  synthesized at runtime with the Web Audio API (OscillatorNode, GainNode,
+  BiquadFilterNode, WaveShaperNode, BufferSourceNode for noise). This satisfies
+  AGENTS.md's no-download single-file requirement and GDD §10.3.
+- One AudioContext created (and resumed) on the first user gesture to satisfy
+  browser autoplay policy; every SFX function no-ops gracefully if the context
+  is missing/suspended, so the game never throws.
+- Node graph (GDD §10.3): source(s) -> busGain(music | sfx) -> masterGain ->
+  destination. Music scheduler uses a lookahead queue (setInterval ~25 ms
+  scheduling ~100 ms ahead) driven by performance.now() to avoid timer drift;
+  tempo/layer changes apply on bar boundaries for click-free transitions.
+- Noise buffers (white/pink) are generated once and reused; short noise bursts
+  are the backbone of percussion, clicks, ratchets, splats, and whooshes.
+- SFX envelope helper: playTone({type, freq, dur, attack, decay, filter, gain,
+  pitchBend, detune, pan}) and playNoise({dur, filterType, freq, Q, gain,
+  pitchBend}) cover every event above. All nodes are scheduled and auto-stopped
+  (osc.stop(t+dur)) and disconnected on `onended` to prevent node leaks in the
+  long-running idle loop.
+- Voice/polyphony cap: limit simultaneous SFX voices (e.g., 24) and steal the
+  oldest; pooled noise sources. Combo chimes retrigger without stacking
+  indefinitely.
+- Toggles: Pause/Settings flip `musicBus.gain.value` / `sfxBus.gain.value`
+  between 0 and their base level (with a 100 ms ramp to avoid clicks) and
+  persist to localStorage key `teb_settings { music, sfx, reducedFlash }`.
+  Music scheduler keeps running silently when muted so state stays consistent.
+- Pause/visibility: on pause or `visibilitychange` (auto-pause per §7), ramp the
+  music bus to 0 and suspend scheduling; on resume, re-queue from the next bar.
+  In-flight one-shot SFX are allowed to finish (short envelopes, no residue).
+- Performance: precompute noise buffers and reuse; avoid per-frame allocation in
+  the SFX path; total audio cost is negligible next to canvas particles. Audio
+  degrades gracefully — if AudioContext is unavailable, the game runs silent.
+- Accessibility: audio is informational, never required to play; music and SFX
+  are independently mutable; the heartbeat/warning cues also have visual
+  counterparts (Stability bar flash), so no gameplay meaning depends on audio.
+
+--- End of audio direction ---

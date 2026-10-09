@@ -1,0 +1,256 @@
+BUGLIST — static review of The Everything Button (index.html)
+Reviewer: review_agent | Target: gameotron_output/20261009_123841/index.html | GDD: gdd.md
+Date: 2026-10-09
+
+============================================================
+[HIGH] Pause does not freeze token timers — active tokens expire instantly on resume
+  Location: index.html:1274-1277 (expire check), index.html:891 & 892 (bornAt/lifetime), index.html:1192-1193 (pause/resume)
+  Explanation: Token lifetime is computed from an absolute wall clock: remain = tk.lifetime - (performance.now() - tk.bornAt)/1000.
+  While state === 'PAUSE' the main loop skips update(), but performance.now() keeps advancing. If the player pauses with a
+  token on screen and resumes after the token's lifetime elapses, remain is <= 0 and expireToken() fires immediately on the
+  first resumed frame. For an enemy token that means an instant -12 Stability hit through no player fault. GDD §7 explicitly
+  requires Pause to "freeze the game clock, token timers" and §10.2 requires "fixed logical timestep accumulator for
+  deterministic timers". The wall-clock token clock violates both.
+  Fix approach: Track per-token elapsed lifetime using accumulated dt inside update() (e.g. tk.age += dt; expire when
+  tk.age >= tk.lifetime), or offset tk.bornAt by the total paused duration on resume. Also pause the Music scheduler /
+  hum while paused if desired. Same fix must apply to G.chargeStart (see LOW-06).
+
+============================================================
+[MEDIUM] Invisible SOCKET drop target acts as a "FIZZLE" trap in Zone 1 before roll 4
+  Location: index.html:1517-1519 (showSocket in drawPads) vs index.html:937-939 (insideAnyPad), index.html:925-927 (routeToken wrong-route branch)
+  Explanation: drawPads only renders the SOCKET pad when (G.zone > 1 || G.totalRolls >= 4), but insideAnyPad() always
+  includes zonesPos.socket in hit-testing. During Zone 1 rolls 1-3 the SOCKET is invisible yet still counts as a valid drop
+  target, so releasing a token anywhere in that area resolves as wrongRoute() ("FIZZLE") and resets the combo. GDD §2.3/§4.4
+  states Zone 1 has "Only Resource + Enemy targets active; SOCKET arrives at 4 accepted rolls". This also conflicts with the
+  idea of the SOCKET being introduced gently.
+  Fix approach: Make insideAnyPad()/routeToken() check the same showSocket condition used in drawPads, or store an
+  "active" flag on each zone recomputed per frame and skip inactive pads in hit detection.
+
+============================================================
+[MEDIUM] HOW TO PLAY opened from Game Over returns to TITLE instead of Game Over
+  Location: index.html:1187 (performAction 'howto' sets prevScreen), index.html:764-769 (goBack)
+  Explanation: GAME_OVER's HOW TO PLAY button uses data-action="howto", which sets G.prevScreen = 'GAME_OVER'. goBack()
+  only restores PAUSE for prevScreen === 'PAUSE' (or GAMEPLAY/SETTINGS/HOW_TO_PLAY) and otherwise falls through to
+  showScreen('TITLE'). So BACK from that help screen drops the player on the Title screen, losing the Game Over context.
+  GDD §8 (Screen 3) requires "BACK button returns to wherever it was opened from."
+  Fix approach: Add a branch in goBack() to restore GAME_OVER and VICTORY when G.prevScreen matches those states (and keep
+  G.inRun consistent since G.inRun stays true on GAME_OVER).
+
+============================================================
+[MEDIUM] Blueprint passive perks are stored but never applied
+  Location: index.html:802 (startRun comment, no code), index.html:829-831 (victory increments blueprints), index.html:366-371 (saveRun)
+  Explanation: GDD §2.1 states blueprints unlock "account-level ... granting small passive perks on future runs (e.g., +1
+  starting socket, faster charge)". The code increments and persists `blueprints`, and displays the count, but startRun()
+  never reads it — the only reference is a comment ("blueprints passive perk: start with +1 socket-ish -> small assist on
+  charge") with no implementation. The advertised meta-progression hook is cosmetic only.
+  Fix approach: In startRun(), read `blueprints` and apply at least one concrete perk (e.g. widen token grab radius, shorten
+  charge time, or start with a random module). Guard with a cap so it stays balanced.
+
+============================================================
+[MEDIUM] "Auto-target the token if the finger stays down" routing assist is not implemented
+  Location: index.html:1086-1102 (gDown), index.html:1103-1110 (gMove)
+  Explanation: GDD §3.3 requires: "the game auto-targets the token if the player keeps their finger down and moves toward
+  it (assist for small screens)." gDown only grabs a token whose distance is already < tk.grabR; there is no proximity
+  acquisition while the pointer is held during the hold→release→drag flow. On small screens the release point and the
+  spawning token are far enough apart (token spawn y = buttonY - buttonR*1.25, ~70px above center) that this assist matters.
+  Fix approach: In gMove(), when !G.grabbed and the pointer has moved toward a non-resolving token within an expanded
+  acquisition radius, auto-grab it. Also consider auto-grabbing the freshest token on the frame after a roll.
+
+============================================================
+[MEDIUM] Chained / concurrent tokens (Zone 2+) are not implemented
+  Location: index.html:847-878 (doRoll), index.html:880-896 (spawnToken)
+  Explanation: GDD §2.3 (Zone 2 "Getting Weird") specifies "Tokens may spawn as 'chained' (second token appears while first
+  is mid-drag after 5 rolls)". Only the Twin Roller module and the Zone 4 double-enemy wave can create a second token;
+  there is no zone-driven chaining after 5 rolls. This removes a documented difficulty layer for Zones 2-3.
+  Fix approach: In correctRoute()/doRoll(), when zone >= 2 and accepted rolls in the zone exceed a threshold, spawn an
+  additional token with a short delay. Keep it off in Zone 1 per GDD ("one token at a time").
+
+============================================================
+[MEDIUM] Near-Miss Bonus (+50) is not awarded for flick-discarding Junk
+  Location: index.html:908-920 (routeToken junk branch)
+  Explanation: GDD §4.4 lists a Near-Miss trigger: "Flick-discarding Junk with the pointer already at the screen edge in the
+  final 0.3 s." The junk branch simply clears the token on any off-edge release and awards no Near-Miss check/bonus, even
+  though correct and enemy routes do receive it. This makes the junk mechanic reward-inconsistent with the documented design.
+  Fix approach: In the junk edge-clear branch compute remain and, if 0 < remain <= 0.3 (widened by Blueprints), award
+  addScore(50) + NEAR MISS popup + sfx, mirroring correctRoute().
+
+============================================================
+[LOW] Combo multiplier is incremented before scoring, so the first correct route awards x2, not x1
+  Location: index.html:950 (G.combo = Math.min(8, G.combo + 1)) , index.html:956-961 (scoring)
+  Explanation: GDD §4.2/§4.3 describe the combo ramp as x1 → x2 and score as 10 × combo. Starting at x1 and incrementing
+  before applying the multiplier means the very first correct route already scores as x2 (20 pts), shifting the whole ramp
+  by one step. Also bestCombo is initialised to 1 and can never record a value below 2.
+  Fix approach: Apply the multiplier using the pre-increment combo, or initialise G.combo = 0 and grant the multiplier after
+  the first success, whichever matches the intended curve.
+
+============================================================
+[LOW] Dead/unused variable in damage()
+  Location: index.html:1016
+  Explanation: `var c = 'rgba(255,71,87,';` is assigned and never used (addPopup uses a hard-coded '#FF4757').
+  Fix approach: Remove the unused declaration.
+
+============================================================
+[LOW] Local `var Audio` shadows the built-in window.Audio constructor
+  Location: index.html:376
+  Explanation: The IIFE declares a local object named Audio while also using window.AudioContext (aliased to AC), so the
+  code works, but shadowing the global `Audio` is error-prone for future edits and confuses tooling.
+  Fix approach: Rename the local object to `Sound`/`Sfx` (and update references), or the context alias.
+
+============================================================
+[LOW] Token grab hitbox (tokenR * 1.9) diverges from the GDD-specified ~64px radius
+  Location: index.html:891
+  Explanation: GDD §3.2 specifies an expanded circular hitbox "~64 px radius". The code uses tokenR * 1.9, which is ~49px on
+  a 375px-wide viewport (below spec) and ~139px on a 1080px-tall desktop (far above spec), so acquisition feel is
+  inconsistent across devices.
+  Fix approach: Use a fixed CSS-px acquisition radius (e.g. Math.max(64, tokenR * 1.9)) or define it as a named constant.
+
+============================================================
+[LOW] advanceZone() unconditionally resets G.over = false
+  Location: index.html:1031
+  Explanation: G.over is the guard against duplicate gameOver()/victory() calls, but advanceZone() clears it every zone
+  transition. If a stability-death and a meter completion ever coincide in the same frame, the guard is defeated and both
+  end states could resolve. It also resets a flag that only gameOver()/victory() should manage.
+  Fix approach: Remove the `G.over = false;` line (startRun() already resets G.over at the start of a run).
+
+============================================================
+[LOW] Pausing while charging leaves the charge timer running; resume yields an instant max-tier roll
+  Location: index.html:1192 (pause), index.html:1250-1251 (charge uses G.chargeStart)
+  Explanation: Pause does not clear G.charging or G.chargeStart. On resume, `G.charge = clamp((performance.now() -
+  G.chargeStart)/3000, 0, 1)` becomes 1 immediately, so a release after pausing grants Tier 3 for free. Same root cause as
+  the HIGH timer issue.
+  Fix approach: On pause, cancel charging (G.charging = false; G.charge = 0), or freeze/offset chargeStart by the paused
+  duration as part of the timer fix.
+
+============================================================
+[LOW] endRunToTitle() leaves tokens, particles and popups drawn behind the Title screen
+  Location: index.html:808-813 (endRunToTitle), index.html:1354-1372 (draw)
+  Explanation: endRunToTitle() only flips G.inRun and shows the Title screen; G.tokens/G.particles/G.popups/G.confetti are
+  not cleared, and the render loop still draws them behind the translucent Title overlay. This can produce stale token
+  artwork lingering on the title screen after returning from a run.
+  Fix approach: Clear G.tokens, G.particles, G.popups (and optionally G.confetti) in endRunToTitle().
+
+============================================================
+[LOW] Zone 1 "NEW: drag upgrades here" SOCKET callout is not implemented
+  Location: index.html:1517-1519
+  Explanation: GDD §4.4 requires an on-screen callout when the SOCKET is introduced at roll 4 of Zone 1. The pad simply
+  appears with no explanatory callout, weakening the staged tutorial promise.
+  Fix approach: When totalRolls reaches 4 in Zone 1, trigger a showBanner()/toast such as "NEW: DRAG UPGRADES HERE".
+
+============================================================
+[LOW] Zone 4-5 "sweet-spot" release band is not implemented
+  Location: index.html:847-851 (doRoll tier mapping)
+  Explanation: GDD §3.3 describes an optional soft sweet-spot band in Zones 4-5 rewarding precise release timing. Tier is
+  currently derived purely from hold duration with no precision band or reward.
+  Fix approach: Add a narrow duration band near each tier boundary in Zones 4-5 that grants a small bonus/popup on release.
+
+============================================================
+[LOW] Settings lacks the high-contrast accessibility toggle from the GDD
+  Location: index.html:211-228 (Settings screen)
+  Explanation: GDD §5 and §8 (Screen 5) specify a "Reduced-flash / high-contrast toggle". Only Reduced Flash is present;
+  there is no high-contrast mode. Reduced Flash does not satisfy the high-contrast accessibility requirement.
+  Fix approach: Add a high-contrast setting that boosts outline/label contrast (and persist it in teb_settings).
+
+============================================================
+[LOW] updateHUD() writes DOM text/styles every frame
+  Location: index.html:1327 (call), index.html:838-845
+  Explanation: updateHUD() sets textContent for score/combo/zone and width/className on the stability bar 60 times per
+  second even when values are unchanged. This forces needless style/layout recalculation on low-end mobile.
+  Fix approach: Cache last values and only write when changed (especially stabBar.style.width/className).
+
+============================================================
+[LOW] Music scheduler setInterval is never stopped
+  Location: index.html:583-588 (start/stop), index.html:1721-1725 (one-time start)
+  Explanation: Music.start() creates a 25 ms setInterval that runs for the lifetime of the page; Music.stop() is never
+  called. It keeps scheduling even while paused/muted (gain 0) and burns wakeups on mobile.
+  Fix approach: Stop the scheduler when music is toggled off and when the document is hidden; restart on resume.
+
+============================================================
+[LOW] "NEW BEST!" flair shows on a tie
+  Location: index.html:776
+  Explanation: renderGameOver() uses `G.score >= bestScore`, but saveRun() has already written G.score into bestScore when
+  it is greater, so an equal-to-previous-best score also displays "NEW BEST!". GDD #6 implies the flair is for a new record.
+  Fix approach: Capture whether the run strictly beat the previous best before saveRun() overwrites it, and use that boolean.
+
+============================================================
+[LOW] Extensive magic numbers with no named constants
+  Location: index.html:703 (300 particle cap), 716 (100 confetti cap), 848-849 (tier thresholds), 964/969 (score values), 1015 (shake), etc.
+  Explanation: Balance values, caps and tuning constants are inlined throughout. GDD §10.2 warns about pooled caps and
+  balancing; duplicated literals make later tuning error-prone.
+  Fix approach: Hoist tuning constants into a CONFIG/constants block (PARTICLE_CAP, CONFETTI_CAP, SCORE_*, TIER_SECONDS, ...).
+
+============================================================
+VERIFIED (no issue found)
+  - All 7 screens present: Title, Pause (music+SFX toggles, How to Play, Back-to-start w/ confirm, Resume, Settings),
+    How to Play (6 panels + input legend + BACK), Gameplay (canvas), Settings (toggles + RESET DATA confirm + credits + BACK),
+    Game Over, Victory — GDD Screen Inventory satisfied.
+  - Unified input: touchstart/touchmove/touchend/touchcancel (cv) and mousedown/mousemove/mouseup (cv/window) both present and
+    sharing handleDown/handleMove/handleUp; pointerActive + activeTouchId guards prevent multi-touch corruption.
+  - viewport meta present (index.html:5); canvas sized to viewport with devicePixelRatio clamp; resize/orientationchange
+    relayout; touch-action:none and user-select:none set; pads >=96px and button >=88px diameter (finger-sized).
+  - Core loop correct: tap-hold charge (0-1/1-2/2-3s tiers) -> release roll -> drag token to VAULT/SOCKET/CANNON; no nested
+    mini-games; outcomes only resource/upgrade/enemy/junk.
+  - Balance: scripted first roll is Resource; Zone 1 lifetime 3.0s; wrong route free in zones 1-2; Near-Miss +50 and
+    Zone Bonus +100×zone implemented; linear lifetime/meter ramp present; T3 gated to Zone 4.
+  - Game feel present AND gated: particles/confetti/popups/shake/hit-stop all return early via window.flags.juiceEnabled;
+    doFlash additionally respects reducedFlash; particle cap 300 and confetti cap 100 prevent memory growth; no duplicate
+    event listeners; no infinite loops (Music.tick guarded, weightedPick bounded); no division-by-zero found.
+  - Audio initialised on first user gesture; localStorage read/write wrapped in try/catch; RESET DATA clears teb_* keys.
+
+TOTALS: C=0 H=1 M=6 L=14
+
+============================================================
+FIXED BUGS:  (bugfix_agent run 2026-10-09)
+============================================================
+- [HIGH] Pause does not freeze token timers — RESOLVED via pause-safe gameNow() clock that subtracts
+  accumulated + in-progress paused duration. Token bornAt/lifetime, chargeStart, routeToken remain,
+  drawTokens arc and trail age now use gameNow(). Pause occurs on pause button, visibilitychange, and
+  resume adds the paused span to G.pauseOffset. Verified at 375x667: enemy token left on screen through
+  a 5s pause remained alive after resume (stability 100%); control without pause expired correctly (88%).
+- [HIGH] Mobile RESET DATA confirm auto-accepted by opening gesture — RESOLVED via a 400ms input-lock
+  (confirmLockUntil) set in askConfirm(). The compatibility click synthesised at the same coordinates is
+  ignored, so the confirm stays open. Verified at 375x667 touch: overlay_after_open=true, saved key
+  intact; a later deliberate YES tap still runs the callback.
+- [MEDIUM] Invisible SOCKET drop target in Zone 1 — RESOLVED via socketActive() helper
+  (zone>1 || totalRolls>=4) gating insideAnyPad(); drawPads() uses the same helper.
+- [MEDIUM] HOW TO PLAY from Game Over/Victory returned to TITLE — RESOLVED by adding
+  GAME_OVER / VICTORY branches to goBack() so BACK restores the originating screen.
+- [MEDIUM] Blueprint perks stored but never applied — RESOLVED in startRun(): G.chargeSpeed
+  (1 + min(0.4, blueprints*0.08)) speeds charge/tier ramp and G.grabBonus (min(0.3, blueprints*0.06))
+  widens token grab; both capped for balance and reset each run.
+- [MEDIUM] Auto-target token assist (GDD 3.3) — RESOLVED in gMove(): while the pointer is held and not
+  charging, moving within an expanded acquire radius (max(64, tokenR*2.6)) auto-grabs the token.
+- [MEDIUM] Chained tokens Zone 2+ — RESOLVED via G.zoneRolls / G.chainPending; after 5 rolls in a zone
+  (zone>=2) a second token spawns 0.45s later, suppressed below Zone 2 and when two tokens already exist.
+- [MEDIUM] Junk near-miss +50 not awarded on edge discard — RESOLVED: junk edge-clear branch now checks
+  remain <= near-miss window and awards +50, NEAR MISS popup, particles, sfx and shake.
+- [LOW] Combo multiplier incremented before scoring — RESOLVED: correctRoute() applies the pre-increment
+  `mult` so the first correct route is x1 (10 pts), second x2, etc.
+- [LOW] Dead `var c` in damage() — RESOLVED (removed).
+- [LOW] Token grab hitbox diverged from spec — RESOLVED: grabR = max(64, tokenR*1.9) * blueprint bonus.
+- [LOW] advanceZone() unconditionally reset G.over — RESOLVED (line removed; only startRun manages G.over).
+- [LOW] Pausing while charging left timer running — RESOLVED by the pause-safe clock (chargeStart uses
+  gameNow()); charge now resumes at its pre-pause value instead of jumping to max tier.
+- [LOW] endRunToTitle() left tokens/particles/popups drawn behind Title — RESOLVED: arrays cleared and
+  transient in-run flags reset.
+- [LOW] Zone 1 SOCKET callout missing — RESOLVED: showBanner('NEW: UPGRADES') fires when totalRolls
+  reaches 4 in Zone 1.
+- [LOW] updateHUD() wrote DOM every frame — RESOLVED via value caching (text/style only on change).
+- [LOW] Music scheduler setInterval never stopped — RESOLVED: Music.stop() on music toggle-off and on
+  document hidden; Music.start() on toggle-on and visibility restore.
+- [LOW] "NEW BEST!" flair shown on a tie — RESOLVED: G.newBest captured as strict > before saveRun();
+  renderGameOver() uses it.
+
+Unfixed bugs:
+- [UNFIXED] [LOW] Local `var Audio` shadows window.Audio | Renaming would touch ~40 references across the
+  file — too broad for a surgical fix, no behavioural impact (window.AudioContext is aliased separately).
+- [UNFIXED] [LOW] Zone 4-5 soft sweet-spot release band missing | Requires balance/design tuning beyond a
+  bug fix; deferring to a design pass.
+- [UNFIXED] [LOW] Settings high-contrast accessibility toggle missing | Feature addition (HTML + settings
+  persistence + toggles) rather than a surgical correction; out of bugfix scope.
+- [UNFIXED] [LOW] Extensive magic numbers / no CONFIG block | Mechanical refactor; risk of introducing
+  regressions outweighs cosmetic benefit in a bugfix pass.
+
+VALIDATION: node --check passed; headless Firefox 375x667 touch and 1920x1080 mouse runs: 0 console
+errors / 0 uncaught exceptions; RESET DATA confirm open/deny/accept verified on touch; pause clock
+verified against a no-pause control; title->HowTo->back, Settings open and confirm cancel verified at
+desktop size.

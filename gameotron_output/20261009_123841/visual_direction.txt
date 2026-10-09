@@ -1,0 +1,204 @@
+================================================================================
+VISUAL DIRECTION — "THE EVERYTHING BUTTON"
+Gameotron Game Jam | Theme: Anything Goes | Run: 20261009_123841
+================================================================================
+
+--------------------------------------------------------------------------------
+0. FIVE VISUAL DIRECTION CONCEPTS
+--------------------------------------------------------------------------------
+Each concept below includes Atmospheric Effects (mandatory). Scored 1-5 per
+criterion: Originality, Theme-Fit, Implementability, Visual Appeal. Total /20.
+
+--- CONCEPT A — "Carnival Slot-O-Tron" (specify-bright toy machine) -----------
+ART STYLE: Chunky toy-machine vector. Glossy dome button, chrome rings, visible
+  cranking gears, rounded bevels, soft drop shadows. Ransom-note banner type.
+PALETTE: Deep navy #0E1024, hot red #FF4757, amber #FFA502, gold #FFD32A,
+  magenta #FF3E80, cyan #18D8F0.
+MOOD: Joyous overstimulation — a county-fair jackpot machine that might explode.
+THEME FIT: Peak. The machine literally dispenses "anything"; the slot gag is
+  the whole game. Matches GDD §5 verbatim.
+ATMOSPHERIC EFFECTS: Idle confetti drift + heat-shimmer behind the dome during
+  charge + sparkle motes rising from the Vault + chromatic flash on jackpot.
+SCORES: Orig 4 | Theme 5 | Impl 5 | Appeal 5 = 19/20
+WHY: Directly serves the GDD palette and shape language; all-procedural.
+
+--- CONCEPT B — "Neon Arcade Cabinet" (80s CRT/vector-glow) --------------------
+ART STYLE: Vector-glow line art on black. Thin neon strokes, bloom halos,
+  scanline overlay, chrome-grid horizon. HUD as glowing monospace.
+PALETTE: Black #05060A, neon pink #FF2D95, electric cyan #00F0FF, violet
+  #9B5CFF, acid green #B6FF3C, white #F5F7FF.
+MOOD: Late-night arcade trance — cool, hypnotic, high-energy.
+THEME FIT: Good but generic — neon is a common jam default; the carnival
+  warmth of "Anything Goes" is lost.
+ATMOSPHERIC EFFECTS: CRT scanlines, phosphor bloom/afterglow on tokens, subtle
+  rolling-bar flicker, vector-mesh grid pulsing to the music.
+SCORES: Orig 3 | Theme 3 | Impl 4 | Appeal 4 = 14/20
+WHY: Gorgeous but risks readability of color-coded token types.
+
+--- CONCEPT C — "Frankenstein Bakery" (ransom-note paper collage) --------------
+ART STYLE: Paper-cutout collage. Torn-paper edges, misregistered halftone-print
+  offset, staples/tape, clashing type sizes hand-placed. Everything looks
+  improvised on the machine's skin.
+PALETTE: Kraft tan #E8D5A8, ink black #17151A, ketchup red #E23A2E, mustard
+  #F2B705, mint #57C79B, sky #5AA9E6.
+MOOD: Manic low-fi workshop — chaotic, tactile, "made of whatever was lying
+  around." Doubles as the "Anything Goes" meta-joke.
+THEME FIT: Strong conceptual fit (improvised = anything goes) but drifts from
+  the GDD's glossy saturated toy-machine spec.
+ATMOSPHERIC EFFECTS: Floating paper scraps and dust motes, ink-bleed wipes on
+  zone transitions, jitter-vibration on the whole screen during heavy combos.
+SCORES: Orig 5 | Theme 4 | Impl 3 | Appeal 4 = 16/20
+WHY: Most original, but halftone/texture via canvas is costly and muddies HUD.
+
+--- CONCEPT D — "Cosmic Gumdrop" (bubbly soft-3D pastel) ----------------------
+ART STYLE: Soft-body 3D-look flat shapes with big smooth gradients, jelly
+  squash-and-stretch, oversized round corners, pastel rim light.
+PALETTE: Plum #2A1B4A, bubblegum #FF6FB5, tangerine #FFB454, lime #A8E05F,
+  sky #7BD4FF, cream #FFF3D6.
+MOOD: Playful, squishy, sugar-rush cute — very mobile-friendly.
+THEME FIT: Medium. Reads "casual kids app" more than "anything goes chaos."
+ATMOSPHERIC EFFECTS: Floating bokeh bubbles, gummy wobble on all UI, soft
+  diffused glow bloom, cotton-candy fog at screen edges.
+SCORES: Orig 4 | Theme 3 | Impl 4 | Appeal 5 = 16/20
+WHY: Lovely, but undercuts the machine/gear tension and danger feedback.
+
+--- CONCEPT E — "Retro Fairground Poster" (silkscreen flat graphic) ------------
+ART STYLE: 1930s midway poster flat illustration — bold silhouettes, limited
+  spot-ink separations, woodcut grain, deco banners, arcing sunburst rays.
+PALETTE: Cream #F4E9CE, brick #B23A2E, marigold #E8A020, teal #2E7D78,
+  charcoal #22201F, gold #D9B44A.
+MOOD: Nostalgic big-top grandeur — "come one, come all, push the button."
+THEME FIT: Nice framing (a fairground barker pitching the impossible machine)
+  but its muted inks fight the GDD's high-saturation pop.
+ATMOSPHERIC EFFECTS: Paper grain overlay, sunburst rays rotating slowly behind
+  the machine, drifting seed-packet dust, ink-splatter bursts on jackpots.
+SCORES: Orig 4 | Theme 4 | Impl 3 | Appeal 4 = 15/20
+WHY: Great identity, weaker color pop and heavier texture cost.
+
+--------------------------------------------------------------------------------
+EVALUATION SUMMARY
+--------------------------------------------------------------------------------
+  Rank | Concept                | Orig | Theme | Impl | Appeal | TOTAL
+  -----|------------------------|------|-------|------|--------|------
+   1   | A. Carnival Slot-O-Tron|  4   |   5   |  5   |   5    | 19/20  <-- SELECTED
+   2   | C. Frankenstein Bakery |  5   |   4   |  3   |   4    | 16/20
+   2   | D. Cosmic Gumdrop      |  4   |   3   |  4   |   5    | 16/20
+   4   | E. Fairground Poster   |  4   |   4   |  3   |   4    | 15/20
+   5   | B. Neon Arcade Cabinet |  3   |   3   |  4   |   4    | 14/20
+
+SELECTED: Concept A — "Carnival Slot-O-Tron." It ties Concept C on originality
+pressure but wins decisively on Theme-Fit (the machine-as-theme) and
+Implementability (100% procedural canvas, no texture assets, tunable palette
+tokens). It also matches GDD §5 spec directly, so code_agent can build it with
+the fewest surprises. Atmospheric Effects are baked in and cheap.
+
+================================================================================
+FINAL VISUAL DIRECTION
+================================================================================
+VISUAL DIRECTION FOR: The Everything Button
+ART STYLE:
+  Chunky toy-machine vector, drawn 100% procedurally on canvas. Glossy domed
+  central button with a chrome/bevel ring and a visible gear train that cranks
+  as the charge fills. Rounded, heavy-outlined shapes with soft inner gradients
+  and drop shadows to feel like an extruded plastic machine. HUD uses a bold
+  condensed sans (system-ui / Arial Narrow fallback); banners use a stacked
+  "ransom-note" treatment built from per-letter rotation and mixed sizes via
+  CSS transforms (no fonts or images required). All shapes are circles, arcs,
+  rounded rects, and polygons — zero external assets.
+
+COLOR PALETTE:
+- Primary (background / chassis shadow): #0E1024  deep navy — makes tokens pop
+- Secondary (machine buttons & housings): #FF4757  carnival red
+- Accent (gears, highlights, HUD):         #FFA502  amber
+- Resource token:                          #FFD32A  gold  (paired with #2ED573)
+- Upgrade token:                           #18D8F0  cyan
+- Enemy token:                             #FF3E80  hot magenta (+ #7B2FF7 violet core)
+- Success / resource secondary:            #2ED573  green
+- TEXT / stroke ink:                       #F5F7FF  near-white
+  (Palette base = navy, red, amber, cyan, magenta, green; 6 hues + neutrals.)
+  ZONE TINTS (hue-shift the background + button rim per zone, linear escalation):
+    Z1 blue #3A6BFF -> Z2 teal #18D8B0 -> Z3 green #57C77A -> Z4 amber #FFA502
+    -> Z5 fiery red #FF4757. Transition interpolates over ~0.6s with the banner.
+
+MOOD:
+  Joyous overstimulation. A county-fair jackpot machine that might explode at
+  any moment. Bright, tactile, and loud on success; tension arrives only through
+  faster token expiry and a creeping zone hue-shift toward red — never through
+  darkness or gloom. Failure is comedic (sad-trombone blip, cracked-machine
+  illustration), victory is a full-screen confetti party.
+
+KEY ELEMENTS:
+- Central ANYTHING GOES button: glossy dome, chrome ring, label, subtle idle
+  bob (sinusoidal y-offset), squash on press.
+- Charge ring: fills clockwise around the button rim; a small gear sprite
+  (procedural) orbits/spins on the ring's leading edge; pitch-colored toward T3.
+- Gear train: 2-3 interlocking gears behind the button that visibly rotate
+  faster the longer the hold, with a slight screen shudder at T3.
+- Zone Meter: a second, thinner ring around the charge ring; fills per accepted
+  outcome; pulses and bursts when the zone advances.
+- Outcome tokens: circular pucks with a glowing color-coded outline + distinct
+  ICON SHAPE for color-blind safety — Resource = diamond/coin, Upgrade = gear,
+  Enemy = spiky star, Junk = crumpled square. Springy pop-in with squash/stretch,
+  soft shadow, and a shrinking lifetime arc/bar beneath.
+- Routing zones: VAULT (right, gold coin-filled safe icon), CANNON (left,
+  magenta cannon icon), SOCKET (top, cyan plug/gear socket). Rounded rectangular
+  pads with pulsing outline; the MATCHING pad glows in the grabbed token's color
+  and shows a ghost drop-outline (assist, fades by Zone 3).
+- HUD top bar: SCORE (odometer roll), COMBO xN (scale-punch on increment), ZONE
+  j/5, STABILITY bar (green -> amber -> red, with crack overlay as it drops).
+- Banners/toasts: ransom-note stacked text — "ANYTHING GOES", "NEAR MISS +50",
+  "ZONE 3!", "JACKPOT!", "COMBO x5" — each letter rotated +/- a few degrees.
+- Machine illustration states: healthy glowing machine (Title/gameplay), and a
+  cracked/smoking version for Game Over; radiant golden version for Victory.
+- Underlying conveyor/mouth: the button "mouth" where tokens spawn, with a
+  chute and a small flash on dispense.
+
+ATMOSPHERIC EFFECTS (required, all procedural):
+- Idle confetti drift: slowly falling colored rectangles/rotating flakes behind
+  UI at low alpha; density rises with combo, capped for mobile.
+- Charge heat-shimmer: subtle vertical wobble/rising spark motes above the dome
+  while holding, intensifying with tier.
+- Token trails: short fading motion-trail on dragged tokens (position history).
+- Correct-route ring-burst: expanding colored ring + particle spray in the
+  token's color; enemy defeat adds a cartoon splat blob.
+- Near-Miss: golden radial shockwave + "+50" floating pop.
+- Wrong-route: token shakes, desaturates to grey, and emits a small grey puff.
+- Jackpot / zone-transition: full-screen color flash (suppressible by the
+  reduced-flash setting), confetti fountain, and a brief screen-shake.
+- Ambient vignette + faint animated noise grain over the whole canvas at very
+  low alpha to unify procedural shapes into one "material."
+- Optional reduced-flash mode: replaces full-screen flashes with small local
+  pulses; all particle counts halved.
+
+TECHNICAL NOTES:
+- Single self-contained index.html: pure vanilla JS + Canvas 2D + CSS. NO image,
+  font, or audio assets — every visual is drawn with paths, arcs, gradients, and
+  shadows; every icon is a procedural shape.
+- Rendering split: canvas handles the gameplay playfield, machine, tokens,
+  particles, and in-canvas banners; DOM/CSS overlays handle the menu screens
+  (Title, How to Play, Pause, Settings, Game Over, Victory) with crisp text.
+- Scaling: size canvas backing store to viewport x devicePixelRatio, then
+  ctx.scale(dpr,dpr); recompute all layout anchors from window.innerWidth/
+  innerHeight on resize/orientationchange. Button radius = ~0.15 * min(vw,vh)
+  (diameter ≈ 30% of shorter edge). Routing pads >= 88 CSS px hit area.
+  Portrait: SOCKET top, VAULT right, CANNON left. Landscape: pads spread wider,
+  button shrinks proportionally.
+- Lighter for perf: each frame alpha blending is cheap; avoid shadowBlur in hot
+  loops (use pre-rendered offscreen canvases for glow sprites if needed).
+  Particle pool hard cap 300, degrade first when frame time > 20ms.
+- Color-blind safety: never rely on hue alone — every token type carries a
+  unique icon shape and the routing pads carry matching icons; zone/hue shifts
+  are paired with banner text.
+- Deterministic theming: define all colors as a single JS palette object and a
+  per-zone tint table; code_agent should reference tokens (PALETTE.red, ZONE[z])
+  rather than literals so hue-shift transitions and the reduced-flash variant
+  are one-line changes.
+- Animation budget: springy squash-and-stretch via simple easing functions;
+  fixed logical timestep for timers; all animation derived from performance.now().
+- Accessibility hooks: expose window.flags = { reducedFlash, juiceEnabled };
+  visuals must remain legible with juiceEnabled=false (no particles, no shake)
+  and with reducedFlash=true (no full-screen flashes).
+
+================================================================================
+END VISUAL DIRECTION — hand off to code_agent alongside gdd.md & audio_direction.txt
+================================================================================

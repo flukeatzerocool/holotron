@@ -1,0 +1,238 @@
+========================================================================
+TEST REPORT — The Everything Button  [TEST 3 / FINAL REGRESSION RUN]
+File under test : /home/fluke/Holotron/gameotron_output/20261009_123841/index.html
+Test run        : 2026-10-09 13:47:51
+Agent           : puppeteer_agent  (Playwright Firefox, headless)
+Harness         : playwright-cli run-code --filename=/tmp/opencode/suites3.js
+Server          : http://127.0.0.1:8899/index.html  (python3 -m http.server)
+Viewports       : 1920x1080 (mouse), 800x600 (mouse), 375x667 (real touch ctx)
+Purpose         : final regression — music-pause nav, combo x8 milestone,
+                  mid-gesture pause/resume, core loop, full screen re-navigation
+========================================================================
+
+SUMMARY
+  Viewport     Mobile  Tests  Pass  Fail  Console err  Verdict
+  1920x1080    no        46    46     0      0       PASS
+  800x600      no        46    46     0      0       PASS
+  375x667      yes       46    46     0      0       PASS
+  Game Over    forced     2     2     0      0       PASS
+  Victory      forced     2     2     0      0       PASS
+
+  Total 142 checks, 142 pass, 0 fail, 0 console errors / 0 uncaught exceptions.
+  Verdict: CLEAN. All three requested regression checks CONFIRMED.
+
+------------------------------------------------------------------------
+REQUESTED CHECK CONFIRMATIONS
+------------------------------------------------------------------------
+  [CONFIRMED] Pause -> SETTINGS / HOW TO PLAY -> BACK returns to PAUSE with music
+              STILL paused on all 3 viewports (musicBus gain 0.3 -> 0 -> stays 0
+              through both sub-screens and both BACKs -> 0.3 only on resume;
+              ramp log since pause = [0,0], no 0.3 leak).
+  [CONFIRMED] Combo x8 +150 milestone is NOT repeatedly awarded on all 3
+              viewports (reached x8 in 7 routes; 3 post-x8 route gains
+              min 79-81 vs the >=230 a repeat would force; no runaway score).
+  [CONFIRMED] Pause mid-charge / mid-drag then resume -> no phantom roll and no
+              phantom route; the first real input after resume is accepted
+              (score unchanged across the pause/release, then rises on the next
+              genuine hold-release / drag).
+
+------------------------------------------------------------------------
+DETAIL — 1920x1080 (desktop mouse)   46/46 PASS
+------------------------------------------------------------------------
+ Load / render
+  [PASS] load_no_crash                                 canvas backing 1920x1080
+  [PASS] canvas_renders                                3932/4156 px differ from bg
+ Screen re-navigation
+  [PASS] title_screen_active                           screenTitle
+  [PASS] title_howto_opens                             screenHowTo
+  [PASS] title_howto_back_returns_title                screenTitle
+  [PASS] title_settings_opens                          screenSettings
+  [PASS] settings_reducedflash_toggle                  OFF->ON
+  [PASS] settings_credits_present                      credits render
+  [PASS] resetdata_confirm_stays_open                  overlay active=true
+  [PASS] resetdata_not_auto_executed                   teb_bestScore=12345
+  [PASS] resetdata_cancel_closes                       cancelled
+  [PASS] settings_back_returns_title                   screenTitle
+  [PASS] gameover_victory_screens_present              screenGameOver:true:3 screenVictory:true:3
+ Gameplay
+  [PASS] start_enters_gameplay                         active=null hud=true
+  [PASS] music_playing_in_gameplay                     musicBus commanded gain=0.3
+ Core loop (check 5) + combo x8 (check 3)
+  [PASS] core_loop_hold_release_drag_scores            score 0->10, combo x1->x2, zone 1/5
+  [PASS] core_loop_checked                             first route exercised
+  [PASS] combo8_reached                                routed 7 times; gains 10,20,30,40,49,58,210; combo x8
+  [PASS] combo8_milestone_not_repeated                 post-x8 gains 277,91,81 (min 81)
+  [PASS] combo8_no_runaway_score                       score=866, combo=x8 after 10 routes
+ Pause / music navigation (check 2)
+  [PASS] pause_button_opens_pause                      screenPause
+  [PASS] music_paused_on_pause                         musicBus commanded gain=0
+  [PASS] pause_settings_opens                          screenSettings
+  [PASS] music_still_paused_in_settings                gain=0
+  [PASS] pause_settings_back_returns_pause             screenPause
+  [PASS] music_still_paused_after_settings_back        gain=0
+  [PASS] pause_howto_opens                             screenHowTo
+  [PASS] music_still_paused_in_howto                   gain=0
+  [PASS] pause_howto_back_returns_pause                screenPause
+  [PASS] music_still_paused_after_howto_back           gain=0
+  [PASS] no_music_resume_behind_pause                  ramp values since pause=[0,0]
+  [PASS] resume_returns_gameplay                       null
+  [PASS] music_resumes_after_resume                    musicBus commanded gain=0.3
+ Mid-gesture pause (check 4)
+  [PASS] pause_during_charge_opens                     screenPause
+  [PASS] pause_during_charge_no_phantom_roll           score 870->870 (must not change)
+  [PASS] pause_during_charge_resume_still_no_roll      score after resume=870
+  [PASS] pause_during_charge_first_input_accepted      score 870->945
+  [PASS] pause_during_drag_opens                       screenPause
+  [PASS] pause_during_drag_no_phantom_route            score 950->950 (no route fired)
+  [PASS] pause_during_drag_first_input_accepted        score 950->1025
+ Pause menu nav (check 6)
+  [PASS] pause_reopen                                  screenPause
+  [PASS] pause_music_toggle                            ON->OFF
+  [PASS] pause_music_toggle_restore                    ON
+  [PASS] pause_sfx_toggle                              ON->OFF
+  [PASS] backtostart_shows_confirm                     overlay active=true
+  [PASS] backtostart_confirm_returns_title             screenTitle
+ console errors: none
+
+------------------------------------------------------------------------
+DETAIL — 800x600 (desktop mouse)   46/46 PASS
+------------------------------------------------------------------------
+  [PASS] load_no_crash                                 canvas backing 800x600
+  [PASS] canvas_renders                                927/962 px differ from bg
+  [PASS] title_screen_active                           screenTitle
+  [PASS] title_howto_opens                             screenHowTo
+  [PASS] title_howto_back_returns_title                screenTitle
+  [PASS] title_settings_opens                          screenSettings
+  [PASS] settings_reducedflash_toggle                  OFF->ON
+  [PASS] settings_credits_present                      credits render
+  [PASS] resetdata_confirm_stays_open                  overlay active=true
+  [PASS] resetdata_not_auto_executed                   teb_bestScore=12345
+  [PASS] resetdata_cancel_closes                       cancelled
+  [PASS] settings_back_returns_title                   screenTitle
+  [PASS] gameover_victory_screens_present              screenGameOver:true:3 screenVictory:true:3
+  [PASS] start_enters_gameplay                         active=null hud=true
+  [PASS] music_playing_in_gameplay                     musicBus commanded gain=0.3
+  [PASS] core_loop_hold_release_drag_scores            score 0->10, combo x1->x2, zone 1/5
+  [PASS] core_loop_checked                             first route exercised
+  [PASS] combo8_reached                                routed 7 times; combo x8
+  [PASS] combo8_milestone_not_repeated                 post-x8 gains 277,89,80 (min 80)
+  [PASS] combo8_no_runaway_score                       score=865, combo=x8 after 10 routes
+  [PASS] pause_button_opens_pause                      screenPause
+  [PASS] music_paused_on_pause                         musicBus commanded gain=0
+  [PASS] pause_settings_opens                          screenSettings
+  [PASS] music_still_paused_in_settings                gain=0
+  [PASS] pause_settings_back_returns_pause             screenPause
+  [PASS] music_still_paused_after_settings_back        gain=0
+  [PASS] pause_howto_opens                             screenHowTo
+  [PASS] music_still_paused_in_howto                   gain=0
+  [PASS] pause_howto_back_returns_pause                screenPause
+  [PASS] music_still_paused_after_howto_back           gain=0
+  [PASS] no_music_resume_behind_pause                  ramp values since pause=[0,0]
+  [PASS] resume_returns_gameplay                       null
+  [PASS] music_resumes_after_resume                    musicBus commanded gain=0.3
+  [PASS] pause_during_charge_opens                     screenPause
+  [PASS] pause_during_charge_no_phantom_roll           score 870->870
+  [PASS] pause_during_charge_resume_still_no_roll      score after resume=870
+  [PASS] pause_during_charge_first_input_accepted      score 870->945
+  [PASS] pause_during_drag_opens                       screenPause
+  [PASS] pause_during_drag_no_phantom_route            score 950->950
+  [PASS] pause_during_drag_first_input_accepted        score 950->1025
+  [PASS] pause_reopen                                  screenPause
+  [PASS] pause_music_toggle                            ON->OFF
+  [PASS] pause_music_toggle_restore                    ON
+  [PASS] pause_sfx_toggle                              ON->OFF
+  [PASS] backtostart_shows_confirm                     overlay active=true
+  [PASS] backtostart_confirm_returns_title             screenTitle
+ console errors: none
+
+------------------------------------------------------------------------
+DETAIL — 375x667 (mobile real touch)   46/46 PASS
+------------------------------------------------------------------------
+  [PASS] load_no_crash                                 canvas backing 750x1334
+  [PASS] canvas_renders                                1877/2006 px differ from bg
+  [PASS] title_screen_active                           screenTitle
+  [PASS] title_howto_opens                             screenHowTo
+  [PASS] title_howto_back_returns_title                screenTitle
+  [PASS] title_settings_opens                          screenSettings
+  [PASS] settings_reducedflash_toggle                  OFF->ON
+  [PASS] settings_credits_present                      credits render
+  [PASS] resetdata_confirm_stays_open                  overlay active=true
+  [PASS] resetdata_not_auto_executed                   teb_bestScore=12345
+  [PASS] resetdata_cancel_closes                       cancelled
+  [PASS] settings_back_returns_title                   screenTitle
+  [PASS] gameover_victory_screens_present              screenGameOver:true:3 screenVictory:true:3
+  [PASS] start_enters_gameplay                         active=null hud=true
+  [PASS] music_playing_in_gameplay                     musicBus commanded gain=0.3
+  [PASS] core_loop_hold_release_drag_scores            score 0->10, combo x1->x2, zone 1/5
+  [PASS] core_loop_checked                             first route exercised
+  [PASS] combo8_reached                                routed 7 times; gains 10,20,30,40,49,59,209; combo x8
+  [PASS] combo8_milestone_not_repeated                 post-x8 gains 277,92,79 (min 79)
+  [PASS] combo8_no_runaway_score                       score=865, combo=x8 after 10 routes
+  [PASS] pause_button_opens_pause                      screenPause
+  [PASS] music_paused_on_pause                         musicBus commanded gain=0
+  [PASS] pause_settings_opens                          screenSettings
+  [PASS] music_still_paused_in_settings                gain=0
+  [PASS] pause_settings_back_returns_pause             screenPause
+  [PASS] music_still_paused_after_settings_back        gain=0
+  [PASS] pause_howto_opens                             screenHowTo
+  [PASS] music_still_paused_in_howto                   gain=0
+  [PASS] pause_howto_back_returns_pause                screenPause
+  [PASS] music_still_paused_after_howto_back           gain=0
+  [PASS] no_music_resume_behind_pause                  ramp values since pause=[0,0]
+  [PASS] resume_returns_gameplay                       null
+  [PASS] music_resumes_after_resume                    musicBus commanded gain=0.3
+  [PASS] pause_during_charge_opens                     screenPause
+  [PASS] pause_during_charge_no_phantom_roll           score 870->870
+  [PASS] pause_during_charge_resume_still_no_roll      score after resume=870
+  [PASS] pause_during_charge_first_input_accepted      score 870->945
+  [PASS] pause_during_drag_opens                       screenPause
+  [PASS] pause_during_drag_no_phantom_route            score 950->950
+  [PASS] pause_during_drag_first_input_accepted        score 950->1026
+  [PASS] pause_reopen                                  screenPause
+  [PASS] pause_music_toggle                            ON->OFF
+  [PASS] pause_music_toggle_restore                    ON
+  [PASS] pause_sfx_toggle                              ON->OFF
+  [PASS] backtostart_shows_confirm                     overlay active=true
+  [PASS] backtostart_confirm_returns_title             screenTitle
+ console errors: none
+
+------------------------------------------------------------------------
+DETAIL — FORCED GAME OVER (1280x800, RNG pinned 0.95 -> enemy)   2/2 PASS
+------------------------------------------------------------------------
+  [PASS] gameOver_reached       screenGameOver after 10 enemy expiries
+                                stability 100% 88% 76% 64% 52% 40% 28% 16% 4% 0%
+  [PASS] gameOver_stats_render  0 SCORE / 1 ZONE REACHED / x1 BEST COMBO / 0 TOKENS ROUTED
+ console errors: none
+
+------------------------------------------------------------------------
+DETAIL — FORCED VICTORY (1280x800, RNG pinned 0.10 -> resource)   2/2 PASS
+------------------------------------------------------------------------
+  [PASS] victory_reached       screenVictory after 60 routes
+  [PASS] victory_stats_render  4660 FINAL SCORE / 25s TIME / x8 BEST COMBO /
+                               0 JACKPOTS / 0 ENEMIES DEFEATED
+ console errors: none
+
+------------------------------------------------------------------------
+TEST METHOD NOTES
+------------------------------------------------------------------------
+  • Input fidelity: real mouse down/move/up on desktop viewports; real
+    TouchEvent (touchstart/touchmove/touchend, identifier-tracked) on 375x667.
+    DOM buttons tapped via Playwright locator.tap() (touch) / click() (mouse).
+  • Mid-gesture pause: the #pauseBtn pointerdown handler was invoked while a
+    canvas gesture was held, because a held pointer cannot simultaneously move
+    onto the pause button in a single-pointer automation model. This exercises
+    the identical performAction('pause') path the real button uses.
+  • Music instrumentation: AudioContext.prototype.createGain + AudioParam
+    prototype hooks label node index 1 as musicBus and record every
+    linearRampToValueAtTime command, giving an observable "music is paused"
+    signal without access to the closure-scoped Audio object.
+  • Determinism: Math.random pinned to 0.05 (all resource tokens) for the
+    combo test; 0.95 (enemies) and 0.10 (resources) for the forced end states.
+  • Score reads use the HUD text; because the HUD score eases toward the true
+    value, deltas carry a <=2-point display-easing tolerance where relevant.
+    This does not affect the x8 milestone test, whose repeat signature (+150)
+    is an order of magnitude above the tolerance.
+
+========================================================================
+END OF REPORT
+========================================================================

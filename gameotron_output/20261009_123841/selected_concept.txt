@@ -1,0 +1,73 @@
+# Selected Concept — Run 20261009_123841
+# Theme: "Anything Goes"
+# Agent: evaluation_agent
+# Weighting: HOOK 30% | TOUCH-FRIENDLINESS 25% | THEME INTEGRATION 45%
+# Scores sourced from concepts_with_review.txt (expert review, 1-5 per axis).
+
+SCORING TABLE:
+| Concept                          | Hook | Touch | Theme | Total | Rank |
+|----------------------------------|------|-------|-------|-------|------|
+| #20 The Everything Button        | 5    | 5     | 5     | 5.00  | 1    |
+| #7  Rule Breaker Dungeon         | 5    | 4     | 5     | 4.75  | 2    |
+| #16 Shape-Shift Sprint           | 5    | 4     | 5     | 4.75  | 3    |
+| #10 Chimera Chef                 | 4    | 5     | 5     | 4.70  | 4    |
+| #18 Recipe of Nothing            | 4    | 5     | 5     | 4.70  | 5    |
+| #1  Kitchen Sink Chaos           | 4    | 4     | 5     | 4.45  | 6    |
+| #2  Genre Roulette Arena         | 5    | 4     | 4     | 4.30  | 7    |
+| #4  Mashup Monster Maker         | 4    | 5     | 4     | 4.25  | 8    |
+| #5  One-Button Everything        | 4    | 5     | 4     | 4.25  | 9    |
+| #3  Doodle Duel                  | 4    | 3     | 5     | 4.20  | 10   |
+| #11 Blank Canvas Wars            | 4    | 3     | 5     | 4.20  | 11   |
+| #17 Junkyard Genius              | 4    | 3     | 5     | 4.20  | 12   |
+| #8  Mix Tape Mayhem              | 4    | 4     | 4     | 4.00  | 13   |
+| #9  Swap Shop Scramble           | 4    | 4     | 4     | 4.00  | 14   |
+| #13 Genre-Fluid Parkour          | 4    | 4     | 4     | 4.00  | 15   |
+| #14 Petri Dish Party             | 4    | 4     | 4     | 4.00  | 16   |
+| #15 Deal With It Deck            | 4    | 4     | 4     | 4.00  | 17   |
+| #19 Blender Boss Rush            | 4    | 4     | 4     | 4.00  | 18   |
+| #12 Anything Armory              | 3    | 4     | 4     | 3.70  | 19   |
+| #6  Collage Catastrophe          | 3    | 4     | 3     | 3.25  | 20   |
+
+RANKING NOTES:
+- #20 scores a perfect 5.00 (5/5/5) — the highest weighted total by a clear margin.
+- Ties broken by THEME, then HOOK, then concept number (e.g. #7 vs #16: identical
+  5/4/5, #7 placed ahead by lower concept number; #10 vs #18 and #4 vs #5 likewise).
+- Full ranking is consistent with the human approval gate: no override is required.
+
+WINNER (human-selected, consistent with weighted ranking):
+
+WINNING CONCEPT: #20
+TITLE: The Everything Button
+GENRE: Incremental / arcade hybrid.
+CORE TOUCH MECHANIC: Tap and hold a giant central button to "roll" a random
+  outcome; the result can be resources, enemies, upgrades, or (budget permitting)
+  a mini-game. Drag to route the rolled results.
+USP: Literally *anything can go* — the game's content is a slot machine of its
+  own mechanics.
+TARGET AUDIENCE: Incremental-game players and novelty-seekers.
+THEME INTEGRATION (5/5): A machine labeled "ANYTHING GOES" dispenses
+  unpredictable content, making the theme the central gag AND the central loop.
+GAME FEEL: Jackpot-casino clatter, escalating combo-roll jingles, burst
+  confetti, screen-flash on jackpots, carnival-bright palette with cranking
+  gear animations.
+
+EXPERT VERDICT (concepts_with_review.txt, Concept #20):
+  HOOK 5 / TOUCH-FRIENDLINESS 5 / THEME INTEGRATION 5.
+  "The theme IS the mechanic — a slot machine of its own systems, labeled
+  'ANYTHING GOES.' Tap-and-hold plus drag-to-route is touch-perfect, and the
+  incremental layer gives instant gratification and long-tail replay. ... Meta-
+  humor is a strong marketing hook. Very buildable, immediately legible,
+  thematically flawless — likely top pick."
+
+DESIGNER DIRECTIVE (carry into GDD — required):
+  Avoid the scope trap of sandwiching *actual nested mini-games* inside rolls
+  (this repeats concept #2's four-genre build cost). Keep roll OUTCOMES to
+  resources, enemies, and upgrades unless budget explicitly allows more. Each
+  outcome must resolve through the single tap-and-hold / drag-to-route loop,
+  not by opening a separate game mode.
+
+HUMAN APPROVAL GATE: The human selected concept #20 "The Everything Button"
+  after expert review. This selection matches the weighted-score winner (rank 1,
+  5.00), so it is honored as the winner with no override required.
+
+FINAL DECISION: Build "The Everything Button" (#20) — a tap-and-hold / drag-to-route incremental-arcade hybrid where an "ANYTHING GOES" machine rolls resources, enemies, and upgrades, keeping outcomes within the core loop rather than full nested mini-games.

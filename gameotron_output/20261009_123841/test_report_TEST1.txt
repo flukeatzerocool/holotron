@@ -1,0 +1,128 @@
+========================================================================
+TEST REPORT — The Everything Button
+File under test : /home/fluke/Holotron/gameotron_output/20261009_123841/index.html
+Test run        : 2026-10-09 13:11:21
+Agent           : puppeteer_agent (Playwright Firefox 1542, headless)
+Harness         : playwright-cli run-code, http://localhost:8899/index.html
+Viewports       : 1920x1080 (mouse), 800x600 (mouse), 375x667 (real touch)
+========================================================================
+
+SUMMARY
+  Viewport     Mobile   Tests  Pass  Fail  Console errors  Verdict
+  1920x1080    no        22     22     0   0               PASS
+  800x600      no        22     22     0   0               PASS
+  375x667      yes       22     21     1   0               PASS w/ 1 HIGH bug
+  Game Over    (forced)   2      2     0   0               PASS (reached)
+  Victory      (forced)   2      2     0   0               PASS (reached)
+
+  Total 70 checks, 69 pass, 1 fail. Zero console errors / zero uncaught
+  exceptions in every run. The single failure is the touch RESET DATA
+  auto-confirm bug detailed in runtime_errors_TEST1.txt.
+
+------------------------------------------------------------------------
+DETAIL — 1920x1080 (desktop, mouse)                      22/22 PASS
+------------------------------------------------------------------------
+ [PASS] load_no_crash                    canvas 1920x1080
+ [PASS] canvas_renders                   all sampled px have content
+ [PASS] title_screen_active              screenTitle
+ [PASS] start_enters_gameplay            no menu screen + HUD/pause visible
+ [PASS] core_loop_charge_release_drag_scores   score=20 combo=x2 zone=1/5
+ [PASS] second_roll_processed            combo x2->x1 (token processed)
+ [PASS] pause_button_opens_pause         screenPause
+ [PASS] pause_music_toggle               ON->OFF
+ [PASS] pause_music_toggle_restore       back ON
+ [PASS] pause_sfx_toggle                 ON->OFF
+ [PASS] pause_howto_opens                screenHowTo
+ [PASS] pause_howto_back_returns_pause   screenPause
+ [PASS] resume_returns_gameplay          HUD back, pause button visible
+ [PASS] backtostart_shows_confirm        overlay active
+ [PASS] backtostart_confirm_returns_title screenTitle
+ [PASS] title_howto_opens                screenHowTo
+ [PASS] title_howto_back_returns_title   screenTitle
+ [PASS] title_settings_opens             screenSettings
+ [PASS] settings_reducedflash_toggle     OFF->ON
+ [PASS] settings_credits_present         Gameotron / code_agent / Carnival
+ [PASS] resetdata_shows_confirm          overlay active (waits for choice)
+ [PASS] settings_back_returns_title      screenTitle
+ console errors: none
+
+------------------------------------------------------------------------
+DETAIL — 800x600 (desktop-small, mouse)                  22/22 PASS
+------------------------------------------------------------------------
+ Same 22 checks as 1920x1080 — ALL PASS.
+ Core loop: score=20 combo=x2 zone=1/5. Layout recomputed (buttonR=90,
+ buttonX=400, buttonY=360, padHalf=78, tokenR=40.8, vault=672,360) and
+ hit-detection confirmed at those computed coordinates.
+ resetdata_shows_confirm: PASS (overlay waits for choice).
+ console errors: none
+
+------------------------------------------------------------------------
+DETAIL — 375x667 (mobile, real touch context)            21/22 PASS
+------------------------------------------------------------------------
+ [PASS] load_no_crash                    canvas 750x1334 (dpr 2)
+ [PASS] canvas_renders                   all sampled px have content
+ [PASS] title_screen_active              screenTitle
+ [PASS] start_enters_gameplay            real touch .tap() on START works
+ [PASS] core_loop_charge_release_drag_scores   score=20 combo=x2 zone=1/5
+        (touchstart/touchmove/touchend on canvas at computed coords)
+ [PASS] second_roll_processed            combo x2->x1 (token processed)
+ [PASS] pause_button_opens_pause         screenPause
+ [PASS] pause_music_toggle               ON->OFF
+ [PASS] pause_music_toggle_restore       back ON
+ [PASS] pause_sfx_toggle                 ON->OFF
+ [PASS] pause_howto_opens                screenHowTo
+ [PASS] pause_howto_back_returns_pause   screenPause
+ [PASS] resume_returns_gameplay          HUD back
+ [PASS] backtostart_shows_confirm        overlay active (did NOT auto-confirm)
+ [PASS] backtostart_confirm_returns_title screenTitle
+ [PASS] title_howto_opens                screenHowTo
+ [PASS] title_howto_back_returns_title   screenTitle
+ [PASS] title_settings_opens             screenSettings
+ [PASS] settings_reducedflash_toggle     OFF->ON
+ [PASS] settings_credits_present         credits render
+ [FAIL] resetdata_shows_confirm          overlay auto-accepted by same tap click
+        -> RESET executes without confirmation. See runtime_errors_TEST1.txt.
+ [PASS] settings_back_returns_title      screenTitle
+ console errors: none
+
+------------------------------------------------------------------------
+DETAIL — FORCED GAME OVER (1280x800, deterministic enemy RNG)     2/2 PASS
+------------------------------------------------------------------------
+ Method: Math.random pinned so every non-forced roll yields an enemy;
+         enemies were left to expire (12 stability each).
+ [PASS] game_over_reached       screen=screenGameOver
+        stability trace: 88% 76% 64% 52% 40% 28% 16% 4% 0%
+        (exactly 12 per enemy expiry -> correct damage mechanics)
+ [PASS] game_over_stats_render  "SCORE / ZONE REACHED / BEST COMBO /
+                                 TOKENS ROUTED / NEW BEST!" all rendered
+ console errors: none
+
+------------------------------------------------------------------------
+DETAIL — FORCED VICTORY (1280x800, deterministic resource RNG)    2/2 PASS
+------------------------------------------------------------------------
+ Method: Math.random pinned so every non-forced roll yields a resource;
+         each token dragged to VAULT; 60 correct routes required by the
+         meter schedule (8+10+12+14+16).
+ [PASS] victory_reached        screen=screenVictory after exactly 60 routes
+ [PASS] victory_stats_render   FINAL SCORE 14090, TIME 33s, BEST COMBO x8,
+                               JACKPOTS 0, ENEMIES DEFEATED 0
+                               + "New blueprint installed ... (Blueprints: 1)"
+ console errors: none
+
+------------------------------------------------------------------------
+HIT-DETECTION VERIFICATION (explicit prompt requirement)
+------------------------------------------------------------------------
+ • Canvas ANYTHING GOES button: charge/release at the computed (buttonX,
+   buttonY) successfully spawned a token on every viewport -> pointer
+   hit-detection at calculated coordinates works.
+ • Token drag: drop inside the computed VAULT/CANNON pad rectangles routed
+   the token; wrong pad produced FIZZLE -> pad hit-detection works.
+ • DOM buttons: real mouse click (desktop) and real touch tap (mobile) both
+   fired the delegated handler for START, PAUSE, RESUME, toggles, HOW TO PLAY,
+   SETTINGS, BACK and the confirm dialog.
+ • The only hit-detection defect is the trailing-click retargeting described
+   in runtime_errors_TEST1.txt (mobile RESET DATA -> confirm YES).
+
+========================================================================
+END OF REPORT
+========================================================================

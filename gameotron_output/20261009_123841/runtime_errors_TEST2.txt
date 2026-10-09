@@ -1,0 +1,91 @@
+========================================================================
+RUNTIME ERRORS / FAILED MECHANICS — The Everything Button  [TEST 2 / post-fix]
+File under test : /home/fluke/Holotron/gameotron_output/20261009_123841/index.html
+Test run        : 2026-10-09 13:32:24  (re-run on FIXED build)
+Agent           : puppeteer_agent (Playwright Firefox, headless)
+Server          : http://127.0.0.1:8899/index.html
+Viewports       : 1920x1080 (mouse), 800x600 (mouse), 375x667 (real touch ctx)
+Scenarios       : 3 viewport suites + forced Game Over + forced Victory
+Prior report    : runtime_errors_TEST1.txt (1 HIGH bug at 375x667)
+========================================================================
+
+[133224] CONSOLE ERRORS .......... NONE
+       0 console.error messages captured across all 5 runs
+       (3 viewports + forced Game Over + forced Victory).
+[133224] UNCAUGHT EXCEPTIONS ..... NONE
+       0 pageerror events; window.__errs (error / unhandledrejection
+       collectors installed via addInitScript) empty on every run.
+[133224] CRASHES ON LOAD .......... NONE
+       Canvas initialised and rendered on all 3 viewports; non-background
+       pixel sampling: 3932/4156 (1920x1080), 927/962 (800x600),
+       1877/2006 (375x667).
+
+------------------------------------------------------------------------
+FAILED INTERACTION MECHANICS
+------------------------------------------------------------------------
+[133224] NONE. All 86 executable checks passed in every run.
+
+------------------------------------------------------------------------
+PRIOR HIGH BUGS — RE-VERIFICATION (TEST 1 -> TEST 2)
+------------------------------------------------------------------------
+[133224] [HIGH-1] FIXED — Mobile RESET DATA confirm auto-accepted by the
+        opening touch (375x667).
+
+        TEST 1 : overlay closed and the reset callback RAN on the same touch.
+        TEST 2 : the overlay remains OPEN and saved data is INTACT until a
+                 deliberate, separate tap on YES.
+
+        Evidence (all three viewports, real touch tap on 375x667):
+          resetdata_confirm_stays_open      PASS  overlay active=true
+          resetdata_not_auto_executed       PASS  teb_bestScore=12345 (intact)
+          resetdata_deliberate_yes_executes PASS  overlay=false key=null
+        Overlap proof (375x667, the exact retargeting condition):
+          RESET DATA center = (187.5, 339);  YES center = (187.5, 329.2)
+          centre distance = 9.8px; YES half-height = 90px  -> the trailing
+          compatibility click DOES land on YES. It is now ignored by the
+          400ms confirmLockUntil guard (index.html:1231-1245); a later
+          deliberate YES tap still executes the callback correctly.
+        Desktop (1920x1080, 800x600) also clean (as in TEST 1).
+
+[133224] [HIGH-2] FIXED — Pause no longer freezes token timers / tokens no
+        longer expire instantly on resume.
+
+        TEST 1 : a token whose lifetime elapsed while paused fired
+                 expireToken() on resume (stability 88%).
+        TEST 2 : with a live ENEMY token on screen (deterministic pin of
+                 Math.random), pausing 5.2s (>> the 3.0s zone-1 lifetime)
+                 then resuming leaves the token alive and grabbable.
+
+        Evidence (identical on 1920x1080, 800x600, 375x667):
+          pause_button_opens_pause      PASS  screenPause
+          pause_holds_screen_5s         PASS  still screenPause
+          pause_token_alive_after_resume PASS stability 100%->100%->100%;
+                                        score 10->60 after routing the
+                                        surviving enemy to CANNON
+          pause_no_stability_loss       PASS  stability 100% after resume
+                                        (expiry would have shown 88%)
+        Fix confirmed: pause-safe gameNow() clock (index.html:693-697)
+        subtracts G.pauseOffset / G.pauseStart, so token age is frozen
+        while paused.
+
+NEW REGRESSIONS INTRODUCED BY THE FIX ... NONE DETECTED
+       All navigation, toggles and confirm-gated actions still behave as
+       in TEST 1; the deliberate YES path was explicitly re-tested.
+
+------------------------------------------------------------------------
+VIEWPORT-SPECIFIC ISSUES
+------------------------------------------------------------------------
+[133224] 1920x1080  — none
+[133224] 800x600    — none
+[133224] 375x667    — none (prior RESET DATA HIGH bug now resolved)
+
+------------------------------------------------------------------------
+NON-ISSUES OBSERVED (expected behaviour, not bugs)
+------------------------------------------------------------------------
+[133224] Server log shows only 404 for /favicon.ico (browser default probe);
+        no game asset requests and no missing-resource errors.
+[133224] WebAudio ran without console errors in headless Firefox; audio is
+        resumed inside user gestures, so no autoplay exceptions.
+[133224] Forced Game Over/RNG pin: stability trace 100 88 76 64 52 40 28 16 4 0
+        (exactly 12 per enemy expiry) — correct damage mechanics.
+========================================================================

@@ -1,0 +1,124 @@
+# Browser Game Expert Review — concepts 1-20 (theme: "Anything Goes")
+# Run 20261009_123841. Companion to concepts.txt.
+
+CONCEPT #1
+HOOK: 4
+TOUCH-FRIENDLINESS: 4
+THEME INTEGRATION: 5
+EXPERT NOTES: Strong theme-as-verb — junk as bridge is a genuinely fresh core loop. Drag-to-place is natural on touch. Risk: physics sandbox path-building can become fiddly on small screens, and the "random object" gimmick may frustrate if luck trumps skill. Needs generous snapping and a forgiving win threshold. Buildable in vanilla JS with a simple 2D physics approximation (or hand-rolled rigid bodies). High concept, slight execution risk.
+
+CONCEPT #2
+HOOK: 5
+TOUCH-FRIENDLINESS: 4
+THEME INTEGRATION: 4
+EXPERT NOTES: WarioWare variety is a proven attention-grabber and the swipe-to-switch meta-layer is clever. But building FOUR distinct mini-game genres in one file is a scope bomb — each will feel shallow, risking a "jack of all trades" demo. Touch controls vary per mini-game, splitting design effort. Theme is skinned-on more than structural. Great trailer, heavy build cost. Recommend cutting to 2-3 genres.
+
+CONCEPT #3
+HOOK: 4
+TOUCH-FRIENDLINESS: 3
+THEME INTEGRATION: 5
+EXPERT NOTES: Drawing-parsed-into-gameplay is high-concept and thematically perfect, but runtime shape recognition in vanilla JS is the hardest task here — freeform sketch parsing is unreliable and will feel unfair. Simplify to a small palette of recognizable strokes or region-based gestures. Turn-based structure suits touch, but the "sketch box" is a small target on phones. Brilliant idea, high technical risk.
+
+CONCEPT #4
+HOOK: 4
+TOUCH-FRIENDLINESS: 5
+THEME INTEGRATION: 4
+EXPERT NOTES: Dragging parts onto a blob is frictionless touch UX and the build-craft fantasy is strong. Auto-battle lowers skill ceiling (good for casual). Main risk: endless hybrids = content treadmill; needs few parts doing much, not many parts doing little. Simple canvas rendering, very buildable. Theme is well-served through unlimited splicing. Solid, safe pick.
+
+CONCEPT #5
+HOOK: 4
+TOUCH-FRIENDLINESS: 5
+THEME INTEGRATION: 4
+EXPERT NOTES: One-button anywhere-tap is the most touch-native control scheme possible — zero input friction, perfect for phones. Context-sensitive single input is elegant but demands tight, readable feedback or players feel cheated. Scope is very achievable in one file. Theme ("one universal yes") is clever but slightly abstract; needs a visual metaphor to land. Excellent accessibility and build-safety, moderate ceiling on depth.
+
+CONCEPT #6
+HOOK: 3
+TOUCH-FRIENDLINESS: 4
+THEME INTEGRATION: 3
+EXPERT NOTES: Hidden-object games are a well-worn mobile genre; the associative "any photo means anything" twist adds novelty but the hook is muted. Drag-to-match is touch-friendly, though cluttered bulletin boards can crowd small screens. Procedural shuffling is easy in vanilla JS. Theme integration is loose — "anything goes" becomes just "random matching," lacking a strong verb. Functional, low-risk, low-excitement.
+
+CONCEPT #7
+HOOK: 5
+TOUCH-FRIENDLINESS: 4
+THEME INTEGRATION: 5
+EXPERT NOTES: "Win by breaking the rule" is a genuinely inventive inversion and perfectly embodies "anything goes." Grid-tap movement is touch-simple. Risk: player confusion — if rules are meant to be violated, onboarding must teach the meta gently or players stall. Great escalation potential (rising rules). Very buildable in vanilla JS with a tile grid. Sharp concept with real personality; a standout.
+
+CONCEPT #8
+HOOK: 4
+TOUCH-FRIENDLINESS: 4
+THEME INTEGRATION: 4
+EXPERT NOTES: Composing your own soundtrack-as-attack is a strong differentiator, and drag-to-timeline is touch-viable. But real-time rhythm plus drag-building is cognitively heavy on a phone — split attention hurts. Audio synthesis in vanilla JS (WebAudio) is feasible; no external assets needed. Genre-collision reward is thematically apt. High novelty, but risk of being fiddly and audio-timing-sensitive across devices.
+
+CONCEPT #9
+HOOK: 4
+TOUCH-FRIENDLINESS: 4
+THEME INTEGRATION: 4
+EXPERT NOTES: Match-3 is the most battle-tested touch genre here — drag-swap is instinctive and it will "just work." Swapping whole board regions is a fresh chaos twist and the flea-market framing is charming. Derivative foundation, but the chunk-swap mechanic differentiates it. Very buildable, low runtime risk. Reliable crowd-pleaser, modest innovator. Good safe pick for a jam.
+
+CONCEPT #10
+HOOK: 4
+TOUCH-FRIENDLINESS: 5
+THEME INTEGRATION: 5
+EXPERT NOTES: Drag-ingredients-to-cauldron is textbook touch UX, and "no recipe, judge by whim" makes improvisation the actual fun — theme fully structural. Cooking games have broad appeal. Risk: judging "creativity" is fuzzy; needs a transparent, learnable scoring heuristic or players flail. Easy vanilla JS scope. Warm, approachable, low technical risk. Very strong all-rounder.
+
+CONCEPT #11
+HOOK: 4
+TOUCH-FRIENDLINESS: 3
+THEME INTEGRATION: 5
+EXPERT NOTES: Paint-your-army is a beautiful theme-expression, but real-time strategy micro drawn by brushstroke is input-complex on touch — drag-to-create AND tap-to-command will feel cramped on a phone. RTS on mobile is historically hard. AI opponent in vanilla JS is nontrivial. Gorgeous concept, high UX and scope risk. Consider single-player wave defense to trim the multiplayer AI burden.
+
+CONCEPT #12
+HOOK: 3
+TOUCH-FRIENDLINESS: 4
+THEME INTEGRATION: 4
+EXPERT NOTES: Top-down wave shooter is a safe, buildable genre with proven touch controls (drag-aim, tap-fire). The scrappy weapon-mod crafting is the interesting layer, but apply-boosters-between-waves is a common trope — hook is familiar rather than novel. Theme ("weaponize garbage") is fun but skin-deep. Moderate ceiling, low risk, decent filler. Needs one hookier signature mechanic to stand out.
+
+CONCEPT #13
+HOOK: 4
+TOUCH-FRIENDLINESS: 4
+THEME INTEGRATION: 4
+EXPERT NOTES: Dimension-shifting mid-run is a striking visual hook and thematically on-point ("reality has no fixed genre"). Tap/drag runner is touch-native. Risk: swapping between side-scroll and top-down means building two control/physics systems — significant scope. Perspective-change demos wow but disorient. Feasible in vanilla JS if the second view stays abstract. Cool, moderate build risk.
+
+CONCEPT #14
+HOOK: 4
+TOUCH-FRIENDLINESS: 4
+THEME INTEGRATION: 4
+EXPERT NOTES: Petri-dish ecosystem sandbox with emergent chain reactions is a delightfully odd, watchable concept — "drop in anything" is the theme made literal. Drag-drop is touch-friendly. Risk: true emerging complexity is hard to author; may collapse into pretty particles rather than meaningful play. Idle layer helps longevity. Vanilla JS friendly. Charming and distinctive, needs careful simulation tuning.
+
+CONCEPT #15
+HOOK: 4
+TOUCH-FRIENDLINESS: 4
+THEME INTEGRATION: 4
+EXPERT NOTES: Cross-genre deck-building is thematically perfect ("every deck is legal") and card games are touch-proven (drag to play). Deck-builder depth is real, but balancing hybrid combos in a jam is a content/balance hazard — exploits or dead cards. Buildable in vanilla JS. Roguelite structure adds replay. Solid, deeper strategy option; risks feeling unbalanced or grindy without tuning time.
+
+CONCEPT #16
+HOOK: 5
+TOUCH-FRIENDLINESS: 4
+THEME INTEGRATION: 5
+EXPERT NOTES: Swipe-to-morph silhouette into the shape you need is a brilliant, instantly-graspable hook and beautifully embodies "anything goes." Swipe + tap is touch-clean. Puzzle-platformer scope is very manageable in one file. Risk: level design must teach each shape's affordance clearly; four shapes mean four physics behaviors to debug. Tight, elegant, high-concept — one of the strongest picks.
+
+CONCEPT #17
+HOOK: 4
+TOUCH-FRIENDLINESS: 3
+THEME INTEGRATION: 5
+EXPERT NOTES: Build-a-contraption racer is a fun fantasy, but tilt/drag steering plus drag-assembly means the touch input competes with itself, and physics vehicle stability (wobbly builds) is notoriously finicky to tune — hand-rolled rigid-body vehicles in vanilla JS are a serious engineering lift. Could be a comedy goldmine or a bug farm. High risk, high reward. Theme integration strong.
+
+CONCEPT #18
+HOOK: 4
+TOUCH-FRIENDLINESS: 5
+THEME INTEGRATION: 5
+EXPERT NOTES: The swirl gesture as your "spell" is a genuinely novel touch-native interaction and perfectly realizes discovery-based "anything goes." Cozy crafting niche is underserved and rewarding. Risk: swirl-pattern recognition (like #3) must stay simple — map to a handful of recognizable motions, not freeform. Vanilla JS friendly, low performance risk. Warm, original, strong touch identity.
+
+CONCEPT #19
+HOOK: 4
+TOUCH-FRIENDLINESS: 4
+THEME INTEGRATION: 4
+EXPERT NOTES: Crossover power-ups pulled from other genres is a clever thematic mashup, and dodge-drag/attack-tap is proven action touch control. Boss-rush focus is efficient scope (few assets, high intensity). Risk: building multiple distinct boss mechanics remixing genres is content-heavy and tuning-heavy in a jam. Hit-stop/juice potential is great. Action fans served; casual players may bounce. Medium risk, strong feel potential.
+
+CONCEPT #20
+HOOK: 5
+TOUCH-FRIENDLINESS: 5
+THEME INTEGRATION: 5
+EXPERT NOTES: The theme IS the mechanic — a slot machine of its own systems, labeled "ANYTHING GOES." Tap-and-hold plus drag-to-route is touch-perfect, and the incremental layer gives instant gratification and long-tail replay. Risk: sandwiching *actual mini-games* inside rolls repeats concept #2's scope trap; keep outcomes to resources/enemies/upgrades unless budget allows. Meta-humor is a strong marketing hook. Very buildable, immediately legible, thematically flawless — likely top pick.
+
+END OF EXPERT REVIEW
