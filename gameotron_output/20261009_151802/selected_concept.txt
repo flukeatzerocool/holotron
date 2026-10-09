@@ -1,0 +1,68 @@
+# SELECTED CONCEPT — Run 20261009_151802
+# Theme: "Anything Goes"
+# Evaluated by evaluation_agent (weighted scoring: HOOK 30%, TOUCH 25%, THEME 45%)
+# Source: concepts.txt + concepts_with_review.txt
+
+SCORING TABLE:
+| Concept | Hook | Touch | Theme | Total | Rank |
+|---------|------|-------|-------|-------|------|
+| #1  Kitchen Sink Chaos       | 4 | 4 | 5 | 4.45 | 5  |
+| #2  Genre Roulette Arena     | 5 | 4 | 4 | 4.30 | 6  |
+| #3  Doodle Duel              | 4 | 3 | 5 | 4.20 | 9  |
+| #4  Mashup Monster Maker     | 4 | 5 | 4 | 4.25 | 7  |
+| #5  One-Button Everything    | 4 | 5 | 4 | 4.25 | 7  |
+| #6  Collage Catastrophe      | 3 | 4 | 3 | 3.25 | 20 |
+| #7  Rule Breaker Dungeon     | 5 | 4 | 5 | 4.75 | 2  |
+| #8  Mix Tape Mayhem          | 4 | 4 | 4 | 4.00 | 10 |
+| #9  Swap Shop Scramble       | 4 | 4 | 4 | 4.00 | 10 |
+| #10 Chimera Chef             | 4 | 5 | 5 | 4.70 | 4  |
+| #11 Blank Canvas Wars        | 4 | 3 | 5 | 4.20 | 9  |
+| #12 Anything Armory          | 3 | 4 | 4 | 3.70 | 19 |
+| #13 Genre-Fluid Parkour      | 4 | 4 | 4 | 4.00 | 10 |
+| #14 Petri Dish Party         | 4 | 4 | 4 | 4.00 | 10 |
+| #15 Deal With It Deck        | 4 | 4 | 4 | 4.00 | 10 |
+| #16 Shape-Shift Sprint       | 5 | 4 | 5 | 4.75 | 2  |
+| #17 Junkyard Genius          | 4 | 3 | 5 | 4.20 | 9  |
+| #18 Recipe of Nothing        | 4 | 5 | 5 | 4.70 | 4  |
+| #19 Blender Boss Rush        | 4 | 4 | 4 | 4.00 | 10 |
+| #20 The Everything Button    | 5 | 5 | 5 | 5.00 | 1  |
+
+WEIGHTED-RANKING #1: Concept #20 "The Everything Button" (5.00)
+HUMAN-APPROVED WINNER: Concept #7 "Rule Breaker Dungeon"
+
+SELECTION NOTES:
+- #20 is the raw weighted leader (perfect 5/5/5) and #7 ties #16 for 2nd at 4.75.
+- The human approval gate explicitly selected #7 as an APPROVED OVERRIDE of the pure
+  weighted ranking. Rationale: #7 has a spatial rooms/exits world map that the Holonovel
+  world model can author and validate (grid + room graph), making it uniquely suited to
+  the Design-phase world_agent step. #7 is a top-tier concept (rank 2, HOOK 5 / THEME 5),
+  so the override is well-justified and does not sacrifice quality.
+- This is an approved override, NOT an inconsistency.
+
+WINNING CONCEPT: #7 — Rule Breaker Dungeon
+
+Genre: grid puzzle-dungeon crawler.
+
+Core touch mechanic: tap tiles to move; each room displays a rising rule
+("no going left," "gravity is up," "walls are edible") that you must break
+or exploit.
+
+USP: Rules are meant to be shattered — the win condition is often to violate
+the displayed law.
+
+Target audience: puzzle veterans and meta-game fans.
+
+Theme integration: A dungeon whose rulebook is torn, where "anything goes" —
+the game dares you to ignore the rules and rewards rebellion.
+
+Game feel: Rules shatter with glass-crack SFX, glitch-static transitions,
+screen-tilt when gravity flips, escalating alarm pulses, stark dungeon tiles
+with rebellious graffiti.
+
+Expert review (browsergame_expert): "Win by breaking the rule" is a genuinely
+inventive inversion and perfectly embodies "anything goes." Grid-tap movement
+is touch-simple. Risk: player confusion — onboarding must teach the meta gently.
+Great escalation potential (rising rules). Very buildable in vanilla JS with a
+tile grid. Sharp concept with real personality; a standout.
+
+FINAL DECISION: Concept #7 "Rule Breaker Dungeon" is selected as the winner — a top-ranked (4.75) grid-tap dungeon crawler whose spatial rooms/exits world the Holonovel model can validate, chosen by the human approval gate as an approved override of the raw weighted leader #20 ("The Everything Button", 5.00).

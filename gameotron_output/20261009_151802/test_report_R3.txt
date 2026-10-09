@@ -1,0 +1,182 @@
+PUPPETEER/PLAYWRIGHT TEST REPORT (R3 - final regression)
+Generated: 2026-10-09T19:58:53.243Z
+File under test: /home/fluke/Holotron/gameotron_output/20261009_151802/index.html
+URL: http://127.0.0.1:8899/index.html
+Browser: Firefox (Playwright, headless)
+Viewports: 1920x1080 (mouse), 800x600 (mouse), 375x667 (touch)
+Focus: (1) door buttons N/S/E/W fully inside stage + real-input traversal,
+       (2) banner long-press expansion not intercepted by a door,
+       (3) core loop + all screens + toggles, no console errors.
+
+=====================================================================
+VIEWPORT: desktop-1920x1080  (1920x1080, MOUSE)
+RESULT: 36/36 PASS  OK
+Console errors: 0 | Failed requests: 0
+---------------------------------------------------------------------
+  [PASS] page loads + canvas + RBD hooks  :: {"title":"Rule Breaker Dungeon","canvas":true,"cw":648,"chh":1080,"rules":true}
+  [PASS] title screen active
+  [PASS] Title -> How to Play
+  [PASS] How to Play -> Back returns Title
+  [PASS] Title -> Settings
+  [PASS] Settings MUSIC toggle changes label  :: {"mBefore":"MUSIC: ON","mAfter":"MUSIC: OFF"}
+  [PASS] Settings SFX toggle changes label  :: {"sBefore":"SOUND FX: ON","sAfter":"SOUND FX: OFF"}
+  [PASS] Settings CREDITS shows panel
+  [PASS] Settings -> Back returns Title
+  [PASS] Title -> START enters PLAYING at entry-hall  :: {"screen":"PLAYING","slug":"entry-hall","broken":0,"score":0}
+  [PASS] HUD visible during gameplay
+  [PASS] entry-hall rule broken via real D-pad input  :: {"screen":"PLAYING","slug":"entry-hall","broken":1,"score":101}
+  [PASS] entry-hall NORTH door rect fully inside stage+viewport  :: {"r":{"left":934,"top":217,"right":986,"bottom":269,"w":52,"h":52,"cx":960,"cy":243},"stage":{"left":636,"top":0,"right":1284,"bottom":1080,"w":648,"h":1080},"inStage":true,"inView":true}
+  [PASS] entry-hall NORTH door click -> chalk-corridor (real door input)  :: {"screen":"PLAYING","slug":"chalk-corridor","broken":1,"score":151}
+  [PASS] chalk-corridor hub has all 4 door buttons (N/S/E/W)  :: ["north","west","east","south"]
+  [PASS] chalk-corridor NORTH door rect fully inside stage+viewport  :: {"inStage":true,"inView":true,"rect":{"left":934,"top":300.316650390625,"right":986,"bottom":352.316650390625,"w":52,"h":52,"cx":960,"cy":326.316650390625},"stage":{"left":636,"top":0,"right":1284,"bottom":1080,"w":648,"h":1080}}
+  [PASS] chalk-corridor NORTH door click -> bell-chamber (real input)  :: {"pass":true,"expected":"bell-chamber","got":"bell-chamber","brokenBefore":2}
+  [PASS] chalk-corridor SOUTH door rect fully inside stage+viewport  :: {"inStage":true,"inView":true,"rect":{"left":934,"top":781.683349609375,"right":986,"bottom":833.683349609375,"w":52,"h":52,"cx":960,"cy":807.683349609375},"stage":{"left":636,"top":0,"right":1284,"bottom":1080,"w":648,"h":1080}}
+  [PASS] chalk-corridor SOUTH door click -> entry-hall (real input)  :: {"pass":true,"expected":"entry-hall","got":"entry-hall","brokenBefore":5}
+  [PASS] chalk-corridor EAST door rect fully inside stage+viewport  :: {"inStage":true,"inView":true,"rect":{"left":1222.9000244140625,"top":541,"right":1274.9000244140625,"bottom":593,"w":52,"h":52,"cx":1248.9000244140625,"cy":567},"stage":{"left":636,"top":0,"right":1284,"bottom":1080,"w":648,"h":1080}}
+  [PASS] chalk-corridor EAST door click -> gravity-well (real input)  :: {"pass":true,"expected":"gravity-well","got":"gravity-well","brokenBefore":4}
+  [PASS] chalk-corridor WEST door rect fully inside stage+viewport  :: {"inStage":true,"inView":true,"rect":{"left":645.0999755859375,"top":541,"right":697.0999755859375,"bottom":593,"w":52,"h":52,"cx":671.0999755859375,"cy":567},"stage":{"left":636,"top":0,"right":1284,"bottom":1080,"w":648,"h":1080}}
+  [PASS] chalk-corridor WEST door click -> rule-core (real input)  :: {"pass":true,"expected":"rule-core","got":"rule-core","brokenBefore":3}
+  [PASS] traversed >=2 rooms by real door buttons  :: {"traversals":5}
+  [PASS] banner centre not intercepted by a door (elementFromPoint)  :: {"cx":915.4583129882812,"cy":64.79999542236328,"topId":"","topCls":"ruleText","inBanner":true,"banner":{"left":639.3333129882812,"top":5.399993896484375,"right":1191.5833129882812,"bottom":124.19999694824219}}
+  [PASS] banner long-press expands rule detail card  :: {"active":true,"html":"<b>RULE:</b> NEVER GO LEFT.<br><br><b>HINT:</b> Go left (west) to break the rule.<br><br><"}
+  [PASS] pause button -> PAUSED
+  [PASS] Pause MUSIC toggle changes label  :: {"pmBefore":"MUSIC: OFF","pmAfter":"MUSIC: ON"}
+  [PASS] Pause SFX toggle clicked
+  [PASS] Pause -> How to Play
+  [PASS] How to Play -> Back returns Pause
+  [PASS] Pause RESUME -> PLAYING
+  [PASS] rule-core book reached -> Victory screen  :: "2718"
+  [PASS] Victory PLAY AGAIN -> PLAYING
+  [PASS] 3 alarm ejections -> Game Over screen  :: [{"screen":"PLAYING","slug":"chalk-corridor"},{"screen":"PLAYING","slug":"chalk-corridor"},{"screen":"GAMEOVER","slug":"bell-chamber"}]
+  [PASS] Game Over BACK TO TITLE -> Title
+
+  DOOR BUTTONS (N/S/E/W) - rect containment + real-input traversal:
+    entry-hall NORTH: PASS  rect=[934,217 - 986,269] (52x52)  stage=[636,0 - 1284,1080] (648x1080)
+    NORTH: rect-inside=PASS  rect=[934,300.32 - 986,352.32] (52x52)  click->bell-chamber=PASS (got bell-chamber)
+    SOUTH: rect-inside=PASS  rect=[934,781.68 - 986,833.68] (52x52)  click->entry-hall=PASS (got entry-hall)
+    EAST: rect-inside=PASS  rect=[1222.90,541 - 1274.90,593] (52x52)  click->gravity-well=PASS (got gravity-well)
+    WEST: rect-inside=PASS  rect=[645.10,541 - 697.10,593] (52x52)  click->rule-core=PASS (got rule-core)
+    Traversed rooms via real door-button input: 5 (required >=2) -> PASS
+
+  BANNER long-press:
+    banner centre elementFromPoint = ruleText (inside #banner=true) -> PASS (not intercepted by a door)
+    rule-detail expanded = true -> PASS
+    cardOverlay active after long-press = true -> overlaps pause menu on small viewports (LOW, see runtime report)
+
+=====================================================================
+VIEWPORT: desktop-small-800x600  (800x600, MOUSE)
+RESULT: 36/36 PASS  OK
+Console errors: 0 | Failed requests: 0
+---------------------------------------------------------------------
+  [PASS] page loads + canvas + RBD hooks  :: {"title":"Rule Breaker Dungeon","canvas":true,"cw":360,"chh":600,"rules":true}
+  [PASS] title screen active
+  [PASS] Title -> How to Play
+  [PASS] How to Play -> Back returns Title
+  [PASS] Title -> Settings
+  [PASS] Settings MUSIC toggle changes label  :: {"mBefore":"MUSIC: ON","mAfter":"MUSIC: OFF"}
+  [PASS] Settings SFX toggle changes label  :: {"sBefore":"SOUND FX: ON","sAfter":"SOUND FX: OFF"}
+  [PASS] Settings CREDITS shows panel
+  [PASS] Settings -> Back returns Title
+  [PASS] Title -> START enters PLAYING at entry-hall  :: {"screen":"PLAYING","slug":"entry-hall","broken":0,"score":0}
+  [PASS] HUD visible during gameplay
+  [PASS] entry-hall rule broken via real D-pad input  :: {"screen":"PLAYING","slug":"entry-hall","broken":1,"score":101}
+  [PASS] entry-hall NORTH door rect fully inside stage+viewport  :: {"r":{"left":374,"top":109,"right":426,"bottom":161,"w":52,"h":52,"cx":400,"cy":135},"stage":{"left":220,"top":0,"right":580,"bottom":600,"w":360,"h":600},"inStage":true,"inView":true}
+  [PASS] entry-hall NORTH door click -> chalk-corridor (real door input)  :: {"screen":"PLAYING","slug":"chalk-corridor","broken":1,"score":151}
+  [PASS] chalk-corridor hub has all 4 door buttons (N/S/E/W)  :: ["north","west","east","south"]
+  [PASS] chalk-corridor NORTH door rect fully inside stage+viewport  :: {"inStage":true,"inView":true,"rect":{"left":374,"top":155.28334045410156,"right":426,"bottom":207.28334045410156,"w":52,"h":52,"cx":400,"cy":181.28334045410156},"stage":{"left":220,"top":0,"right":580,"bottom":600,"w":360,"h":600}}
+  [PASS] chalk-corridor NORTH door click -> bell-chamber (real input)  :: {"pass":true,"expected":"bell-chamber","got":"bell-chamber","brokenBefore":2}
+  [PASS] chalk-corridor SOUTH door rect fully inside stage+viewport  :: {"inStage":true,"inView":true,"rect":{"left":374,"top":422.7166748046875,"right":426,"bottom":474.7166748046875,"w":52,"h":52,"cx":400,"cy":448.7166748046875},"stage":{"left":220,"top":0,"right":580,"bottom":600,"w":360,"h":600}}
+  [PASS] chalk-corridor SOUTH door click -> entry-hall (real input)  :: {"pass":true,"expected":"entry-hall","got":"entry-hall","brokenBefore":5}
+  [PASS] chalk-corridor EAST door rect fully inside stage+viewport  :: {"inStage":true,"inView":true,"rect":{"left":528,"top":289,"right":580,"bottom":341,"w":52,"h":52,"cx":554,"cy":315},"stage":{"left":220,"top":0,"right":580,"bottom":600,"w":360,"h":600}}
+  [PASS] chalk-corridor EAST door click -> gravity-well (real input)  :: {"pass":true,"expected":"gravity-well","got":"gravity-well","brokenBefore":4}
+  [PASS] chalk-corridor WEST door rect fully inside stage+viewport  :: {"inStage":true,"inView":true,"rect":{"left":220,"top":289,"right":272,"bottom":341,"w":52,"h":52,"cx":246,"cy":315},"stage":{"left":220,"top":0,"right":580,"bottom":600,"w":360,"h":600}}
+  [PASS] chalk-corridor WEST door click -> rule-core (real input)  :: {"pass":true,"expected":"rule-core","got":"rule-core","brokenBefore":3}
+  [PASS] traversed >=2 rooms by real door buttons  :: {"traversals":5}
+  [PASS] banner centre not intercepted by a door (elementFromPoint)  :: {"cx":370.25,"cy":36,"topId":"","topCls":"ruleText","inBanner":true,"banner":{"left":221.85000610351562,"top":3,"right":518.6499938964844,"bottom":69}}
+  [PASS] banner long-press expands rule detail card  :: {"active":true,"html":"<b>RULE:</b> NEVER GO LEFT.<br><br><b>HINT:</b> Go left (west) to break the rule.<br><br><"}
+  [PASS] pause button -> PAUSED
+  [PASS] Pause MUSIC toggle changes label  :: {"pmBefore":"MUSIC: OFF","pmAfter":"MUSIC: ON"}
+  [PASS] Pause SFX toggle clicked
+  [PASS] Pause -> How to Play
+  [PASS] How to Play -> Back returns Pause
+  [PASS] Pause RESUME -> PLAYING
+  [PASS] rule-core book reached -> Victory screen  :: "2718"
+  [PASS] Victory PLAY AGAIN -> PLAYING
+  [PASS] 3 alarm ejections -> Game Over screen  :: [{"screen":"PLAYING","slug":"chalk-corridor"},{"screen":"PLAYING","slug":"chalk-corridor"},{"screen":"GAMEOVER","slug":"bell-chamber"}]
+  [PASS] Game Over BACK TO TITLE -> Title
+
+  DOOR BUTTONS (N/S/E/W) - rect containment + real-input traversal:
+    entry-hall NORTH: PASS  rect=[374,109 - 426,161] (52x52)  stage=[220,0 - 580,600] (360x600)
+    NORTH: rect-inside=PASS  rect=[374,155.28 - 426,207.28] (52x52)  click->bell-chamber=PASS (got bell-chamber)
+    SOUTH: rect-inside=PASS  rect=[374,422.72 - 426,474.72] (52x52)  click->entry-hall=PASS (got entry-hall)
+    EAST: rect-inside=PASS  rect=[528,289 - 580,341] (52x52)  click->gravity-well=PASS (got gravity-well)
+    WEST: rect-inside=PASS  rect=[220,289 - 272,341] (52x52)  click->rule-core=PASS (got rule-core)
+    Traversed rooms via real door-button input: 5 (required >=2) -> PASS
+
+  BANNER long-press:
+    banner centre elementFromPoint = ruleText (inside #banner=true) -> PASS (not intercepted by a door)
+    rule-detail expanded = true -> PASS
+    cardOverlay active after long-press = true -> overlaps pause menu on small viewports (LOW, see runtime report)
+
+=====================================================================
+VIEWPORT: mobile-375x667  (375x667, TOUCH)
+RESULT: 36/36 PASS  OK
+Console errors: 0 | Failed requests: 0
+---------------------------------------------------------------------
+  [PASS] page loads + canvas + RBD hooks  :: {"title":"Rule Breaker Dungeon","canvas":true,"cw":375,"chh":625,"rules":true}
+  [PASS] title screen active
+  [PASS] Title -> How to Play
+  [PASS] How to Play -> Back returns Title
+  [PASS] Title -> Settings
+  [PASS] Settings MUSIC toggle changes label  :: {"mBefore":"MUSIC: ON","mAfter":"MUSIC: OFF"}
+  [PASS] Settings SFX toggle changes label  :: {"sBefore":"SOUND FX: ON","sAfter":"SOUND FX: OFF"}
+  [PASS] Settings CREDITS shows panel
+  [PASS] Settings -> Back returns Title
+  [PASS] Title -> START enters PLAYING at entry-hall  :: {"screen":"PLAYING","slug":"entry-hall","broken":0,"score":0}
+  [PASS] HUD visible during gameplay
+  [PASS] entry-hall rule broken via real D-pad input  :: {"screen":"PLAYING","slug":"entry-hall","broken":1,"score":101}
+  [PASS] entry-hall NORTH door rect fully inside stage+viewport  :: {"r":{"left":161.5,"top":135.63333129882812,"right":213.5,"bottom":187.63333129882812,"w":52,"h":52,"cx":187.5,"cy":161.63333129882812},"stage":{"left":0,"top":21,"right":375,"bottom":646,"w":375,"h":625},"inStage":true,"inView":true}
+  [PASS] entry-hall NORTH door click -> chalk-corridor (real door input)  :: {"screen":"PLAYING","slug":"chalk-corridor","broken":1,"score":151}
+  [PASS] chalk-corridor hub has all 4 door buttons (N/S/E/W)  :: ["north","west","east","south"]
+  [PASS] chalk-corridor NORTH door rect fully inside stage+viewport  :: {"inStage":true,"inView":true,"rect":{"left":161.5,"top":183.8333282470703,"right":213.5,"bottom":235.8333282470703,"w":52,"h":52,"cx":187.5,"cy":209.8333282470703},"stage":{"left":0,"top":21,"right":375,"bottom":646,"w":375,"h":625}}
+  [PASS] chalk-corridor NORTH door click -> bell-chamber (real input)  :: {"pass":true,"expected":"bell-chamber","got":"bell-chamber","brokenBefore":2}
+  [PASS] chalk-corridor SOUTH door rect fully inside stage+viewport  :: {"inStage":true,"inView":true,"rect":{"left":161.5,"top":462.41668701171875,"right":213.5,"bottom":514.4166870117188,"w":52,"h":52,"cx":187.5,"cy":488.41668701171875},"stage":{"left":0,"top":21,"right":375,"bottom":646,"w":375,"h":625}}
+  [PASS] chalk-corridor SOUTH door click -> entry-hall (real input)  :: {"pass":true,"expected":"entry-hall","got":"entry-hall","brokenBefore":5}
+  [PASS] chalk-corridor EAST door rect fully inside stage+viewport  :: {"inStage":true,"inView":true,"rect":{"left":323,"top":323.1333312988281,"right":375,"bottom":375.1333312988281,"w":52,"h":52,"cx":349,"cy":349.1333312988281},"stage":{"left":0,"top":21,"right":375,"bottom":646,"w":375,"h":625}}
+  [PASS] chalk-corridor EAST door click -> gravity-well (real input)  :: {"pass":true,"expected":"gravity-well","got":"gravity-well","brokenBefore":4}
+  [PASS] chalk-corridor WEST door rect fully inside stage+viewport  :: {"inStage":true,"inView":true,"rect":{"left":0,"top":323.1333312988281,"right":52,"bottom":375.1333312988281,"w":52,"h":52,"cx":26,"cy":349.1333312988281},"stage":{"left":0,"top":21,"right":375,"bottom":646,"w":375,"h":625}}
+  [PASS] chalk-corridor WEST door click -> rule-core (real input)  :: {"pass":true,"expected":"rule-core","got":"rule-core","brokenBefore":3}
+  [PASS] traversed >=2 rooms by real door buttons  :: {"traversals":5}
+  [PASS] banner centre not intercepted by a door (elementFromPoint)  :: {"cx":157.59165954589844,"cy":58.5,"topId":"","topCls":"ruleText","inBanner":true,"banner":{"left":1.9166717529296875,"top":24.133331298828125,"right":313.2666473388672,"bottom":92.86666870117188}}
+  [PASS] banner long-press expands rule detail card  :: {"active":true,"html":"<b>RULE:</b> NEVER GO LEFT.<br><br><b>HINT:</b> Go left (west) to break the rule.<br><br><"}
+  [PASS] pause button -> PAUSED
+  [PASS] Pause MUSIC toggle changes label  :: {"pmBefore":"MUSIC: OFF","pmAfter":"MUSIC: ON"}
+  [PASS] Pause SFX toggle clicked
+  [PASS] Pause -> How to Play
+  [PASS] How to Play -> Back returns Pause
+  [PASS] Pause RESUME -> PLAYING
+  [PASS] rule-core book reached -> Victory screen  :: "2718"
+  [PASS] Victory PLAY AGAIN -> PLAYING
+  [PASS] 3 alarm ejections -> Game Over screen  :: [{"screen":"PLAYING","slug":"chalk-corridor"},{"screen":"PLAYING","slug":"chalk-corridor"},{"screen":"GAMEOVER","slug":"bell-chamber"}]
+  [PASS] Game Over BACK TO TITLE -> Title
+
+  DOOR BUTTONS (N/S/E/W) - rect containment + real-input traversal:
+    entry-hall NORTH: PASS  rect=[161.50,135.63 - 213.50,187.63] (52x52)  stage=[0,21 - 375,646] (375x625)
+    NORTH: rect-inside=PASS  rect=[161.50,183.83 - 213.50,235.83] (52x52)  click->bell-chamber=PASS (got bell-chamber)
+    SOUTH: rect-inside=PASS  rect=[161.50,462.42 - 213.50,514.42] (52x52)  click->entry-hall=PASS (got entry-hall)
+    EAST: rect-inside=PASS  rect=[323,323.13 - 375,375.13] (52x52)  click->gravity-well=PASS (got gravity-well)
+    WEST: rect-inside=PASS  rect=[0,323.13 - 52,375.13] (52x52)  click->rule-core=PASS (got rule-core)
+    Traversed rooms via real door-button input: 5 (required >=2) -> PASS
+
+  BANNER long-press:
+    banner centre elementFromPoint = ruleText (inside #banner=true) -> PASS (not intercepted by a door)
+    rule-detail expanded = true -> PASS
+    cardOverlay active after long-press = true -> overlaps pause menu on small viewports (LOW, see runtime report)
+
+=====================================================================
+TOTAL: 108/108 checks passed across 3 viewports.
+DOOR-BUTTON rect containment (all N/S/E/W @ 3 sizes): PASS
+DOOR-BUTTON real-input traversal (>=2 rooms): PASS
+BANNER long-press expansion (not intercepted by a door): PASS
+CORE LOOP + ALL SCREENS + TOGGLES: PASS
+CONSOLE/PAGE ERRORS: 0

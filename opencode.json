@@ -1,0 +1,28 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "holonovel": {
+      "type": "local",
+      "command": ["bash", "scripts/holonovel-mcp.sh"],
+      "cwd": ".",
+      "enabled": true,
+      "environment": {
+        "TTRPG_DATA_DIR": ".holonovel-state",
+        "TTRPG_SEED": "holotron"
+      }
+    }
+  },
+  "permission": {
+    "*": "allow",
+    "holonovel_*": "deny",
+    "read_mcp_resource": "deny"
+  },
+  "agent": {
+    "world_agent": {
+      "permission": {
+        "holonovel_*": "allow",
+        "read_mcp_resource": "allow"
+      }
+    }
+  }
+}

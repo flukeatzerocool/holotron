@@ -1,0 +1,93 @@
+WORLD MAP — Rule Breaker Dungeon (run 20261009_151802)
+Novel: rule-breaker-dungeon-151802
+Concept: #7 "Rule Breaker Dungeon" — grid puzzle-dungeon crawler
+
+============================================================
+world://map (raw)
+============================================================
+Entry Hall: north → Chalk Corridor
+Chalk Corridor: south → Entry Hall, east → Gravity Well, north → Bell Chamber, west → Rule Core
+Gravity Well: west → Chalk Corridor, south → Torn Library
+Torn Library: north → Gravity Well, west → Bell Chamber
+Bell Chamber: east → Torn Library, south → Chalk Corridor
+Rule Core: east → Chalk Corridor
+
+============================================================
+Rooms / Exits / Things (readable summary)
+============================================================
+6 rooms, 6 bidirectional exits (12 directed), 4 things.
+
+[entry-hall] Entry Hall  (START)
+    "A low stone vestibule where every sign points a different direction and
+     all of them are wrong. The start of your rebellion."
+    exits:  north -> chalk-corridor
+    things: (none)
+
+[chalk-corridor] Chalk Corridor
+    "A hallway scrawled floor to ceiling with chalk rules, each one crossed
+     out by a bolder hand. Rebel graffiti marks the walls."
+    exits:  south -> entry-hall, east -> gravity-well,
+            north -> bell-chamber, west -> rule-core
+    things: rebel-graffiti
+
+[gravity-well] Gravity Well
+    "A round shaft where the floor is a suggestion and 'down' is a dare.
+     Loose pebbles drift upward past your ears."
+    exits:  west -> chalk-corridor, south -> torn-library
+    things: (none)
+
+[torn-library] Torn Library
+    "Shelves of shredded rulebooks, pages swirling in a windless draft.
+     Half the laws of the dungeon lie here in confetti."
+    exits:  north -> gravity-well, west -> bell-chamber
+    things: cracked-rulebook
+
+[bell-chamber] Bell Chamber
+    "A brass bell the size of a door hangs silent. Every rule you break
+     rings it a little louder."
+    exits:  east -> torn-library, south -> chalk-corridor
+    things: alarm-bell
+
+[rule-core] Rule Core  (GOAL ROOM — tear out the final page)
+    "The pulsing heart of the dungeon, where the master rulebook is chained
+     open. Win by tearing out its final page."
+    exits:  east -> chalk-corridor
+    things: master-rulebook
+
+------------------------------------------------------------
+Graph topology
+------------------------------------------------------------
+- START: entry-hall — north -> chalk-corridor (Chalk Corridor is the hub).
+- LOOP (4-cycle): chalk-corridor -> bell-chamber -> torn-library ->
+  gravity-well -> chalk-corridor.
+  Directed path: chalk-corridor(north)->bell-chamber(east)->torn-library
+  (north)->gravity-well(west)->chalk-corridor.
+- Leaf branch: chalk-corridor(west) -> rule-core (goal).
+- Entry Hall is a leaf off the hub.
+
+============================================================
+Things (objects)
+============================================================
+- rebel-graffiti  @ chalk-corridor  (readable)
+    "ANYTHING GOES. Rules are just suggestions with good PR."
+- cracked-rulebook @ torn-library  (readable)
+    "Rule 1: Never go left. Rule 2: Gravity points down. Rule 3: Walls are
+     solid. (These are lies. Break them.)"
+- alarm-bell @ bell-chamber
+    Brass alarm bell; rings louder with every rule broken.
+- master-rulebook @ rule-core
+    The chained master rulebook; its final page is the win condition.
+
+============================================================
+Notes for gdd_agent / code_agent
+============================================================
+- Consume world_map.json VERBATIM as window.WORLD.
+- start = "entry-hall".
+- All exits are bidirectional; every exit target is a declared room slug.
+- Suggested rule themes per room (rising difficulty):
+    chalk-corridor : "no going left" (break by tapping left)
+    gravity-well   : "gravity is up" (flip gravity)
+    torn-library   : "walls are edible" (eat a wall)
+    bell-chamber   : alarm escalates as rules shatter
+    rule-core      : final inversion — win by violating the master rule
+- Reaching rule-core and interacting with master-rulebook is the win.

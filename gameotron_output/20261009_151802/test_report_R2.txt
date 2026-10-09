@@ -1,0 +1,174 @@
+PUPPETEER/PLAYWRIGHT TEST REPORT (R2)
+Generated: 2026-10-09T19:41:34.139Z
+File under test: /home/fluke/Holotron/gameotron_output/20261009_151802/index.html
+URL: http://127.0.0.1:8899/index.html
+Browser: Firefox (Playwright, headless)  | Viewports: 1920x1080 (mouse), 800x600 (mouse), 375x667 (touch)
+
+=====================================================================
+VIEWPORT: desktop-1920x1080  (1920x1080, MOUSE)
+RESULT: 47/47 PASS  OK
+Console errors: 0 | Uncaught exceptions: 0 | Failed requests: 0
+---------------------------------------------------------------------
+  [PASS] page loads (HTTP 200)  :: status=200
+  [PASS] canvas element present with valid backing size  :: {"hasCanvas":true,"sizeOk":true,"w":648,"h":1080}
+  [PASS] WORLD + window.move hooks present
+  [PASS] title screen active
+  [PASS] Title -> How to Play
+  [PASS] How to Play -> Back returns Title
+  [PASS] Title -> Settings
+  [PASS] Settings MUSIC toggle changes state+label  :: before=true after=false label="MUSIC: OFF"
+  [PASS] Settings SFX toggle changes state+label  :: before=true after=false
+  [PASS] Settings CREDITS shows credits panel
+  [PASS] Settings RESET opens confirm dialog  :: ["Reset all data? This clears your best score and progress."]
+  [PASS] Settings -> Back returns Title
+  [PASS] Title -> START enters PLAYING at start room  :: {"screen":"PLAYING","prev":"TITLE","over":false}
+  [PASS] HUD visible during gameplay
+  [PASS] board NOT pinned to canvas top-left  :: {"minX":33,"minY":276}
+  [PASS] first board pixels appear around board origin (below top HUD)  :: {"minX":33,"minY":276,"expOx":32.4,"expOy":275.4,"tilePx":116.6}
+  [PASS] board does not start at origin y=0  :: minY=276 (expected ~275)
+  [PASS] canvas corner (0,0) is background  :: alpha=0
+  [PASS] player token rendered at geom tile centre  :: {"cx":324,"cy":567,"teal":920,"sampled":11025}
+  [PASS] tap visual centre of tile moves player onto that tile  :: {"from":{"c":2,"r":2},"to":{"c":2,"r":1}}
+  [PASS] tap moves player to chalk tile (3,2)  :: {"c":3,"r":2}
+  [PASS] breaking room rule increments score  :: score 1 -> 103
+  [PASS] breaking room rule sets room.broken + run.broken  :: roomBroken=true run.broken=1
+  [PASS] pause button -> PAUSED
+  [PASS] Pause MUSIC toggle works  :: before=false after=true
+  [PASS] Pause SFX toggle works
+  [PASS] Pause -> How to Play
+  [PASS] How to Play -> Back returns Pause
+  [PASS] Pause -> Settings
+  [PASS] Settings -> Back returns Pause
+  [PASS] Pause RESUME -> PLAYING
+  [PASS] entered bell-chamber with alarm armed + rule unbroken  :: {"slug":"bell-chamber","alarmMax":60,"active":true,"broken":false}
+  [PASS] alarm meter fills over time while rule unbroken  :: peak alarm observed=1.22
+  [PASS] 1st alarm ejection fires while rule unbroken  :: {"ejection":1,"ejects":1,"alarm":0.7000000000000005,"broken":false}
+  [PASS] 2nd alarm ejection fires  :: {"ejection":2,"ejects":2,"alarm":0.7000000000000005,"broken":false}
+  [PASS] 3rd ejection reaches Game Over screen  :: {"ejects":3,"screen":"screen-gameover","trace":[{"ejection":1,"ejects":1,"alarm":0.7000000000000005,"broken":false},{"ejection":2,"ejects":2,"alarm":0.7000000000000005,"broken":false},{"ejection":3,"ejects":3,"screen":"GAMEOVER","alarm":0.7000000000000005,"broken":false}]}
+  [PASS] Game Over shows score  :: goScore=100
+  [PASS] Game Over RETRY -> PLAYING (fresh run)
+  [PASS] force Victory -> screen-victory
+  [PASS] Victory shows real rules-broken count (not forced 6/6)  :: vRules=0/6
+  [PASS] Victory PLAY AGAIN -> PLAYING
+  [PASS] window.WORLD.rooms matches world_map.json verbatim
+  [PASS] default window.move is locked until rule broken  :: {"r":false,"from":"entry-hall","to":"entry-hall"}
+  [PASS] window.move(dir,{ignoreLock:true}) traverses entry-hall->chalk-corridor  :: {"r":"chalk-corridor","from":"entry-hall","to":"chalk-corridor"}
+  [PASS] window.move('up') invalid -> false & no move  :: {"r":false,"unchanged":true}
+  [PASS] full 6-room traversal matches world_map exits  :: [{"d":"north","r":"chalk-corridor","cur":"chalk-corridor"},{"d":"west","r":"rule-core","cur":"rule-core"},{"d":"east","r":"chalk-corridor","cur":"chalk-corridor"},{"d":"north","r":"bell-chamber","cur":"bell-chamber"},{"d":"east","r":"torn-library","cur":"torn-library"},{"d":"north","r":"gravity-well","cur":"gravity-well"}]
+  [PASS] WORLD.visited deduped / all slugs valid  :: ["entry-hall","chalk-corridor","rule-core","bell-chamber","torn-library","gravity-well"]
+  Dialogs seen: ["Reset all data? This clears your best score and progress."]
+
+=====================================================================
+VIEWPORT: desktop-small-800x600  (800x600, MOUSE)
+RESULT: 47/47 PASS  OK
+Console errors: 0 | Uncaught exceptions: 0 | Failed requests: 0
+---------------------------------------------------------------------
+  [PASS] page loads (HTTP 200)  :: status=200
+  [PASS] canvas element present with valid backing size  :: {"hasCanvas":true,"sizeOk":true,"w":360,"h":600}
+  [PASS] WORLD + window.move hooks present
+  [PASS] title screen active
+  [PASS] Title -> How to Play
+  [PASS] How to Play -> Back returns Title
+  [PASS] Title -> Settings
+  [PASS] Settings MUSIC toggle changes state+label  :: before=true after=false label="MUSIC: OFF"
+  [PASS] Settings SFX toggle changes state+label  :: before=true after=false
+  [PASS] Settings CREDITS shows credits panel
+  [PASS] Settings RESET opens confirm dialog  :: ["Reset all data? This clears your best score and progress."]
+  [PASS] Settings -> Back returns Title
+  [PASS] Title -> START enters PLAYING at start room  :: {"screen":"PLAYING","prev":"TITLE","over":false}
+  [PASS] HUD visible during gameplay
+  [PASS] board NOT pinned to canvas top-left  :: {"minX":17,"minY":152}
+  [PASS] first board pixels appear around board origin (below top HUD)  :: {"minX":17,"minY":152,"expOx":18,"expOy":153,"tilePx":64.8}
+  [PASS] board does not start at origin y=0  :: minY=152 (expected ~153)
+  [PASS] canvas corner (0,0) is background  :: alpha=0
+  [PASS] player token rendered at geom tile centre  :: {"cx":180,"cy":315,"teal":289,"sampled":3481}
+  [PASS] tap visual centre of tile moves player onto that tile  :: {"from":{"c":2,"r":2},"to":{"c":2,"r":1}}
+  [PASS] tap moves player to chalk tile (3,2)  :: {"c":3,"r":2}
+  [PASS] breaking room rule increments score  :: score 1 -> 103
+  [PASS] breaking room rule sets room.broken + run.broken  :: roomBroken=true run.broken=1
+  [PASS] pause button -> PAUSED
+  [PASS] Pause MUSIC toggle works  :: before=false after=true
+  [PASS] Pause SFX toggle works
+  [PASS] Pause -> How to Play
+  [PASS] How to Play -> Back returns Pause
+  [PASS] Pause -> Settings
+  [PASS] Settings -> Back returns Pause
+  [PASS] Pause RESUME -> PLAYING
+  [PASS] entered bell-chamber with alarm armed + rule unbroken  :: {"slug":"bell-chamber","alarmMax":60,"active":true,"broken":false}
+  [PASS] alarm meter fills over time while rule unbroken  :: peak alarm observed=1.22
+  [PASS] 1st alarm ejection fires while rule unbroken  :: {"ejection":1,"ejects":1,"alarm":0.7000000000000005,"broken":false}
+  [PASS] 2nd alarm ejection fires  :: {"ejection":2,"ejects":2,"alarm":0.7000000000000005,"broken":false}
+  [PASS] 3rd ejection reaches Game Over screen  :: {"ejects":3,"screen":"screen-gameover","trace":[{"ejection":1,"ejects":1,"alarm":0.7000000000000005,"broken":false},{"ejection":2,"ejects":2,"alarm":0.7000000000000005,"broken":false},{"ejection":3,"ejects":3,"screen":"GAMEOVER","alarm":0.7000000000000005,"broken":false}]}
+  [PASS] Game Over shows score  :: goScore=100
+  [PASS] Game Over RETRY -> PLAYING (fresh run)
+  [PASS] force Victory -> screen-victory
+  [PASS] Victory shows real rules-broken count (not forced 6/6)  :: vRules=0/6
+  [PASS] Victory PLAY AGAIN -> PLAYING
+  [PASS] window.WORLD.rooms matches world_map.json verbatim
+  [PASS] default window.move is locked until rule broken  :: {"r":false,"from":"entry-hall","to":"entry-hall"}
+  [PASS] window.move(dir,{ignoreLock:true}) traverses entry-hall->chalk-corridor  :: {"r":"chalk-corridor","from":"entry-hall","to":"chalk-corridor"}
+  [PASS] window.move('up') invalid -> false & no move  :: {"r":false,"unchanged":true}
+  [PASS] full 6-room traversal matches world_map exits  :: [{"d":"north","r":"chalk-corridor","cur":"chalk-corridor"},{"d":"west","r":"rule-core","cur":"rule-core"},{"d":"east","r":"chalk-corridor","cur":"chalk-corridor"},{"d":"north","r":"bell-chamber","cur":"bell-chamber"},{"d":"east","r":"torn-library","cur":"torn-library"},{"d":"north","r":"gravity-well","cur":"gravity-well"}]
+  [PASS] WORLD.visited deduped / all slugs valid  :: ["entry-hall","chalk-corridor","rule-core","bell-chamber","torn-library","gravity-well"]
+  Dialogs seen: ["Reset all data? This clears your best score and progress."]
+
+=====================================================================
+VIEWPORT: mobile-375x667  (375x667, TOUCH)
+RESULT: 47/47 PASS  OK
+Console errors: 0 | Uncaught exceptions: 0 | Failed requests: 0
+---------------------------------------------------------------------
+  [PASS] page loads (HTTP 200)  :: status=200
+  [PASS] canvas element present with valid backing size  :: {"hasCanvas":true,"sizeOk":true,"w":375,"h":625}
+  [PASS] WORLD + window.move hooks present
+  [PASS] title screen active
+  [PASS] Title -> How to Play
+  [PASS] How to Play -> Back returns Title
+  [PASS] Title -> Settings
+  [PASS] Settings MUSIC toggle changes state+label  :: before=true after=false label="MUSIC: OFF"
+  [PASS] Settings SFX toggle changes state+label  :: before=true after=false
+  [PASS] Settings CREDITS shows credits panel
+  [PASS] Settings RESET opens confirm dialog  :: ["Reset all data? This clears your best score and progress."]
+  [PASS] Settings -> Back returns Title
+  [PASS] Title -> START enters PLAYING at start room  :: {"screen":"PLAYING","prev":"TITLE","over":false}
+  [PASS] HUD visible during gameplay
+  [PASS] board NOT pinned to canvas top-left  :: {"minX":18,"minY":159}
+  [PASS] first board pixels appear around board origin (below top HUD)  :: {"minX":18,"minY":159,"expOx":18.8,"expOy":159.4,"tilePx":67.5}
+  [PASS] board does not start at origin y=0  :: minY=159 (expected ~159)
+  [PASS] canvas corner (0,0) is background  :: alpha=0
+  [PASS] player token rendered at geom tile centre  :: {"cx":187.5,"cy":328.125,"teal":303,"sampled":3844}
+  [PASS] tap visual centre of tile moves player onto that tile  :: {"from":{"c":2,"r":2},"to":{"c":2,"r":1}}
+  [PASS] tap moves player to chalk tile (3,2)  :: {"c":3,"r":2}
+  [PASS] breaking room rule increments score  :: score 1 -> 103
+  [PASS] breaking room rule sets room.broken + run.broken  :: roomBroken=true run.broken=1
+  [PASS] pause button -> PAUSED
+  [PASS] Pause MUSIC toggle works  :: before=false after=true
+  [PASS] Pause SFX toggle works
+  [PASS] Pause -> How to Play
+  [PASS] How to Play -> Back returns Pause
+  [PASS] Pause -> Settings
+  [PASS] Settings -> Back returns Pause
+  [PASS] Pause RESUME -> PLAYING
+  [PASS] entered bell-chamber with alarm armed + rule unbroken  :: {"slug":"bell-chamber","alarmMax":60,"active":true,"broken":false}
+  [PASS] alarm meter fills over time while rule unbroken  :: peak alarm observed=1.22
+  [PASS] 1st alarm ejection fires while rule unbroken  :: {"ejection":1,"ejects":1,"alarm":0.7000000000000005,"broken":false}
+  [PASS] 2nd alarm ejection fires  :: {"ejection":2,"ejects":2,"alarm":0.7000000000000005,"broken":false}
+  [PASS] 3rd ejection reaches Game Over screen  :: {"ejects":3,"screen":"screen-gameover","trace":[{"ejection":1,"ejects":1,"alarm":0.7000000000000005,"broken":false},{"ejection":2,"ejects":2,"alarm":0.7000000000000005,"broken":false},{"ejection":3,"ejects":3,"screen":"GAMEOVER","alarm":0.7000000000000005,"broken":false}]}
+  [PASS] Game Over shows score  :: goScore=100
+  [PASS] Game Over RETRY -> PLAYING (fresh run)
+  [PASS] force Victory -> screen-victory
+  [PASS] Victory shows real rules-broken count (not forced 6/6)  :: vRules=0/6
+  [PASS] Victory PLAY AGAIN -> PLAYING
+  [PASS] window.WORLD.rooms matches world_map.json verbatim
+  [PASS] default window.move is locked until rule broken  :: {"r":false,"from":"entry-hall","to":"entry-hall"}
+  [PASS] window.move(dir,{ignoreLock:true}) traverses entry-hall->chalk-corridor  :: {"r":"chalk-corridor","from":"entry-hall","to":"chalk-corridor"}
+  [PASS] window.move('up') invalid -> false & no move  :: {"r":false,"unchanged":true}
+  [PASS] full 6-room traversal matches world_map exits  :: [{"d":"north","r":"chalk-corridor","cur":"chalk-corridor"},{"d":"west","r":"rule-core","cur":"rule-core"},{"d":"east","r":"chalk-corridor","cur":"chalk-corridor"},{"d":"north","r":"bell-chamber","cur":"bell-chamber"},{"d":"east","r":"torn-library","cur":"torn-library"},{"d":"north","r":"gravity-well","cur":"gravity-well"}]
+  [PASS] WORLD.visited deduped / all slugs valid  :: ["entry-hall","chalk-corridor","rule-core","bell-chamber","torn-library","gravity-well"]
+  Dialogs seen: ["Reset all data? This clears your best score and progress."]
+
+=====================================================================
+TOTAL: 141/141 checks passed across 3 viewports.
+BOARD-ORIGIN fix: PASS on all viewports.
+TAP VISUAL-CENTRE alignment: PASS on all viewports.
+ALARM / GAME-OVER: PASS on all viewports.
+WORLD-CONTRACT traversal: PASS on all viewports.

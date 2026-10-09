@@ -7,6 +7,14 @@ Implement a complete browser game as a single HTML file using Vanilla JS based o
 - Game Design Document
 - Audio Direction
 - Visual Direction
+- world_map.json (the validated spatial world from world_agent, when present)
+
+## World Contract (Holotron)
+When `world_map.json` is provided, embed it **verbatim** as `window.WORLD` and use it as
+the single source of truth for level generation. Set `window.WORLD.current = "<slug>"` on
+every room transition, and expose `window.move(dir)` that invokes the **same** transition
+handler the UI uses (a thin hook, not a parallel path) so automated tests can traverse the
+world deterministically. Never diverge from the embedded world.
 
 ## Capabilities
 - Game implementation

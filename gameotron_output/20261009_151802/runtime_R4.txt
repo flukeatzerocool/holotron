@@ -1,0 +1,30 @@
+RUNTIME ERRORS REPORT (R4 - Phase 2 world<->game consistency)
+Generated: 2026-10-09T16:10:12-0400
+File: /home/fluke/Holotron/gameotron_output/20261009_151802/index.html
+URL:  http://127.0.0.1:8931/gameotron_output/20261009_151802/index.html
+Browser: Firefox (playwright-cli, headless)
+Server: local python3 http.server (127.0.0.1:8931, repo root)
+Viewports exercised: 800x600 (mouse), 375x667 (mouse/touch-bound handlers), 1920x1080*
+
+=== CONSOLE ERRORS (timestamped) ===
+(none)
+
+=== UNCAUGHT EXCEPTIONS (timestamped) ===
+(none)
+
+=== FAILED / BLOCKED REQUESTS ===
+(none)
+
+=== FAILED INTERACTION MECHANICS ===
+(none)
+- window.move(dir,{ignoreLock:true}) real traversal: 24/24 observed transitions matched declared exits
+- gated window.move (no ignoreLock) refused on unbroken entry-hall rule: PASS
+- edge-tile taps 375x667 / 800x600 -> moved player, no side door, elementFromPoint = canvas: PASS
+- post-ring score stability (idle 1400 ms on bell): PASS (626 -> 626)
+
+=== VIEWPORT-SPECIFIC ISSUES ===
+(none)
+
+=== SUMMARY ===
+Runtime/console/network errors: 0  | failed requests: 0  | fatal viewports: 0
+Mismatch counts -> A structural: 0 | B behavioral: 0 | C control(malformed): 2

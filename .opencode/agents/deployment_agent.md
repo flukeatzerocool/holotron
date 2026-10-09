@@ -20,6 +20,17 @@ Prepare and upload the game to itch.io using Butler CLI.
 - Butler target: `username/project:html5` (placeholder — use the actual itch.io username/project supplied by the user or orchestrator)
 - Check authentication with `butler status` before attempting an upload
 
+## BUTLER SETUP (Linux — this fork)
+- Install (pinned, reproducible): `scripts/install-butler.sh` → binary at `.tools/butler/linux-amd64/butler` (gitignored).
+  The canonical `broth.itch.ovh` host may not resolve; the script uses the GitHub release asset.
+- Auth: butler reads the token from `~/.config/itch/butler_creds` (the `-i/--identity` file), created by `butler login`.
+  **`$BUTLER_API_KEY` is not read by butler natively** — the Windows env-var convention above is a wrapper convention.
+- Check auth: `.tools/butler/linux-amd64/butler status <username>/<project>:html5`
+- Upload: `.tools/butler/linux-amd64/butler push build/ <username>/<project>:html5 --userversion <ver>`
+- Note: itch.io requires the account's **email to be verified** before the first build upload (400 otherwise),
+  and the project must be set **Public/HTML** for the `.itch.io/<project>` page to resolve.
+
+
 ## USER CONFIRMATION (REQUIRED):
 - Never run `butler push` until the user has explicitly confirmed the deployment in the current session.
 

@@ -1,0 +1,30 @@
+JUICE GAP ANALYSIS - Rule Breaker Dungeon (juice_agent)
+Generated: 20260909_151802 / index.html (1436 lines at scan time)
+
+EXISTING (do not duplicate):
+- [Particles]      particles[] + burst()/shatterFX()/confetti()/eat-wall crumbs; cap 180-200
+- [Screen Shake]   shake.mag triggers on break(7), tear(16), block(3), flip(5), pebble(4), eject(10)
+- [Hit-Stop]       hitstop timer, 70ms break / 160ms tear, honoured in loop()
+- [Popups]         popups[] via addScore(), cap 18
+- [Transitions]    flashWipe() glitch wipe; banner glitch/struck; camera tilt easing
+- [Visual]         glowing book pulse, alarm bell pulse, toast; all gated by window.flags.juiceEnabled
+
+GAPS / CANDIDATES (priority):
+1 [Particles]       Ambient per-room motes (chalk dust / paper / embers) - visual_direction calls for drifting motes; MISSING
+2 [Particles]       Move dust + player motion trail / squash-and-stretch trigger - MISSING
+3 [Particles]       Collectible gold sparkle + near-miss burst - popup only, no particle - MISSING
+4 [Particles]       Pebble drifting dust trail (Gravity Well) - MISSING
+5 [Transitions]     Rule-break chromatic/impact flash + brief zoom - MISSING
+6 [Visual]          SFX ring-wave feedback on major sounds - MISSING
+7 [Easing]          Player squash/stretch on move - MISSING
+8 [Camera]          Look-ahead / deadzone - N/A (static fit-to-board, no scrolling camera)
+9 [Popups]          Combo text - no combo mechanic in GDD
+10 [Screen Shake]   Already implemented - SKIP
+11 [Hit-Stop]       Already implemented - SKIP
+
+SELECTED FOR THIS RUN (max 5 categories, non-duplicative):
+- [Particles]        ambient motes, footstep dust, collect sparkle, pebble trail
+- [Transitions]      impact flash + impact/victory zoom (reducedFlash-aware)
+- [Visual Feedback]  SFX ring waves, spark glow
+- [Animation Easing] player squash/stretch
+- [Sound Complement] ring-wave visual on collect/shatter/near-miss

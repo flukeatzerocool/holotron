@@ -1,0 +1,229 @@
+BUGLIST R3 — Rule Breaker Dungeon (final verification + fresh scan)
+File reviewed: /home/fluke/Holotron/gameotron_output/20261009_151802/index.html (1425 lines)
+Prior buglist: buglist_R2.txt
+Reviewer: review_agent (static analysis + independent Playwright/Firefox runtime probes)
+Date: 2026-10-09
+
+======================================================================
+PART A — FIX CONFIRMATION (R2 HIGH/MEDIUM items)
+======================================================================
+
+[A-HIGH] Side (east/west) door buttons clipped off-stage — CONFIRMED FIXED.
+  syncDoors() (index.html:1008-1013) now places side doors relative to the
+  board edges (east = min(g.ox+g.bw-2, DESIGN_W-hw), west = max(g.ox+2, hw))
+  with a half-button margin hw = 26/view.scale so the fixed 52px CSS box stays
+  inside #stage (overflow:hidden).
+  Independent runtime verification (Firefox headless, all 6 rooms, three
+  viewports 1920x1080 / 800x600 / 375x667):
+    every door button rect is fully inside the stage (inside=true for all),
+    no console errors. Door-tap travel alive: chalk-corridor EAST ->
+    gravity-well (PASS) on all three viewports.
+  NOTE: the fix trades clipping for overlay interception of the outermost
+  board cells — see fresh-scan M1 (regression).
+
+[A-MEDIUM] North door intercepting the RULE banner long-press — CONFIRMED FIXED.
+  North door now sits in the board's top gutter (cy = g.oy-24, index.html:1010),
+  below the 96px topbar at every room size. Independent runtime verification:
+  at the geometric centre of #banner, document.elementFromPoint() returns the
+  banner's .ruleText span in every room, on all three viewports (bannerHit=true,
+  top=ruleText). The 500ms long-press is no longer shadowed by a door.
+
+[A-MEDIUM] Near-miss score popups double-centred (half-tile offset) —
+  CONFIRMED FIXED.
+  nearMiss() (index.html:852-858) now subtracts 0.5 from the already-centred
+  coords it receives before handing them to addScore() (which re-adds +0.5).
+  Independent runtime verification (Array.prototype.push probe, 800x600):
+  ringing/near-miss path produced popup at (3.5, 2.5) == tile centre (3,2).
+  PASS.
+  NOTE: making this branch reachable has also exposed a post-break score loop
+  — see fresh-scan M2.
+
+======================================================================
+PART B — FRESH SCAN (focus: regressions from door repositioning)
+======================================================================
+
+CRITICAL
+======================================================================
+(none)
+
+======================================================================
+HIGH
+======================================================================
+(none)
+
+======================================================================
+MEDIUM
+======================================================================
+
+[M1] Side-door DOM buttons now overlay the board's outermost columns and
+  intercept tap-to-move for the edge cells, so tapping a tile centre there
+  performs the door action (travel or "DOOR LOCKED") instead of moving.
+  This is a regression introduced by the R2 door repositioning (R2 placed the
+  side doors on the board edges to escape #stage clipping; they now sit on top
+  of the edge column at the board's vertical middle).
+  Location: index.html:1012-1013 (east/west placement), 93-101
+            (.doorBtn 52px fixed box, transform:translate(-50%,-50%)),
+            1063-1070 (canvas pointer handlers never fire because the door
+            button is the topmost element), 735-748 (handleTap tap-to-move)
+  Explanation: syncDoors clamps the side doors to the board edge / stage gutter
+  rather than leaving a clear tile. At scale < 1 (mobile/small) hw = 26/scale
+  grows in design units, so the button covers more of the edge column.
+  Independent runtime verification:
+    - 375x667 (scale 0.781): tile centres (0,2)->WEST and (6,2)->EAST are
+      covered by doorBtn (elementFromPoint returns the button); clicking the
+      centre of (6,2) leaves the player at (5,2) (interior (4,2) still MOVES).
+    - 800x600 (scale 0.75): east edge (6,2) centre hit doorBtn -> NOT MOVED;
+      west edge (0,2) centre hit doorBtn -> NOT MOVED (travel fired once the
+      rule was broken by the interior westward move). Interior taps MOVED.
+    - 1920x1080: edge tile centre is just outside the button; only the outer
+      fringe of the edge cell is covered.
+  Impact: the primary advertised control ("tap the tile you want to step onto",
+  How to Play, index.html:205) silently does the wrong thing on the outer
+  columns at the door row on the mobile and desktop-small viewports. The D-pad
+  / keyboard remain as workarounds, and the door itself is a legitimate tap
+  target, so this is rated MEDIUM (borderline HIGH on mobile, where the covered
+  area is ~60% of the cell).
+  Fix approach: keep the door hit target clear of tile centres — e.g. inset the
+  side doors fully into the stage gutter by shrinking the button at small scales
+  (size = min(52, gutter*scale) or a smaller min target), offset the button
+  centre to the outer ~10px of the stage, or render side doors as narrow
+  edge chevrons/half-buttons anchored to the stage border so they never cover a
+  tile centre. Re-run the edge-tile elementFromPoint + tap-move probe on all
+  three viewports after the change.
+
+[M2] Bell Chamber near-miss bonus repeats indefinitely after the bell is rung,
+  granting +50 every ~3s while the player stands on the bell (score farm).
+  Location: index.html:846-849 (bell near-miss condition), 852-858 (nearMiss),
+            712-718 (ringBell sets alarmActive=false but leaves alarm>0),
+            836-845 (alarm fill is correctly gated by !room.broken)
+  Explanation: the near-miss branch requires only
+  `room.alarm > room.alarmMax*0.6` and `room.nearMissCd<=0`; it is NOT gated by
+  `!room.broken` or `room.alarmActive`. ringBell() stops the meter
+  (alarmActive=false) but does not zero `room.alarm`, and the player ends the
+  ring standing on the bell (bd=0<1.0). So once the alarm passed 60% before the
+  ring, the branch fires, sets nearMissCd=3, and fires again every 3s forever.
+  Independent runtime verification (800x600): entered bell-chamber with
+  alarm=48/alarmMax=60, moved onto the bell (room.broken=true, pos 3,2), then
+  sampled score every 1.5s: 626 -> 676 -> 676 -> 726 -> 726 — increasing.
+  Impact: corrupts the score / persisted best score (a scoring exploit, not a
+  crash). Reachable in normal play by letting the alarm build past 60% before
+  ringing.
+  Fix approach: gate the bell near-miss branch with `!room.broken` (and ideally
+  `room.alarmActive`), or zero `room.alarm` in ringBell() after the meter stops.
+  Re-verify: after ringBell the score must stop increasing while idle on the bell.
+
+======================================================================
+LOW
+======================================================================
+
+[L1] South door button still overlaps the bottom controls band (carried from
+  R2). south cy = g.oy+g.bh+24 (index.html:1011) sits inside the 690-800
+  controls strip; it is centered horizontally where no interactive control
+  lives (D-pad left, FLIP right), so it is cosmetic only. Re-check after M1's
+  positioning change.
+  Location: index.html:1011, 69-73.
+
+[L2] Side-door buttons visually cover the edge tile's content/token at the door
+  row (the offending cell is hidden behind the button). Cosmetic consequence of
+  the M1 placement; addressed by the same fix.
+  Location: index.html:1012-1013.
+
+[L3] +150 "Bell Chamber clears under 50% alarm" bonus (GDD score table,
+  gdd.md:205) is still not implemented. ringBell()/breakRule() award only the
+  rule-shatter points. Non-blocking scoring gap (carried from R2).
+  Location: index.html:646-663, 712-718.
+
+[L4] No "quit-with-score" Game Over path: Pause "GO BACK TO START MENU"
+  (onAct 'tostart', index.html:1129) discards the run and jumps to TITLE
+  without routing through triggerGameOver()/best-score submission. Carried
+  from R2.
+  Location: index.html:1129, 222.
+
+[L5] handleTap() hardcodes the wall coordinate `room.eaten['4,3']` for the
+  torn-library collectible gate (index.html:743), duplicating
+  CFG['torn-library'].walls / thingPos. Works today; brittle if geometry moves.
+  Carried from R2.
+  Location: index.html:743, 536.
+
+[L6] Magic numbers / dead configuration constants still inline (hitstop ms,
+  shake magnitudes, near-miss radii 0.62/0.8, time-bonus 900/x5, unused
+  DIRVEC/HINTS usage). Non-functional cleanup; carried from R1/R2.
+  Location: index.html:556, 646-649, 685, 824-832, 922.
+
+======================================================================
+STANDARD CHECKS SUMMARY
+======================================================================
+Functionality: Loads and runs, 0 console errors across all three viewports.
+  All R2 HIGH/MEDIUM fixes verified independently (door rects in-stage, banner
+  long-press reachable, near-miss popup centred, door-tap travel alive).
+  No CRITICAL/HIGH defects found. Two MEDIUM: side-door overlay intercepting
+  edge tile taps (M1, regression) and a post-ring near-miss score loop (M2).
+Screens: 7 states present and transition (TITLE/HOWTO/PLAYING/PAUSED/SETTINGS/
+  GAMEOVER/VICTORY); GAMEOVER reachable via 3rd alarm ejection; Pause has
+  resume + music/SFX toggles + How to Play + Settings + back-to-title. 6+
+  screens satisfied.
+Controls: touchstart/move/end/cancel + mousedown/move/up unified; viewport meta
+  present; canvas letterboxed 480x800 and DPR-scaled; tap-to-move aligned.
+  Regression: side-door overlays block edge-cell tap-to-move (M1). D-pad and
+  keyboard fully functional as fallback.
+World contract: window.WORLD matches world_map.json; window.WORLD.current set
+  on load and every transition; window.move and doorAttempt share the single
+  gated transition; visited deduped.
+Game feel: particles/shake/hit-stop/wipe/toast/popups/confetti present, gated
+  by window.flags.juiceEnabled.
+Bug potential: fixed-step accumulator guarded (5), dt clamped, geometry guards
+  present, FX arrays capped, localStorage/audio wrapped in try/catch. No
+  infinite loops or crashes found. Score-loop exploit M2 is logic, not a hang.
+
+TOTALS: C=0 H=0 M=2 L=6
+
+======================================================================
+FIXED BUGS:
+======================================================================
+- [MEDIUM] M1 Side-door buttons overlay the board's outer columns and
+  intercept edge-tile tap-to-move - RESOLVED. Added a narrow `.doorBtn.side`
+  modifier (28px wide x 64px tall) and re-anchored east/west doors flush to the
+  stage's outer gutter (cx = DESIGN_W - 14/scale for east, 14/scale for west),
+  vertically centred on the board (syncDoors, index.html). North/south keep the
+  original 52px `.doorBtn` in the top/bottom gutters (unchanged). Half-width 14px
+  means the side chevron never reaches an edge-column tile centre.
+  Runtime verification (headless Firefox, bell-chamber, fresh run):
+    * 800x600 (scale 0.75): edge tile centres (6,2),(0,2),(6,3),(0,3),(6,4),(0,4)
+      elementFromPoint -> CANVAS.cv (not doorBtn); east chevron rect 552..580
+      inside stage (true); edge taps move player 5->6 (east) and 1->0 (west).
+    * 375x667 (scale 0.78125): same six tile centres -> CANVAS.cv; east chevron
+      347..375 flush inside stage (true); edge taps move 5->6 (east) and 1->0
+      (west). Door tap still works: mousedown on east chevron -> torn-library.
+
+- [MEDIUM] M2 Bell Chamber near-miss bonus repeats indefinitely after ringing -
+  RESOLVED. Gated the bell near-miss branch with `!room.broken`
+  (stepHazards, index.html:850). room.broken is set by breakRule() during
+  ringBell(), so the branch can no longer fire once the bell is rung.
+  Runtime verification (headless Firefox):
+    * 800x600: rang the bell with alarm 40/60 (player 3,4 -> 3,3 -> 3,2);
+      stepped 400 x 0.05s idle on the bell -> idleDelta = 0 (score stable).
+    * 375x667: same with alarm 50/60 -> idleDelta = 0.
+
+Non-regression checks (all PASS):
+  * Door containment inside #stage: every door rect inside=true at 800x600 and
+    375x667.
+  * Banner long-press: elementFromPoint at #banner centre returns the
+    .ruleText span (chalk-corridor, north door present).
+  * World contract: window.WORLD.current set on transition; window.move is a
+    function and routes through the gated transition.
+  * Board-origin offset (BOARD/geom) untouched.
+  * Console: 0 errors (4 pre-existing AudioContext autoplay warnings only).
+
+Unfixed bugs:
+- [UNFIXED] [LOW] L1 South door still overlaps the bottom controls band |
+  Cosmetic; unchanged, out of scope for the two targeted fixes.
+- [UNFIXED] [LOW] L2 (now largely mitigated) side chevrons cover less of the
+  edge column; remaining overlap is cosmetic | addressed incidentally by M1.
+- [UNFIXED] [LOW] L3 +150 "Bell Chamber under 50% alarm" bonus not implemented |
+  Scoring gap, out of scope.
+- [UNFIXED] [LOW] L4 No quit-with-score Game Over path | Out of scope.
+- [UNFIXED] [LOW] L5 handleTap hardcodes room.eaten['4,3'] | Brittle but works;
+  out of scope.
+- [UNFIXED] [LOW] L6 Magic numbers / dead constants | Non-functional cleanup.
+
+FILE: index.html now 1436 lines (was 1425).

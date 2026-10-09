@@ -1,0 +1,22 @@
+RUNTIME ERRORS REPORT (R1)
+Generated: 2026-10-09T19:32:05.558Z
+File: /home/fluke/Holotron/gameotron_output/20261009_151802/index.html
+URL: http://127.0.0.1:8899/index.html
+Browser: Firefox (Playwright, headless)
+
+=== desktop-1920x1080 (1920x1080) ===
+[FAIL]     interaction: canvas renders (non-blank pixels) :: {"ok":false,"why":"nonBlankSamples=0","w":648,"h":1080}
+[FAIL]     interaction: WORLD.visited records traversal slugs in order :: ["entry-hall","entry-hall","chalk-corridor","gravity-well","torn-library"]
+[FAIL]     interaction: full 6-room contract traversal follows world_map exits :: [{"d":"north","r":"gravity-well","cur":"gravity-well"},{"d":"west","r":"chalk-corridor","cur":"chalk-corridor"},{"d":"east","r":"gravity-well","cur":"gravity-well"},{"d":"north","r":false,"cur":"gravity-well"},{"d":"east","r":false,"cur":"gravity-well"},{"d":"north","r":false,"cur":"gravity-well"}]
+
+=== desktop-small-800x600 (800x600) ===
+[FAIL]     interaction: canvas renders (non-blank pixels) :: {"ok":false,"why":"nonBlankSamples=0","w":360,"h":600}
+[FAIL]     interaction: WORLD.visited records traversal slugs in order :: ["entry-hall","entry-hall","chalk-corridor","gravity-well","torn-library"]
+[FAIL]     interaction: full 6-room contract traversal follows world_map exits :: [{"d":"north","r":"gravity-well","cur":"gravity-well"},{"d":"west","r":"chalk-corridor","cur":"chalk-corridor"},{"d":"east","r":"gravity-well","cur":"gravity-well"},{"d":"north","r":false,"cur":"gravity-well"},{"d":"east","r":false,"cur":"gravity-well"},{"d":"north","r":false,"cur":"gravity-well"}]
+
+=== mobile-375x667 (375x667) ===
+[FAIL]     interaction: canvas renders (non-blank pixels) :: {"ok":false,"why":"nonBlankSamples=0","w":375,"h":625}
+[FAIL]     interaction: WORLD.visited records traversal slugs in order :: ["entry-hall","entry-hall","chalk-corridor","gravity-well","torn-library"]
+[FAIL]     interaction: full 6-room contract traversal follows world_map exits :: [{"d":"north","r":"gravity-well","cur":"gravity-well"},{"d":"west","r":"chalk-corridor","cur":"chalk-corridor"},{"d":"east","r":"gravity-well","cur":"gravity-well"},{"d":"north","r":false,"cur":"gravity-well"},{"d":"east","r":false,"cur":"gravity-well"},{"d":"north","r":false,"cur":"gravity-well"}]
+
+SUMMARY: 0 runtime/console/network errors across 3 viewports.

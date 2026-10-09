@@ -1,0 +1,16 @@
+RUNTIME ERRORS REPORT (R1)
+Generated: 2026-10-09T19:33:18.103Z
+File: /home/fluke/Holotron/gameotron_output/20261009_151802/index.html
+URL: http://127.0.0.1:8899/index.html
+Browser: Firefox (Playwright, headless)
+
+=== desktop-1920x1080 (1920x1080) ===
+No runtime errors or failed interactions detected.
+
+=== desktop-small-800x600 (800x600) ===
+No runtime errors or failed interactions detected.
+
+=== mobile-375x667 (375x667) ===
+No runtime errors or failed interactions detected.
+
+SUMMARY: 0 runtime/console/network errors across 3 viewports.

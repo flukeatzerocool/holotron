@@ -1,0 +1,279 @@
+VISUAL DIRECTION FOR: Rule Breaker Dungeon
+================================================================
+
+PHASE 1 — FIVE VISUAL DIRECTION CONCEPTS
+----------------------------------------------------------------
+Each concept is scored 1–5 on Originality (O), Theme-Fit (T),
+Implementability in a single canvas/CSS index.html (I), and Visual
+Appeal (V). All five below include an Atmospheric Effects layer, as
+required.
+
+----------------------------------------------------------------
+CONCEPT 1 — "CHALK & RUIN" (Chalkpunk Insurgent)
+----------------------------------------------------------------
+ART STYLE: Hand-chalked line art on a grimy slate dungeon. Every
+tile, wall and glyph is drawn with a deliberately wobbly, line-boiled
+chalk stroke over charcoal stone. Rules are scrawled in white chalk
+and crossed out by a bolder red hand. Overlaid on top is a thin
+digital glitch-static layer (scanline tears + chromatic flicker) so
+the "rebellion" reads as physical chalk vandalism *and* as a system
+being hacked.
+
+PALETTE: Charcoal #1b1b22 / Slate #2b2b36 / Chalk white #f2efe4 /
+Blood-scrawl red #e0453b / Shatter cyan #57e0d0 / Chalk-yellow #f2c14e
+
+MOOD: Defiant, punk-zine energy — a dungeon vandalized by its own
+prisoners. Grim but playful; the graffiti is the light source.
+
+THEME-FIT: Very high. "Anything Goes" is literally written on the
+walls; rule-banners are torn rulebook strips; every shatter cracks
+the chalk layer. The theme is structural, and this style makes the
+structure visible.
+
+ATMOSPHERIC EFFECTS: chalk-dust motes drifting off freshly drawn
+strokes; glitch-static wipe between rooms; 6 px screen-shake +
+chromatic-aberration flash on rule-break; gravity-flip camera tilt.
+
+----------------------------------------------------------------
+CONCEPT 2 — "VHS OCCULT" (Analog Horror Dungeon)
+----------------------------------------------------------------
+ART STYLE: Degraded VHS/CRT dungeon. Scanlines, tracking-error
+bands, phosphor bloom, timestamp overlay in the corner. Rules appear
+as corrupted closed-caption text that glitches into truth. Rooms are
+dim, high-contrast silhouettes lit by a single flickering source.
+
+PALETTE: VCR black #0a0a0c / Phosphor green #7dfba0 / Magnetic
+purple #a05cff / Tape-white #e8e6df / Warning red #ff2f45 / Bleed
+cyan #4fd8ff
+
+MOOD: Creepy, liminal, "found footage" dread. Rebellion as a
+forbidden broadcast.
+
+THEME-FIT: High. "Break the signal" pairs with "break the rule," and
+glitch-static transitions are baked in. Slightly less playful than
+the GDD's wry tone.
+
+ATMOSPHERIC EFFECTS: rolling tracking bands, tape-jitter jitter on
+shatter, phosphor flicker, VHS dropout on screen transitions,
+desaturation pulse during the Bell Chamber alarm.
+
+----------------------------------------------------------------
+CONCEPT 3 — "RANSOM-ZINE" (Cut-Paper Collage)
+----------------------------------------------------------------
+ART STYLE: Everything is torn paper and cut-out ransom-note
+typography. Tiles are cardboard/comic panels; rules are pasted
+letter-clippings held with tape; the player is a paper cut-out with
+visible scissor-edge. Shatter = paper tearing, not glass.
+
+PALETTE: Kraft brown #b89a6a / Newsprint grey #d9d6c9 / Ink black
+#14140f / Poster red #d6302a / Tape yellow #e8c33b / Corner blue
+#3a6ea5
+
+MOOD: Scrappy, DIY, handmade-craft rebellion. Warm and tactile.
+
+THEME-FIT: High conceptually (torn rulebook = torn paper), but the
+GDD explicitly calls for a "glass-crack shatter" signature, which
+this style would fight.
+
+ATMOSPHERIC EFFECTS: paper-grain texture, fluttering page gusts in
+Torn Library, confetti of paper scraps on victory, soft drop-shadow
+depth, tape-peel animations.
+
+----------------------------------------------------------------
+CONCEPT 4 — "NEON SIGIL ARCADE"
+----------------------------------------------------------------
+ART STYLE: Glowing vector runes on obsidian. Thin additive-blend
+neon strokes, grid floors, bloom halos; rules rendered as glowing
+sigils that invert to a negative on break. Very high contrast,
+synthetic.
+
+PALETTE: Obsidian #05060a / Neon magenta #ff2d95 / Electric cyan
+#22e6ff / Void violet #7a3cff / Bone #f5f2ff / Ember orange #ff8a2b
+
+MOOD: Sleek, hypnotic, arcade-futurist hedonism. "Anything goes"
+as a nightclub, not a prison.
+
+THEME-FIT: Medium. Beautiful and easy to implement, but the neon
+aesthetic is generic and the dungeon/rulebook/chalk framing gets
+lost — the "torn rulebook" theme becomes decoration rather than
+structure.
+
+ATMOSPHERIC EFFECTS: additive bloom, particle trails on every move,
+neon ripple on tile entry, gravity-flip light-streak, alarm strobe.
+
+----------------------------------------------------------------
+CONCEPT 5 — "INK-WASH CATACOMB"
+----------------------------------------------------------------
+ART STYLE: Sumi-e ink wash over aged parchment. Rules brushed in
+black ink; the rebellion layer is a violent slash of red. Soft
+chiaroscuro walls, negative-space corridors.
+
+PALETTE: Ink #101014 / Wash grey #3c3a3f / Parchment #e9e0cc /
+Vermilion #c8392b / Moss #5a6b4f / Gold leaf #c9a227
+
+MOOD: Ancient, solemn, melancholy. A cathedral of dead rules.
+
+THEME-FIT: Medium. Thematically rich but tonally at odds with the
+GDD's punk/playful "ANYTHING GOES" voice and its fast phone-first
+arcade pacing.
+
+ATMOSPHERIC EFFECTS: ink-in-water diffusion on shatter, drifting
+dust motes, brush-stroke trails, slow vignette breathing, gold-leaf
+sparkle on collectibles.
+
+================================================================
+PHASE 2 — EVALUATION
+================================================================
+Scores 1–5 (O = Originality, T = Theme-Fit, I = Implementability,
+V = Visual Appeal). Weighted to match the pipeline (THEME-heavy,
+TOUCH/feel matters).
+
+| Concept              |  O  |  T  |  I  |  V  | Total (avg) |
+|----------------------|-----|-----|-----|-----|-------------|
+| 1 Chalk & Ruin       |  4  |  5  |  5  |  4  |   4.50      |
+| 2 VHS Occult         |  5  |  4  |  4  |  4  |   4.25      |
+| 3 Ransom-Zine        |  5  |  5  |  3  |  4  |   4.25      |
+| 4 Neon Sigil Arcade  |  3  |  3  |  5  |  5  |   4.00      |
+| 5 Ink-Wash Catacomb  |  4  |  3  |  3  |  4  |   3.50      |
+
+EVALUATION NOTES:
+- Concept 1 leads on Theme-Fit and Implementability simultaneously.
+  Every requested motif (stark stone tiles, chalk graffiti, glass-crack
+  rule shatter, glitch-static wipe, gravity-flip tilt) is natively
+  drawable with canvas 2D primitives (stroke, arc, gradients, per-pixel
+  noise), and its glitch overlay is a cheap post-effect.
+- Concept 2 is the most original but its CRT post-processing (scanline
+  shader-ish passes) costs more per-frame budget on 375 px phones and
+  drifts the tone darker than the GDD's wry voice.
+- Concept 3 ties Concept 1 on Theme-Fit but a paper-collage style
+  contradicts the mandated "glass-crack" shatter and requires heavy
+  hand-drawn typography, hurting Implementability.
+- Concept 4 is the easiest to build and very pretty, but the theme
+  becomes skin-deep — a fatal mismatch for a game whose entire point is
+  structural rule-inversion.
+- Concept 5 is atmospheric but tonally wrong and hard to keep legible
+  at phone size.
+
+SELECTED: CONCEPT 1 — "CHALK & RUIN" (Chalkpunk Insurgent).
+TRANSPARENT NOTE: I selected Concept 1 because it is the only concept
+that scores top-tier on Theme-Fit and Implementability at once. It fuses
+the GDD's mandated physical motifs (stark stone, hand-chalked rules,
+glass shatter, graffiti) with the digital glitch-static layer the GDD's
+transitions and finale already call for, and every element is achievable
+in vanilla canvas 2D + CSS with zero external assets. Concepts 2 and 3
+were close on originality/theme but each traded away implementability or
+tone; 4 and 5 lost on theme fidelity. I have augmented Concept 1 with
+select strong ideas from the runners-up: VHS-style scanline jitter at
+the Rule Core finale (Concept 2) and a light paper-tear accent on the
+master-rulebook page (Concept 3), without importing their heavier
+post-processing or palette.
+
+================================================================
+PHASE 3 — FINAL SPECIFICATION
+================================================================
+
+VISUAL DIRECTION FOR: Rule Breaker Dungeon
+
+ART STYLE:
+Hand-chalked line art on a grimy slate-and-stone dungeon, overlaid with
+a thin digital glitch-static layer ("chalkpunk insurgent"). Confidence/
+wobble: all strokes drawn with a 2–3 px random jitter and a slow
+line-boil (stroke seed re-rolled ~6 fps) so edges vibrate like damp
+chalk. Tile and wall outlines are rough, imperfect, high-contrast. Rules
+are scrawled in chalk-white, then struck through by a bolder red hand.
+Typography is ragged ransom-note / torn-rulebook: oversized, slightly
+rotated letterforms (CSS clip-path tears + transform skew), legible at
+375 px. The player token is a small defiant chalk stick-figure with a
+raised marker, squash-and-stretch on each move (scaleY 1.15 → 0.9 over
+90 ms ease). Overall: stark dungeon structure (stone/slate) versus a
+rebellious chalk+glitch overlay — the dungeon is one half of the
+palette, the vandalism the other.
+
+COLOR PALETTE:
+- Primary:   #1b1b22  (charcoal dungeon stone — dominant ground/walls)
+- Secondary: #2b2b36  (slate — raised tiles, panel fills, grid depth)
+- Accent 1:  #f2efe4  (chalk white — rules, tile outlines, typography)
+- Accent 2:  #e0453b  (blood-scrawl red — crossed-out rules, danger,
+                       Bell Chamber alarm, wrong/forbidden cues)
+- Accent 3:  #57e0d0  (shatter cyan — rule-break VFX, doors unlocked,
+                       gravity-flip, valid target highlight)
+- Accent 4:  #f2c14e  (chalk-yellow — near-miss / score popups / zone
+                       bonus; the "reward" spark)
+
+Usage rule: stone/slate are ground; chalk white is law; red is the lie
+and the danger; cyan is the break and the way forward; yellow is the
+reward. Color is never the only signal — every state also carries an
+icon/shape (color-plus-icon accessibility cue).
+
+MOOD:
+Defiant punk-zine energy — a dungeon vandalized by its own prisoners.
+Grim but playful and wry, matching the GDD's taunting voice ("Rules are
+just suggestions with good PR"). Darkness is the canvas, not the tone:
+the graffiti and glitch are the light. Escalation is felt in color
+temperature — rooms 1–2 cool and calm slate; rooms 3–4 cooler with
+drifting motes and paper; room 5 (Bell Chamber) pulses hot red with the
+alarm; room 6 (Rule Core) throbs heart-glow cyan-vs-red at the finale.
+
+KEY ELEMENTS:
+- Stone grid tiles: rough charcoal/slate quads with hand-chalked
+  outlines and a subtle wobble; one deliberately "wrong" chalk tile is
+  visually distinct in every room (texture + corner icon, not color
+  alone).
+- Player token: chalk stick-figure with raised marker; squash-and-stretch
+  on move; silhouette preserved at phone size.
+- RULE banner: a torn strip of the rulebook pinned across the top 12%;
+  ransom-note lettering; glitches and cracks apart on break; hold-to-
+  expand detail card.
+- Rule-break VFX: glass-crack fracture with pivoting "rule shard"
+  polygons, glyph-letter fragments, chromatic-aberration flash, 6 px
+  screen-shake, hit-stop.
+- Glitch-static wipe: full-screen noise/scanline band wiping between
+  rooms (180 ms); menus use a 120 ms fade.
+- Doors: chalk-drawn archways; dormant = dim red X, unlocked = cyan
+  glow with pulsing rune arrow, mapping 1:1 to `window.WORLD.exits`.
+- Graffiti layer: rebellious scrawls ("ANYTHING GOES", "RULES ARE
+  LIES") revealed as rooms are cleared, chalk-white + red hand.
+- Hazards: Gravity Well drifting pebbles (with dust trail); Torn
+  Library wind gusts visualized as drifting pages; Bell Chamber brass
+  bell with a rising red alarm ring; Rule Core chained-open master
+  rulebook with throbbing heart-glow.
+- HUD: rules-broken counter (0/6), things (0/4), score, room name —
+  flat, oversized, phone-legible.
+- Contextual controls: FLIP button and D-pad drawn as chalk buttons;
+  only present in relevant rooms.
+
+TECHNICAL NOTES (single self-contained index.html, vanilla JS):
+- Rendering: Canvas 2D only, one responsive `<canvas>` scaled by
+  `devicePixelRatio`, letterboxed to a fixed design aspect. All layout
+  math in virtual units with a single scale factor. `requestAnimationFrame`
+  with a fixed-step logic accumulator; variable render.
+- Chalk line-boil: pre-render each tile/wall to an offscreen canvas at
+  load; re-roll a small set (4–6) of jittered stroke variants and cycle
+  them ~6 fps. Zero per-frame path re-tessellation cost.
+- Glitch-static layer: a low-resolution offscreen noise buffer (e.g.
+  64×64) drawn with `drawImage` nearest-neighbour and a globalAlpha
+  flicker, plus a moving scanline band. Cheap, capped; only active
+  during transitions and the Rule Core finale.
+- Chromatic aberration: draw the scene (or just the shatter region)
+  twice with red/cyan offsets at low alpha during the break flash only.
+- Rule shards / particles: pooled particle array with a hard cap (e.g.
+  180 live); shards are simple triangles/quads with gravity + rotation;
+  popups drawn as text. Cap protects 375 px phone FPS.
+- Screen tilt on gravity flip: apply a CSS/ctx transform (rotate ~8°)
+  to the board container with an eased whoomp; keep HUD untransformed.
+- Typography without assets: use system chalk-like stacks and CSS
+  `clip-path` tears + slight `transform` skew for the ransom look —
+  no webfonts, no images. Rule text sized in virtual units for 375 px.
+- Touch targets ≥ 48 px; D-pad fallback bottom-left, FLIP bottom-right,
+  Pause top-right; all drawn on canvas and hit-tested in virtual coords.
+- Accessibility: high contrast, color-plus-icon cues on every state
+  (valid tile, danger, locked door, near-miss), so color-blind players
+  are never blocked; everything legible at 375 px width.
+- Performance target: 60 fps at 375×667 and 1920×1080; cap particles,
+  pre-render static textures, avoid per-frame allocations in the render
+  loop.
+- Zero external assets: no images, no webfonts, no network calls — all
+  visuals are canvas primitives, gradients, and drawn typography/CSS,
+  satisfying the free-to-play, fully offline requirement.
+
+*End of Visual Direction.*

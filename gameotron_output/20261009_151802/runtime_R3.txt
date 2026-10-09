@@ -1,0 +1,37 @@
+RUNTIME ERRORS REPORT (R3 - final regression)
+Generated: 2026-10-09T19:58:53.243Z
+File: /home/fluke/Holotron/gameotron_output/20261009_151802/index.html
+URL: http://127.0.0.1:8899/index.html
+Browser: Firefox (Playwright, headless)
+Viewports: 1920x1080 (mouse), 800x600 (mouse), 375x667 (touch)
+
+=== desktop-1920x1080 (1920x1080, MOUSE) ===
+No console errors, uncaught exceptions, or failed requests detected.
+No failed interaction checks.
+[viewport-issue/LOW] rule-detail card (z-index 25) stays visible for 3.2s after a banner long-press
+    (desktop-1920x1080 card rect [674.87,151.20 - 1245.10,313.20] (570.23x162)).
+    On 800x600 and 375x667 this rect covers the pause menu RESUME button and intercepted the tap during the run
+    (the card was dismissed before the pause-menu checks). At 1920x1080 it sits above the pause menu and did not overlap.
+    Impact: no crash; only during the card lifetime (it auto-hides after 3.2s). Suggested: hide #ruleDetail on state change to PAUSED.
+
+=== desktop-small-800x600 (800x600, MOUSE) ===
+No console errors, uncaught exceptions, or failed requests detected.
+No failed interaction checks.
+[viewport-issue/LOW] rule-detail card (z-index 25) stays visible for 3.2s after a banner long-press
+    (desktop-small-800x600 card rect [241.60,84 - 558.40,186] (316.80x102)).
+    On 800x600 and 375x667 this rect covers the pause menu RESUME button and intercepted the tap during the run
+    (the card was dismissed before the pause-menu checks). At 1920x1080 it sits above the pause menu and did not overlap.
+    Impact: no crash; only during the card lifetime (it auto-hides after 3.2s). Suggested: hide #ruleDetail on state change to PAUSED.
+
+=== mobile-375x667 (375x667, TOUCH) ===
+No console errors, uncaught exceptions, or failed requests detected.
+No failed interaction checks.
+[viewport-issue/LOW] rule-detail card (z-index 25) stays visible for 3.2s after a banner long-press
+    (mobile-375x667 card rect [22.50,108.50 - 352.50,215.50] (330x107)).
+    On 800x600 and 375x667 this rect covers the pause menu RESUME button and intercepted the tap during the run
+    (the card was dismissed before the pause-menu checks). At 1920x1080 it sits above the pause menu and did not overlap.
+    Impact: no crash; only during the card lifetime (it auto-hides after 3.2s). Suggested: hide #ruleDetail on state change to PAUSED.
+
+=== SUMMARY ===
+Runtime/console/network errors: 0  | failed requests: 0  | fatal viewports: 0
+Failed interaction checks (door buttons / banner / screens / toggles): 0

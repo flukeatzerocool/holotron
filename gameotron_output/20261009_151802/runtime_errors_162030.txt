@@ -1,0 +1,7 @@
+2026-10-09 16:20:42 
+Console errors: 0
+Uncaught exceptions: 0
+Failed interactions: 0
+Failed requests: 0
+World-contract mismatches: 0
+Warnings (benign): 4 AudioContext autoplay notices

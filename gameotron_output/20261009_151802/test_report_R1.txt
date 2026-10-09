@@ -1,0 +1,150 @@
+PUPPETEER/PLAYWRIGHT TEST REPORT (R1)
+Generated: 2026-10-09T19:33:18.103Z
+File under test: /home/fluke/Holotron/gameotron_output/20261009_151802/index.html
+URL: http://127.0.0.1:8899/index.html
+Browser: Firefox (Playwright, headless)  | Viewports: 1920x1080 (mouse), 800x600 (mouse), 375x667 (touch)
+
+=====================================================================
+VIEWPORT: desktop-1920x1080  (1920x1080, MOUSE)
+RESULT: 40/40 PASS  OK
+Console errors: 0 | Uncaught exceptions: 0 | Failed requests: 0
+---------------------------------------------------------------------
+  [PASS] page loads (HTTP 200)  :: status=200
+  [PASS] canvas element present with valid backing size  :: {"hasCanvas":true,"sizeOk":true,"w":648,"h":1080}
+  [PASS] WORLD + window.move hooks present
+  [PASS] title screen active
+  [PASS] Title -> How to Play
+  [PASS] How to Play -> Back returns Title
+  [PASS] Title -> Settings
+  [PASS] Settings MUSIC toggle changes state+label  :: before=true after=false label="MUSIC: OFF"
+  [PASS] Settings SFX toggle changes state+label  :: before=true after=false label="SOUND FX: OFF"
+  [PASS] Settings CREDITS shows credits panel
+  [PASS] Settings RESET opens confirm dialog  :: ["Reset all data? This clears your best score and progress."]
+  [PASS] Settings -> Back returns Title
+  [PASS] Title -> START enters PLAYING at start room  :: {"screen":"PLAYING","prev":"TITLE","over":false}
+  [PASS] HUD visible during gameplay
+  [PASS] canvas renders gameplay (non-blank pixels)  :: {"nonBlank":3275,"w":648,"h":1080}
+  [PASS] tap-to-move steps player onto grid tile  :: {"c":3,"r":2}
+  [PASS] breaking room rule increments score  :: score 0 -> 101
+  [PASS] breaking room rule sets room.broken + run.broken  :: roomBroken=true run.broken=1
+  [PASS] pause button -> PAUSED
+  [PASS] Pause MUSIC toggle works  :: before=false after=true
+  [PASS] Pause SFX toggle works
+  [PASS] Pause -> How to Play
+  [PASS] How to Play -> Back returns Pause
+  [PASS] Pause -> Settings
+  [PASS] Settings -> Back returns Pause
+  [PASS] Pause RESUME -> PLAYING
+  [PASS] force Game Over -> screen-gameover
+  [PASS] Game Over shows score  :: goScore=101
+  [PASS] Game Over RETRY -> PLAYING (fresh run)
+  [PASS] force Victory -> screen-victory
+  [PASS] Victory shows score  :: vScore=1400
+  [PASS] Victory PLAY AGAIN -> PLAYING
+  [PASS] reset to start slug  :: current=entry-hall
+  [PASS] window.move('up') invalid -> false & no move  :: {"r":false,"unchanged":true}
+  [PASS] window.move('north') from entry-hall returns truthy + current=chalk-corridor  :: {"r":"chalk-corridor","from":"entry-hall","to":"chalk-corridor"}
+  [PASS] window.move('east') from chalk-corridor returns truthy + current=gravity-well  :: {"r":"gravity-well","from":"chalk-corridor","to":"gravity-well"}
+  [PASS] window.move('south') from gravity-well returns truthy + current=torn-library  :: {"r":"torn-library","from":"gravity-well","to":"torn-library"}
+  [PASS] WORLD.visited records traversal slugs in order  :: ["entry-hall","chalk-corridor","gravity-well","torn-library"]
+  [PASS] visited slugs all exist in world_map.json  :: ["entry-hall","chalk-corridor","gravity-well","torn-library"]
+  [PASS] full 6-room contract traversal follows world_map exits  :: [{"d":"north","r":"chalk-corridor","cur":"chalk-corridor"},{"d":"west","r":"rule-core","cur":"rule-core"},{"d":"east","r":"chalk-corridor","cur":"chalk-corridor"},{"d":"north","r":"bell-chamber","cur":"bell-chamber"},{"d":"east","r":"torn-library","cur":"torn-library"},{"d":"north","r":"gravity-well","cur":"gravity-well"}]
+  Dialogs seen: ["Reset all data? This clears your best score and progress."]
+
+=====================================================================
+VIEWPORT: desktop-small-800x600  (800x600, MOUSE)
+RESULT: 40/40 PASS  OK
+Console errors: 0 | Uncaught exceptions: 0 | Failed requests: 0
+---------------------------------------------------------------------
+  [PASS] page loads (HTTP 200)  :: status=200
+  [PASS] canvas element present with valid backing size  :: {"hasCanvas":true,"sizeOk":true,"w":360,"h":600}
+  [PASS] WORLD + window.move hooks present
+  [PASS] title screen active
+  [PASS] Title -> How to Play
+  [PASS] How to Play -> Back returns Title
+  [PASS] Title -> Settings
+  [PASS] Settings MUSIC toggle changes state+label  :: before=true after=false label="MUSIC: OFF"
+  [PASS] Settings SFX toggle changes state+label  :: before=true after=false label="SOUND FX: OFF"
+  [PASS] Settings CREDITS shows credits panel
+  [PASS] Settings RESET opens confirm dialog  :: ["Reset all data? This clears your best score and progress."]
+  [PASS] Settings -> Back returns Title
+  [PASS] Title -> START enters PLAYING at start room  :: {"screen":"PLAYING","prev":"TITLE","over":false}
+  [PASS] HUD visible during gameplay
+  [PASS] canvas renders gameplay (non-blank pixels)  :: {"nonBlank":1022,"w":360,"h":600}
+  [PASS] tap-to-move steps player onto grid tile  :: {"c":3,"r":2}
+  [PASS] breaking room rule increments score  :: score 0 -> 101
+  [PASS] breaking room rule sets room.broken + run.broken  :: roomBroken=true run.broken=1
+  [PASS] pause button -> PAUSED
+  [PASS] Pause MUSIC toggle works  :: before=false after=true
+  [PASS] Pause SFX toggle works
+  [PASS] Pause -> How to Play
+  [PASS] How to Play -> Back returns Pause
+  [PASS] Pause -> Settings
+  [PASS] Settings -> Back returns Pause
+  [PASS] Pause RESUME -> PLAYING
+  [PASS] force Game Over -> screen-gameover
+  [PASS] Game Over shows score  :: goScore=101
+  [PASS] Game Over RETRY -> PLAYING (fresh run)
+  [PASS] force Victory -> screen-victory
+  [PASS] Victory shows score  :: vScore=1400
+  [PASS] Victory PLAY AGAIN -> PLAYING
+  [PASS] reset to start slug  :: current=entry-hall
+  [PASS] window.move('up') invalid -> false & no move  :: {"r":false,"unchanged":true}
+  [PASS] window.move('north') from entry-hall returns truthy + current=chalk-corridor  :: {"r":"chalk-corridor","from":"entry-hall","to":"chalk-corridor"}
+  [PASS] window.move('east') from chalk-corridor returns truthy + current=gravity-well  :: {"r":"gravity-well","from":"chalk-corridor","to":"gravity-well"}
+  [PASS] window.move('south') from gravity-well returns truthy + current=torn-library  :: {"r":"torn-library","from":"gravity-well","to":"torn-library"}
+  [PASS] WORLD.visited records traversal slugs in order  :: ["entry-hall","chalk-corridor","gravity-well","torn-library"]
+  [PASS] visited slugs all exist in world_map.json  :: ["entry-hall","chalk-corridor","gravity-well","torn-library"]
+  [PASS] full 6-room contract traversal follows world_map exits  :: [{"d":"north","r":"chalk-corridor","cur":"chalk-corridor"},{"d":"west","r":"rule-core","cur":"rule-core"},{"d":"east","r":"chalk-corridor","cur":"chalk-corridor"},{"d":"north","r":"bell-chamber","cur":"bell-chamber"},{"d":"east","r":"torn-library","cur":"torn-library"},{"d":"north","r":"gravity-well","cur":"gravity-well"}]
+  Dialogs seen: ["Reset all data? This clears your best score and progress."]
+
+=====================================================================
+VIEWPORT: mobile-375x667  (375x667, TOUCH)
+RESULT: 40/40 PASS  OK
+Console errors: 0 | Uncaught exceptions: 0 | Failed requests: 0
+---------------------------------------------------------------------
+  [PASS] page loads (HTTP 200)  :: status=200
+  [PASS] canvas element present with valid backing size  :: {"hasCanvas":true,"sizeOk":true,"w":375,"h":625}
+  [PASS] WORLD + window.move hooks present
+  [PASS] title screen active
+  [PASS] Title -> How to Play
+  [PASS] How to Play -> Back returns Title
+  [PASS] Title -> Settings
+  [PASS] Settings MUSIC toggle changes state+label  :: before=true after=false label="MUSIC: OFF"
+  [PASS] Settings SFX toggle changes state+label  :: before=true after=false label="SOUND FX: OFF"
+  [PASS] Settings CREDITS shows credits panel
+  [PASS] Settings RESET opens confirm dialog  :: ["Reset all data? This clears your best score and progress."]
+  [PASS] Settings -> Back returns Title
+  [PASS] Title -> START enters PLAYING at start room  :: {"screen":"PLAYING","prev":"TITLE","over":false}
+  [PASS] HUD visible during gameplay
+  [PASS] canvas renders gameplay (non-blank pixels)  :: {"nonBlank":1105,"w":375,"h":625}
+  [PASS] tap-to-move steps player onto grid tile  :: {"c":3,"r":2}
+  [PASS] breaking room rule increments score  :: score 0 -> 101
+  [PASS] breaking room rule sets room.broken + run.broken  :: roomBroken=true run.broken=1
+  [PASS] pause button -> PAUSED
+  [PASS] Pause MUSIC toggle works  :: before=false after=true
+  [PASS] Pause SFX toggle works
+  [PASS] Pause -> How to Play
+  [PASS] How to Play -> Back returns Pause
+  [PASS] Pause -> Settings
+  [PASS] Settings -> Back returns Pause
+  [PASS] Pause RESUME -> PLAYING
+  [PASS] force Game Over -> screen-gameover
+  [PASS] Game Over shows score  :: goScore=101
+  [PASS] Game Over RETRY -> PLAYING (fresh run)
+  [PASS] force Victory -> screen-victory
+  [PASS] Victory shows score  :: vScore=1400
+  [PASS] Victory PLAY AGAIN -> PLAYING
+  [PASS] reset to start slug  :: current=entry-hall
+  [PASS] window.move('up') invalid -> false & no move  :: {"r":false,"unchanged":true}
+  [PASS] window.move('north') from entry-hall returns truthy + current=chalk-corridor  :: {"r":"chalk-corridor","from":"entry-hall","to":"chalk-corridor"}
+  [PASS] window.move('east') from chalk-corridor returns truthy + current=gravity-well  :: {"r":"gravity-well","from":"chalk-corridor","to":"gravity-well"}
+  [PASS] window.move('south') from gravity-well returns truthy + current=torn-library  :: {"r":"torn-library","from":"gravity-well","to":"torn-library"}
+  [PASS] WORLD.visited records traversal slugs in order  :: ["entry-hall","chalk-corridor","gravity-well","torn-library"]
+  [PASS] visited slugs all exist in world_map.json  :: ["entry-hall","chalk-corridor","gravity-well","torn-library"]
+  [PASS] full 6-room contract traversal follows world_map exits  :: [{"d":"north","r":"chalk-corridor","cur":"chalk-corridor"},{"d":"west","r":"rule-core","cur":"rule-core"},{"d":"east","r":"chalk-corridor","cur":"chalk-corridor"},{"d":"north","r":"bell-chamber","cur":"bell-chamber"},{"d":"east","r":"torn-library","cur":"torn-library"},{"d":"north","r":"gravity-well","cur":"gravity-well"}]
+  Dialogs seen: ["Reset all data? This clears your best score and progress."]
+
+=====================================================================
+TOTAL: 120/120 checks passed across 3 viewports.
+WORLD-CONTRACT traversal (window.move): WORKED on all viewports.

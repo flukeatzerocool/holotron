@@ -21,14 +21,15 @@ Phase 2: Ideation
 - Use evaluation_agent to rank concepts and select the best one
 
 Phase 3: Design
-- Use gdd_agent to create a comprehensive Game Design Document for the selected concept
+- Use world_agent to author and validate the game world from the selected concept (Holonovel world model); it produces world_map.json (machine-readable) + world_map.txt
+- Use gdd_agent to create a comprehensive Game Design Document for the selected concept, using the world_agent outputs (world_map.json / world_map.txt)
 
 Phase 4: Concept Development
 - Use audio_agent to define audio direction
 - Use visual_agent to define visual direction
 
 Phase 5: Implementation
-- Use code_agent to implement the game as a single index.html file with touch + mouse controls
+- Use code_agent to implement the game as a single index.html file with touch + mouse controls, using the Phase 3 world artifacts (embed world_map.json as window.WORLD and expose window.move(dir) per the world contract)
 - Loop review → bugfix cycles until no CRITICAL/HIGH/MEDIUM issues remain or max 3 cycles reached:
   * Use review_agent for static code analysis
   * Use puppeteer_agent for runtime testing

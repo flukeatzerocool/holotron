@@ -1,0 +1,126 @@
+BUGLIST R1 — Rule Breaker Dungeon
+File reviewed: /home/fluke/Holotron/gameotron_output/20261009_151802/index.html
+GDD: /home/fluke/Holotron/gameotron_output/20261009_151802/gdd.md
+Reviewer: review_agent (static analysis)
+Date: 2026-10-09
+
+======================================================================
+CRITICAL
+======================================================================
+
+[CRITICAL] Canvas board is rendered at the wrong origin (missing BOARD.gx/gy offset) so the visible grid does not match hit-testing; tap-to-move selects the wrong tile and the board draws behind the top bar/HUD.
+Location: index.html:1172-1272 (drawBoard), vs geom() index.html:564-570, tileAt() 571-577, doors 990-991, particles 795, popups 1323
+Explanation: `geom()` returns `ox = BOARD.gx + (gw-bw)/2` and `oy = BOARD.gy + (gh-bh)/2` (BOARD.gy=150, gw=432, gh=540). tileAt(), syncDoors(), shatterFX() and popup rendering ALL add `g.ox`/`g.oy` to their coordinates, so they assume the board's top-left is at (ox,oy). But `drawBoard()` never translates by (g.ox,g.oy): after `ctx.save()` it immediately does `ctx.translate(g.bw/2,g.bh/2)` and then draws every tile/entity at local `(c*g.tile, r*g.tile)`, i.e. pinned to the canvas origin (0,0). Consequences: (a) the grid/player token are drawn shifted up-left by ~(24,204) in entry-hall and hidden under the DOM topbar/HUD; (b) `handleTap`→`tileAt` subtracts (ox,oy), so tapping a drawn tile selects a cell offset by one full offset — tap-to-move is effectively broken for most of the board; (c) door buttons, shatter particles and score popups appear detached from the board. The D-pad still works, which masks the failure in a casual playtest but the primary control (tap-to-move, the GDD's stated core verb) is misaligned.
+Fix approach: In `drawBoard()`, immediately after `ctx.save()`, add `ctx.translate(g.ox, g.oy);` BEFORE the existing `ctx.translate(g.bw/2,g.bh/2)` / rotate / `translate(-g.bw/2,-g.bh/2)` block, so all local tile/entity drawing is offset to the board rect. Verify by cross-checking that a synthesized tap at the rendered player tile yields the player's own cell.
+
+======================================================================
+HIGH
+======================================================================
+
+[HIGH] Bell Chamber alarm meter and ejection never activate — the signature soft-timer mechanic is dead and `alarmEject()` can never run.
+Location: index.html:618 (enterRoom alarmActive=false), 709-715 (ringBell sets alarmActive=true then breakRule sets broken=true), 830-839 (stepHazards)
+Explanation: On entering `bell-chamber`, `enterRoom` explicitly sets `room.alarmActive = false` and the meter is only advanced when `room.slug==='bell-chamber' && room.alarmActive && !room.broken` (line 830). `alarmActive` is set true only inside `ringBell()`, but `ringBell()` then calls `breakRule()`, which sets `room.broken = true`; the very next frame the guard `!room.broken` prevents `room.alarm += dt`. Therefore `room.alarm` stays 0 forever, `alarm >= alarmMax` is never true, `alarmEject()` (line 838) never fires, and the Bell-Chamber near-miss branch (line 840, requires `room.alarm>0`) is unreachable. The GDD's "alarm meter fills 0→100 then ejects to Chalk Corridor" (gdd.md:100) and the escalating alarm-pulse audio do not function.
+Fix approach: Start the meter on entry — set `room.alarmActive = true` in `enterRoom` for `bell-chamber` (remove the forced false), and let it fill while the rule is unbroken. Ringing the bell should stop the meter (broken=true), and if the meter fills first call `alarmEject()` (then reset alarm on re-entry). Keep the `!room.broken` guard so it stops after a successful ring.
+
+[HIGH] Game Over screen is unreachable — `triggerGameOver()` is defined but never called, so the required GAME_OVER screen has no transition path.
+Location: index.html:920-930 (definition); no call sites anywhere (grep confirms only the definition)
+Explanation: The GDD Screen Inventory (§7f, gdd.md:335-338) requires a Game Over screen with Retry/Back-to-Title, and §6 lists `PLAYING → GAME_OVER` as a transition. The DOM screen `#screen-gameover` and `show(GS.GAMEOVER)` mapping exist, but nothing invokes `triggerGameOver()`: not the Bell-Chamber alarm eject (which is soft-fail by design), and there is no quit-with-score path from Pause (Pause's "GO BACK TO START MENU" jumps straight to TITLE and discards the run). The screen is therefore dead UI — the requested "verify all screens exist and transitions work" fails for this screen.
+Fix approach: Wire at least one deterministic path: either (a) on alarm ejection after N failures in the Bell Chamber call `triggerGameOver()`, or (b) add a "Quit (Submit Score)" action from Pause that calls `triggerGameOver()` before returning to TITLE. Recompute best score inside `triggerGameOver` (already done) and confirm the Retry button (`data-act="retry"`) returns to PLAYING.
+
+======================================================================
+MEDIUM
+======================================================================
+
+[MEDIUM] `window.move(dir)` bypasses the rule-break lock that the player-facing door tap enforces, diverging from the GDD "API and UI can never diverge" contract.
+Location: index.html:628-638 (transition / window.move) vs 724-728 (doorAttempt); gdd.md:178
+Explanation: The door-tap UI calls `doorAttempt()`, which refuses the transition until `room.broken` is true (line 726) then calls `transition()`. `window.move()` calls `transition()` directly with no broken-gate (line 637), so an automated/scripted caller can traverse all six rooms without ever breaking a rule. build_notes.txt (lines 93-96) documents this as a deliberate testing affordance, but the GDD states `window.move(dir)` is "the exact function the door-tap UI calls; the API and the UI can never diverge." The divergence is real even if intentional; it should be made explicit in the GDD or unified.
+Fix approach: Either route `window.move` through `doorAttempt` (losing the ungated traversal convenience) OR add an explicit documented parameter, e.g. `transition(dir, {ignoreLock:true})`, and have both `window.move` and `doorAttempt` call the same gated function by default, with tests opting in. Update the GDD contract accordingly.
+
+[MEDIUM] Torn Library's `cracked-rulebook` can be collected by tapping its tile from any distance, bypassing the intended wall-eating reveal.
+Location: index.html:737-739 (handleTap)
+Explanation: `handleTap` collects `room.thingPos` whenever the tapped tile equals `thingPos`, with no adjacency or line-of-sight check ("collect visible things by tap (any distance)"). The thing at (5,3) is deliberately walled off at (4,3) so the player must eat a wall to reach it (gdd.md:90-93). Because the tap handler ignores walls, the collectible (and its +25 and lore) is obtainable without performing the room's break action, undermining the "eat a wall to reveal the page behind" design.
+Fix approach: Require adjacency (as with movement) or require `hasWall(4,3)` to have been eaten before allowing the tap-collect in `torn-library`. Simplest: gate the `thingPos` branch on `Math.abs(dc)+Math.abs(dr)<=1` (or on `room.eaten['4,3']`).
+
+[MEDIUM] `tearPage()` force-sets `run.broken = 6`, so the victory screen can report 6/6 rules broken even when the player reached Rule Core after breaking only one rule.
+Location: index.html:662-674 (tearPage line 665)
+Explanation: Rule Core is reachable via chalk-corridor's `west` exit immediately after breaking only the Chalk Corridor rule. `tearPage()` unconditionally sets `run.broken = 6`, and the victory screen hardcodes `6/6` (line 913). The HUD counter and the victory "Rules broken" readout therefore misrepresent player progress, and the per-rule Shatter Bonus for the unvisited rooms is never earned (the score model becomes inconsistent with the counter).
+Fix approach: Keep `run.broken` as the real count (do not overwrite to 6), display `run.broken + '/6'` on victory, and optionally require all six rules broken before Rule Core's book can be torn (or add the missing rule-shatter points when force-completing).
+
+[MEDIUM] Several input behaviours specified in GDD §2.1/2.2 are missing or implemented differently: no 500 ms banner hold, no hover highlight, no drag/pan, and swipe direction is not restricted to gravity-well until release.
+Location: index.html:1065 (banner uses tap via bindPress), 1026-1032 (pointerMove), 1046-1048
+Explanation: GDD requires (a) hold the RULE banner ≥500 ms to expand the detail card — the code toggles it on `touchstart`/`mousedown` immediately via `bindPress` (250 ms debounce only), so any accidental tap opens/closes it; (b) desktop `mousemove` hover highlighting of valid tiles — not implemented; (c) drag/pan for overflow boards — not implemented (boards always fit, so low impact). These are specified controls in the GDD and should be reconciled.
+Fix approach: Implement an explicit long-press timer on the banner (start on touchstart/mousedown, expand after 500 ms, cancel on early release/move), guard the existing tap behaviour behind it, and either implement hover/pan or amend the GDD to match the shipped interaction. Given board-fit, hover/pan can be explicitly descoped in the GDD.
+
+[MEDIUM] Repeated same-direction taps on the on-screen D-pad can be swallowed by the 250 ms per-element debounce, degrading responsiveness on touch devices.
+Location: index.html:1006-1018 (bindPress), 1051-1053 (d-pad binding)
+Explanation: `bindPress` ignores any second event within 250 ms (`if (now-last < 250) return;`). Because it also fires on `touchstart`, a player tapping the same direction repeatedly faster than 4 Hz loses moves. Since touch events already de-duplicate the synthesized mouse event, the debounce is only needed to suppress the touch→mouse echo, and 250 ms is longer than necessary.
+Fix approach: Reduce to a shorter echo guard (e.g. 40-60 ms) or suppress the follow-up mouse event per-gesture instead of time-throttling all presses.
+
+======================================================================
+LOW
+======================================================================
+
+[LOW] `window.WORLD.visited` accumulates duplicates on every traversal and is not deduplicated.
+Location: index.html:615-616 (enterRoom)
+Explanation: `first` is computed via `indexOf`, but the slug is always pushed regardless, so revisiting rooms grows the array without bound and it no longer represents distinct visited rooms. It is otherwise unused, so impact is minor (growth/memory and misleading semantics for test assertions).
+Fix approach: Only push when `first` is true: `if (first) window.WORLD.visited.push(slug);`.
+
+[LOW] `eatWall()` spawns particles unconditionally, ignoring `window.flags.juiceEnabled`.
+Location: index.html:716-723 (burst at 720)
+Explanation: Every other juice effect (shatterFX, confetti, shake, hitstop, score popups) is gated behind `window.flags.juiceEnabled`, but the wall-crunch `burst(...)` is not. With juice disabled, eating a wall still emits a particle burst, violating the "all juice togglable via juiceEnabled" policy.
+Fix approach: Wrap `burst(...)` in `if (window.flags.juiceEnabled) { ... }`.
+
+[LOW] Menu navigation can lose the Pause origin after a Pause→Settings→HowTo→Back→Settings→Back round trip.
+Location: index.html:1084-1092 (onAct back/settings/howto)
+Explanation: `show()` overwrites `state.prev` on every call, so backtracking more than one level from a nested menu resolves to TITLE instead of the original PAUSED state. Minor UX inconsistency in the required menu flow.
+Fix approach: Track a small navigation stack (or preserve an explicit `returnTo` that is not overwritten when entering HOWTO/SETTINGS from the same menu chain).
+
+[LOW] Decorative scanline/vignette render pass is a no-op placeholder.
+Location: index.html:1303-1308 (render)
+Explanation: The comment promises "subtle scanlines / vignette" but the else branch is empty and no overlay is drawn; the visual_direction notes scanline treatment. Cosmetic gap only.
+Fix approach: Draw a cached scanline/vignette overlay (respecting `reducedFlash`) or remove the misleading comment.
+
+[LOW] No first-failure hint timing — the rule detail hint is available immediately on tap, GDD calls for a hint after 3 failed attempts.
+Location: index.html:1057-1065 (showRuleDetail)
+Explanation: The GDD (gdd.md:124) specifies the hint to appear after 3 failed attempts; it is instead always shown in the detail card, so the "gentle nudge" cadence is absent.
+Fix approach: Increment a per-room failed-attempt counter on blocked/locked feedback and only reveal the HINT line once it reaches 3 (or amend the GDD).
+
+[LOW] Magic numbers / dead configuration constants.
+Location: index.html:556 (hitstop), 646-649, 908, and `shake.mag` literals (656, 668, 751, 824, 855)
+Explanation: Numerous tuning literals (hitstop ms, shake magnitudes, time-bonus 900/×5, near-miss radii 0.62/0.8) are inline. Not a functional bug, but hurts balancing/tuning and readability; also `DIRVEC` and `HINTS` are only partially used.
+Fix approach: Extract a `TUNE` constants object and reference it; keep as a non-blocking cleanup.
+
+======================================================================
+STANDARD CHECKS SUMMARY
+======================================================================
+Functionality: Runs, but CRITICAL C1 breaks the primary tap-to-move control alignment; HIGH H1 kills the Bell-Chamber timer; HIGH H2 leaves Game Over unreachable.
+Screens: 7 states present (TITLE, HOWTO, PAUSED, PLAYING/canvas, SETTINGS, GAMEOVER, VICTORY). Pause has resume + music toggle + SFX toggle + How to Play + Settings + Back-to-Title (GDD-min all present). GAMEOVER transition does not fire (H2).
+Controls: touchstart/touchmove/touchend (+cancel) and mousedown/mousemove/mouseup both registered via a shared gesture state; viewport meta present; canvas + CSS scaled responsively; touch targets >= 48-52 px. Passes, with MEDIUM input-behaviour gaps.
+World contract: `window.WORLD` matches world_map.json verbatim (6 rooms, seed 0, start entry-hall); `window.WORLD.current` set on load and in enterRoom on every transition; `window.move(dir)` validates dir and returns the target slug/false via the shared transition() handler. Load-bearing traversal works; note the gate divergence M1.
+Game feel: particles, screenshake, hit-stop, wipe, toast, popups, confetti all present and mostly gated by window.flags.juiceEnabled (one ungated burst — LOW).
+Bug potential: no infinite loops (fixed-step accumulator guarded to 5), no div-by-zero (guards present), no duplicate DOM listeners (bindPress touch+mouse de-duplicated by preventDefault), FX arrays capped; minor unbounded `visited` growth (LOW).
+
+TOTALS: C=1 H=2 M=5 L=6
+
+======================================================================
+FIXED BUGS (bugfix_agent, cycle 1)
+======================================================================
+- [CRITICAL] drawBoard() missing board offset - RESOLVED via `ctx.translate(g.ox,g.oy);` added immediately after `ctx.save()` (before the bw/2 rotate block), so tile/entity rendering aligns with geom()/tileAt() hit-testing. Particles (shatterFX), popups and doors already add g.ox/g.oy outside drawBoard and are drawn in world space, so they are not double-offset.
+- [HIGH] Bell Chamber alarm meter dead / alarmEject unreachable - RESOLVED via enterRoom now sets `room.alarmActive=true` (plus alarm=0, alarmed=false) for bell-chamber; ringBell() stops the meter (`alarmActive=false`) instead of starting it; stepHazards fills the 0->max meter while unbroken, so alarmEject() now fires.
+- [HIGH] Game Over unreachable - RESOLVED via alarm-eject failure path: run.ejects counter (init in run + reset in newRun); alarmEject() increments it and calls triggerGameOver() on the 3rd ejection (toast always fires first). Retry button reuses newRun().
+- [MEDIUM] window.move() bypassed door rule-break lock - RESOLVED via single gated `transition(dir, opts)`; `window.move(dir, opts)` and `doorAttempt(dir)` both go through it. Tests opt in with `window.move(dir, {ignoreLock:true})` (or boolean `true`). UI and API now share one gate by default.
+- [MEDIUM] torn-library cracked-rulebook collectable at any distance - RESOLVED via handleTap now requires adjacency (|dc|+|dr|<=1) or prior wall-eat `room.eaten['4,3']` before collecting thingPos.
+- [MEDIUM] tearPage() force-set run.broken=6 - RESOLVED via `run.broken += 1` (true count) and victory now renders `run.broken + '/6'`; full clear still reads 6/6, partial runs report their real count.
+- [MEDIUM] Banner assumed any tap opened the detail card - RESOLVED via dedicated 500ms long-press handlers on bannerEl (touchstart/mousedown start timer, touchend/mouseup/mouseleave/touchcancel cancel); early release does nothing.
+- [MEDIUM] 250ms D-pad debounce swallowed rapid taps - RESOLVED via bindPress echo guard reduced to 60ms; touchstart preventDefault still suppresses the synthesized mouse echo.
+- [LOW] window.WORLD.visited unbounded growth - RESOLVED via `if (first) window.WORLD.visited.push(slug);`.
+- [LOW] eatWall() burst ignored juiceEnabled - RESOLVED by wrapping burst in `if (window.flags.juiceEnabled)`. Related alignment fix: burst coords now converted from tile units to world pixels (gg.ox+(c+0.5)*tile) matching the particle system's pixel-space integration.
+
+Unfixed bugs:
+- [UNFIXED] [LOW] Menu navigation can lose the Pause origin after deep Pause->Settings->HowTo round trips | Reason: requires a navigation stack; low UX impact, deferred to avoid scope creep.
+- [UNFIXED] [LOW] Decorative scanline/vignette render pass is a no-op placeholder | Reason: cosmetic only; adding a cached overlay risks perf/appearance regressions, deferred.
+- [UNFIXED] [LOW] No 3-failed-attempt hint timing (hint always shown after hold) | Reason: playback cadence tuning; needs per-room failed-attempt counter design, deferred.
+- [UNFIXED] [LOW] Magic numbers / dead config constants (hitstop, shake.mag, TUNE) | Reason: non-blocking refactor, deferred.
+- [DESCCOPED] [MEDIUM] GDD input: desktop hover highlight and drag/pan not implemented | Reason: boards always fit the viewport (no overflow), so pan is inert; hover would need pointer-hover hit-testing and is better reconciled in the GDD. The 500ms banner hold (the load-bearing item) was implemented.
+
+New line count: index.html = 1415 lines (was 1388).

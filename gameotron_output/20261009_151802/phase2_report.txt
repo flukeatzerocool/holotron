@@ -1,0 +1,147 @@
+PHASE 2 — WORLD <-> GAME CONSISTENCY REPORT (R4)
+Generated: 2026-10-09T16:10:12-0400
+Game:    /home/fluke/Holotron/gameotron_output/20261009_151802/index.html
+World:   /home/fluke/Holotron/gameotron_output/20261009_151802/world_map.json
+Control: /home/fluke/Holotron/test_worlds/malformed.json
+Tooling: playwright-cli (Firefox, headless) + local python3 http.server (127.0.0.1:8931)
+Viewports: 1920x1080* / 800x600 / 375x667  (*edge probes on 800x600 + 375x667 per task)
+
+
+==================================================================
+RESULT SUMMARY
+==================================================================
+A. STRUCTURAL (game) mismatch count ............... 0   (target 0)  PASS
+B. BEHAVIORAL (real traversal) mismatch count ..... 0   (target 0)  PASS
+   - every observed transition matched a declared exit
+   - every declared room reached by real window.move traversal (6/6)
+   - zero undeclared transitions
+   - gated window.move refused while rule unbroken ......... PASS
+C. CONTROL (malformed.json) mismatch count ........ 2   (must be >=2) PASS
+   -> the validator detects errors rather than parroting the file.
+Edge-tile taps (375x667, 800x600) ................. PASS
+Post-ring score stability ......................... PASS
+Console errors / uncaught exceptions .............. 0
+
+
+==================================================================
+A. STRUCTURAL — window.WORLD vs world_map.json
+==================================================================
+Rooms declared: 6   start: entry-hall   current on load: entry-hall
+(i)   every room's every exit targets a declared room ...... OK (0 dangling)
+(ii)  every room reachable from start (declared graph BFS)  OK (6/6)
+(iii) room + exit set equals world_map.json ................ OK (ids, keys, targets, start)
+
+Mismatch count A = 0
+
+Rooms: entry-hall, chalk-corridor, gravity-well, torn-library, bell-chamber, rule-core
+Exits (verbatim match):
+  entry-hall     north -> chalk-corridor
+  chalk-corridor south -> entry-hall ; east -> gravity-well ; north -> bell-chamber ; west -> rule-core
+  gravity-well   west -> chalk-corridor ; south -> torn-library
+  torn-library   north -> gravity-well ; west -> bell-chamber
+  bell-chamber   east -> torn-library ; south -> chalk-corridor
+  rule-core      east -> chalk-corridor
+
+
+==================================================================
+B. BEHAVIORAL — real traversal via window.move(dir,{ignoreLock:true})
+==================================================================
+Method: BFS over the declared exit graph, driven ONLY through real
+window.move(dir,{ignoreLock:true}) calls. After every move window.WORLD.current
+was re-read; the observed from/dir/to was recorded and compared to the declared
+exit. Navigation between BFS nodes used only declared edges (no teleporting).
+
+Declared rooms: 6   Reached by real traversal: 6   Observed transitions: 24
+Undeclared transitions: 0   Wrong-target moves: 0   Return-value mismatches: 0
+B mismatch count = 0
+
+Sample observed transitions (verbatim):
+  entry-hall      north -> chalk-corridor   (ret chalk-corridor)
+  chalk-corridor  south -> entry-hall       (ret entry-hall)
+  chalk-corridor  east  -> gravity-well     (ret gravity-well)
+  gravity-well    west  -> chalk-corridor   (ret chalk-corridor)
+  chalk-corridor  north -> bell-chamber     (ret bell-chamber)
+  bell-chamber    south -> chalk-corridor   (ret chalk-corridor)
+  chalk-corridor  west  -> rule-core        (ret rule-core)
+  rule-core       east  -> chalk-corridor   (ret chalk-corridor)
+
+Gate check (anti-tautology for the lock):
+  fresh run, current = entry-hall, room.broken = false (rule unbroken)
+  window.move('north')  [no ignoreLock]  -> returned false, current unchanged
+  gateRefused = true   PASS
+
+
+==================================================================
+C. CONTROL — same validator applied to malformed.json
+==================================================================
+Input /home/fluke/Holotron/test_worlds/malformed.json:
+  rooms: hall (start), island
+  hall.exits.north -> "ghost-room"   (target NOT declared)
+  island                              (no inbound edge -> unreachable)
+
+Validator output (2 mismatches):
+  1. dangling-exit      from=hall   dir=north  to=ghost-room
+  2. unreachable-room   room=island
+
+Mismatch count C = 2  -> caught >= 2  PASS
+This proves the validator flags structural errors instead of echoing the file.
+
+
+==================================================================
+VERIFY THE TWO LATEST FIXES
+==================================================================
+1) EDGE-TILE TAPS (side doors must not swallow outer-column tile taps)
+------------------------------------------------------------------
+Room: chalk-corridor (7 cols, exits east + west => both side chevrons present).
+
+375x667 (mobile, scale 0.78125):
+  WEST tile (0,2) centre client=(42.86,349.13):
+    elementFromPoint -> CANVAS#cv (isCanvas=true)
+    tap: player (1,2) -> (0,2)   room stayed chalk-corridor  PASS
+    west chevron rect x=0..28 ; tile centre x=42.86 -> clear
+  EAST tile (6,2) centre client=(332.14,349.13):
+    elementFromPoint -> CANVAS#cv (isCanvas=true)
+    tap: player (5,2) -> (6,2)   room stayed chalk-corridor  PASS
+    east chevron rect x=347..375 ; tile centre x=332.14 -> clear
+
+800x600 (desktop-small, scale 0.75):
+  WEST tile (0,2) centre client=(261.14,315):
+    elementFromPoint -> CANVAS#cv (isCanvas=true)
+    tap: player (1,2) -> (0,2)   room stayed chalk-corridor  PASS
+    west chevron rect x=220..248 ; tile centre x=261.14 -> clear
+  EAST tile (6,2) centre client=(538.86,315):
+    elementFromPoint -> CANVAS#cv (isCanvas=true)
+    tap: player (5,2) -> (6,2)   room stayed chalk-corridor  PASS
+    east chevron rect x=552..580 ; tile centre x=538.86 -> clear
+
+Edge-tap result: PASS at both viewports (elementFromPoint returns the canvas;
+edge-column taps MOVE the player and do NOT fire a side door).
+
+2) POST-RING SCORE STABILITY (idle on the bell after breaking)
+------------------------------------------------------------------
+Room: bell-chamber; bell tile (3,2); entered via real transitions.
+  score before ring .............. 100
+  step onto bell (movePlayer) .... breaks rule; score after ring = 626
+  idle 1400 ms on the bell tile .. score = 626  (unchanged)
+  current room after idle ........ bell-chamber ; player (3,2)
+Post-ring stability: PASS (score does not increase while idle on the bell).
+
+
+==================================================================
+CONSOLE / RUNTIME
+==================================================================
+Console errors: 0
+Uncaught page exceptions: 0
+Failed network requests: 0
+
+See runtime_R4.txt for the raw runtime-error channel.
+
+==================================================================
+VERDICT
+==================================================================
+A = 0 mismatches | B = 0 mismatches | C = 2 mismatches (>=2 required)
+Control caught >= 2 errors: YES
+Edge-tile taps (375x667 & 800x600): PASS
+Post-ring score stability: PASS
+Console/runtime errors: NONE
+PHASE 2: PASS

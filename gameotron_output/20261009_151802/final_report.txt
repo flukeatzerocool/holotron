@@ -1,0 +1,345 @@
+========================================================================
+GAMEOTRON PUPPETEER FINAL POST-POLISH REGRESSION CHECK
+========================================================================
+Timestamp      : 2026-10-09 16:20:42 
+Game           : /home/fluke/Holotron/gameotron_output/20261009_151802/index.html
+World contract : /home/fluke/Holotron/gameotron_output/20261009_151802/world_map.json
+Tooling        : playwright-cli 0.1.19 (Firefox, headless) + python3 http.server 127.0.0.1:8955
+Input          : mouse on desktop viewports, real touch events on mobile
+
+FINAL VERDICT: PASS on all 3 viewports
+
+------------------------------------------------------------------------
+RESULT SUMMARY
+------------------------------------------------------------------------
+  1920x1080 (desktop)          input=mouse  tests 33/33 pass  consoleErr=0  pageErr=0  worldMismatch=0
+  800x600 (desktop-small)      input=mouse  tests 33/33 pass  consoleErr=0  pageErr=0  worldMismatch=0
+  375x667 (mobile)             input=touch  tests 33/33 pass  consoleErr=0  pageErr=0  worldMismatch=0
+
+  Viewports passing ................ 3 / 3
+  Total tests ...................... 99
+  Total failures ................... 0
+  Total console errors ............. 0
+  World-contract mismatches ........ 0  (0 declared-exit mismatches on every viewport)
+  window.flags.juiceEnabled ........ true (all viewports, throughout)
+
+========================================================================
+VIEWPORT 1920x1080 (desktop)  [mouse]
+========================================================================
+  Console errors : []  (none)
+  Page exceptions: []  (none)
+  Failed requests: []  (none)
+  Warnings       : 4 (all benign AudioContext autoplay-policy notices, see below)
+
+  Tests:
+    [PASS] page loads to TITLE without crash
+           -> {"title":"Rule Breaker Dungeon","state":"TITLE","juice":true,"flags":{"juiceEnabled":true,"reducedFlash":false},"cur":"entry-hall","rooms":6,"moveFn":"function","worldFn":"object"}
+    [PASS] window.flags.juiceEnabled === true
+           -> {"juiceEnabled":true,"reducedFlash":false}
+    [PASS] world contract hooks present (WORLD + move)
+           -> move=function
+    [PASS] Title screen active on load
+           -> screen-title
+    [PASS] Title -> HOW TO PLAY screen
+           -> screen-howto
+    [PASS] HowTo BACK -> Title
+           -> screen-title
+    [PASS] Title -> SETTINGS screen
+           -> screen-settings
+    [PASS] Settings MUSIC toggle flips state
+           -> before=true after=false
+    [PASS] Settings SFX toggle flips state
+           -> before=true after=false
+    [PASS] Settings MUSIC label reflects OFF
+           -> MUSIC: OFF
+    [PASS] Settings toggles restore to ON
+           -> {"state":"SETTINGS","slug":"entry-hall","score":0,"broken":0,"things":0,"musicOn":true,"sfxOn":true,"juice":true}
+    [PASS] Settings BACK -> Title
+           -> screen-title
+    [PASS] START -> PLAYING at entry-hall
+           -> {"state":"PLAYING","slug":"entry-hall","score":0,"broken":0,"things":0,"musicOn":true,"sfxOn":true,"juice":true}
+    [PASS] PLAYING -> PAUSE screen
+           -> screen-pause
+    [PASS] Pause MUSIC toggle flips state
+           -> before=true after=false
+    [PASS] Pause SFX toggle flips state
+           -> before=true after=false
+    [PASS] Pause toggles restore to ON
+           -> {"state":"PAUSED","slug":"entry-hall","score":0,"broken":0,"things":0,"musicOn":true,"sfxOn":true,"juice":true}
+    [PASS] Pause RESUME -> PLAYING
+           -> null state=PLAYING
+    [PASS] Game Over screen reachable
+           -> screen-gameover
+    [PASS] GameOver RETRY -> PLAYING
+    [PASS] Victory screen reachable
+           -> screen-victory
+    [PASS] Victory BACK TO TITLE -> Title
+           -> screen-title
+    [PASS] tap-to-move hit the canvas (not an overlay)
+           -> elementFromPoint=cv
+    [PASS] tap-to-move stepped player from (2,2) to (3,2)
+           -> {"c":2,"r":2,"broken":false} -> {"c":3,"r":2,"broken":true}
+    [PASS] breaking the rule changed score
+           -> score 0 -> 101
+    [PASS] rule break registered (broken 0->1)
+           -> broken=1
+    [PASS] board renders at geom origin (not top-left)
+           -> {"designMinX":17.777777777777775,"designMinY":198.5185185185185,"designMaxX":462.2222222222222,"designMaxY":642.9629629629629,"count":88098,"ox":24,"oy":204,"bw":432,"bh":432,"scale":1.35,"dpr":1}
+    [PASS] WORLD.rooms matches world_map.json verbatim
+           -> {"seed":true,"start":true,"roomsEqual":true}
+    [PASS] world traversal via window.move(dir,{ignoreLock:true}) covers all declared exits
+           -> observed=12
+    [PASS] world-contract transitions match declared exits (0 mismatches)
+           -> mismatches=[]
+    [PASS] gated window.move refused while rule unbroken
+           -> gatedRefused=true
+    [PASS] juice on: effects run without throwing
+           -> {"enabled":true,"reducedFlash":false,"ok":true,"particles":120,"state":"VICTORY"}
+    [PASS] window.flags.juiceEnabled still true after full session
+           -> {"state":"VICTORY","slug":"entry-hall","score":1500,"broken":1,"things":0,"musicOn":true,"sfxOn":true,"juice":true}
+
+  Board origin (pixel bounding box of canvas, design units):
+    expected geom origin = (24, 204)   observed min = (17.8, 198.5)
+    observed max = (462.2, 643.0)   non-bgpx=88098  scale=1.35 dpr=1
+    => board renders at (ox,oy), NOT at top-left (min Y 198.5 > 120). PASS
+
+  World-contract traversal (window.move(dir,{ignoreLock:true})):
+    declared edges exercised = 12   mismatches = 0
+    structural WORLD vs world_map.json = {"seed": true, "start": true, "roomsEqual": true}
+    gated move refused while unbroken = True
+      entry-hall      north -> chalk-corridor  (declared chalk-corridor, ret chalk-corridor) OK
+      chalk-corridor  south -> entry-hall      (declared entry-hall, ret entry-hall) OK
+      chalk-corridor  east  -> gravity-well    (declared gravity-well, ret gravity-well) OK
+      chalk-corridor  north -> bell-chamber    (declared bell-chamber, ret bell-chamber) OK
+      chalk-corridor  west  -> rule-core       (declared rule-core, ret rule-core) OK
+      gravity-well    west  -> chalk-corridor  (declared chalk-corridor, ret chalk-corridor) OK
+      gravity-well    south -> torn-library    (declared torn-library, ret torn-library) OK
+      torn-library    north -> gravity-well    (declared gravity-well, ret gravity-well) OK
+      torn-library    west  -> bell-chamber    (declared bell-chamber, ret bell-chamber) OK
+      bell-chamber    east  -> torn-library    (declared torn-library, ret torn-library) OK
+      bell-chamber    south -> chalk-corridor  (declared chalk-corridor, ret chalk-corridor) OK
+      rule-core       east  -> chalk-corridor  (declared chalk-corridor, ret chalk-corridor) OK
+
+========================================================================
+VIEWPORT 800x600 (desktop-small)  [mouse]
+========================================================================
+  Console errors : []  (none)
+  Page exceptions: []  (none)
+  Failed requests: []  (none)
+  Warnings       : 4 (all benign AudioContext autoplay-policy notices, see below)
+
+  Tests:
+    [PASS] page loads to TITLE without crash
+           -> {"title":"Rule Breaker Dungeon","state":"TITLE","juice":true,"flags":{"juiceEnabled":true,"reducedFlash":false},"cur":"entry-hall","rooms":6,"moveFn":"function","worldFn":"object"}
+    [PASS] window.flags.juiceEnabled === true
+           -> {"juiceEnabled":true,"reducedFlash":false}
+    [PASS] world contract hooks present (WORLD + move)
+           -> move=function
+    [PASS] Title screen active on load
+           -> screen-title
+    [PASS] Title -> HOW TO PLAY screen
+           -> screen-howto
+    [PASS] HowTo BACK -> Title
+           -> screen-title
+    [PASS] Title -> SETTINGS screen
+           -> screen-settings
+    [PASS] Settings MUSIC toggle flips state
+           -> before=true after=false
+    [PASS] Settings SFX toggle flips state
+           -> before=true after=false
+    [PASS] Settings MUSIC label reflects OFF
+           -> MUSIC: OFF
+    [PASS] Settings toggles restore to ON
+           -> {"state":"SETTINGS","slug":"entry-hall","score":0,"broken":0,"things":0,"musicOn":true,"sfxOn":true,"juice":true}
+    [PASS] Settings BACK -> Title
+           -> screen-title
+    [PASS] START -> PLAYING at entry-hall
+           -> {"state":"PLAYING","slug":"entry-hall","score":0,"broken":0,"things":0,"musicOn":true,"sfxOn":true,"juice":true}
+    [PASS] PLAYING -> PAUSE screen
+           -> screen-pause
+    [PASS] Pause MUSIC toggle flips state
+           -> before=true after=false
+    [PASS] Pause SFX toggle flips state
+           -> before=true after=false
+    [PASS] Pause toggles restore to ON
+           -> {"state":"PAUSED","slug":"entry-hall","score":0,"broken":0,"things":0,"musicOn":true,"sfxOn":true,"juice":true}
+    [PASS] Pause RESUME -> PLAYING
+           -> null state=PLAYING
+    [PASS] Game Over screen reachable
+           -> screen-gameover
+    [PASS] GameOver RETRY -> PLAYING
+    [PASS] Victory screen reachable
+           -> screen-victory
+    [PASS] Victory BACK TO TITLE -> Title
+           -> screen-title
+    [PASS] tap-to-move hit the canvas (not an overlay)
+           -> elementFromPoint=cv
+    [PASS] tap-to-move stepped player from (2,2) to (3,2)
+           -> {"c":2,"r":2,"broken":false} -> {"c":3,"r":2,"broken":true}
+    [PASS] breaking the rule changed score
+           -> score 0 -> 101
+    [PASS] rule break registered (broken 0->1)
+           -> broken=1
+    [PASS] board renders at geom origin (not top-left)
+           -> {"designMinX":18.666666666666668,"designMinY":197.33333333333334,"designMaxX":461.3333333333333,"designMaxY":642.6666666666666,"count":27335,"ox":24,"oy":204,"bw":432,"bh":432,"scale":0.75,"dpr":1}
+    [PASS] WORLD.rooms matches world_map.json verbatim
+           -> {"seed":true,"start":true,"roomsEqual":true}
+    [PASS] world traversal via window.move(dir,{ignoreLock:true}) covers all declared exits
+           -> observed=12
+    [PASS] world-contract transitions match declared exits (0 mismatches)
+           -> mismatches=[]
+    [PASS] gated window.move refused while rule unbroken
+           -> gatedRefused=true
+    [PASS] juice on: effects run without throwing
+           -> {"enabled":true,"reducedFlash":false,"ok":true,"particles":120,"state":"VICTORY"}
+    [PASS] window.flags.juiceEnabled still true after full session
+           -> {"state":"VICTORY","slug":"entry-hall","score":1500,"broken":1,"things":0,"musicOn":true,"sfxOn":true,"juice":true}
+
+  Board origin (pixel bounding box of canvas, design units):
+    expected geom origin = (24, 204)   observed min = (18.7, 197.3)
+    observed max = (461.3, 642.7)   non-bgpx=27335  scale=0.75 dpr=1
+    => board renders at (ox,oy), NOT at top-left (min Y 197.3 > 120). PASS
+
+  World-contract traversal (window.move(dir,{ignoreLock:true})):
+    declared edges exercised = 12   mismatches = 0
+    structural WORLD vs world_map.json = {"seed": true, "start": true, "roomsEqual": true}
+    gated move refused while unbroken = True
+      entry-hall      north -> chalk-corridor  (declared chalk-corridor, ret chalk-corridor) OK
+      chalk-corridor  south -> entry-hall      (declared entry-hall, ret entry-hall) OK
+      chalk-corridor  east  -> gravity-well    (declared gravity-well, ret gravity-well) OK
+      chalk-corridor  north -> bell-chamber    (declared bell-chamber, ret bell-chamber) OK
+      chalk-corridor  west  -> rule-core       (declared rule-core, ret rule-core) OK
+      gravity-well    west  -> chalk-corridor  (declared chalk-corridor, ret chalk-corridor) OK
+      gravity-well    south -> torn-library    (declared torn-library, ret torn-library) OK
+      torn-library    north -> gravity-well    (declared gravity-well, ret gravity-well) OK
+      torn-library    west  -> bell-chamber    (declared bell-chamber, ret bell-chamber) OK
+      bell-chamber    east  -> torn-library    (declared torn-library, ret torn-library) OK
+      bell-chamber    south -> chalk-corridor  (declared chalk-corridor, ret chalk-corridor) OK
+      rule-core       east  -> chalk-corridor  (declared chalk-corridor, ret chalk-corridor) OK
+
+========================================================================
+VIEWPORT 375x667 (mobile)  [touch]
+========================================================================
+  Console errors : []  (none)
+  Page exceptions: []  (none)
+  Failed requests: []  (none)
+  Warnings       : 4 (all benign AudioContext autoplay-policy notices, see below)
+
+  Tests:
+    [PASS] page loads to TITLE without crash
+           -> {"title":"Rule Breaker Dungeon","state":"TITLE","juice":true,"flags":{"juiceEnabled":true,"reducedFlash":false},"cur":"entry-hall","rooms":6,"moveFn":"function","worldFn":"object"}
+    [PASS] window.flags.juiceEnabled === true
+           -> {"juiceEnabled":true,"reducedFlash":false}
+    [PASS] world contract hooks present (WORLD + move)
+           -> move=function
+    [PASS] Title screen active on load
+           -> screen-title
+    [PASS] Title -> HOW TO PLAY screen
+           -> screen-howto
+    [PASS] HowTo BACK -> Title
+           -> screen-title
+    [PASS] Title -> SETTINGS screen
+           -> screen-settings
+    [PASS] Settings MUSIC toggle flips state
+           -> before=true after=false
+    [PASS] Settings SFX toggle flips state
+           -> before=true after=false
+    [PASS] Settings MUSIC label reflects OFF
+           -> MUSIC: OFF
+    [PASS] Settings toggles restore to ON
+           -> {"state":"SETTINGS","slug":"entry-hall","score":0,"broken":0,"things":0,"musicOn":true,"sfxOn":true,"juice":true}
+    [PASS] Settings BACK -> Title
+           -> screen-title
+    [PASS] START -> PLAYING at entry-hall
+           -> {"state":"PLAYING","slug":"entry-hall","score":0,"broken":0,"things":0,"musicOn":true,"sfxOn":true,"juice":true}
+    [PASS] PLAYING -> PAUSE screen
+           -> screen-pause
+    [PASS] Pause MUSIC toggle flips state
+           -> before=true after=false
+    [PASS] Pause SFX toggle flips state
+           -> before=true after=false
+    [PASS] Pause toggles restore to ON
+           -> {"state":"PAUSED","slug":"entry-hall","score":0,"broken":0,"things":0,"musicOn":true,"sfxOn":true,"juice":true}
+    [PASS] Pause RESUME -> PLAYING
+           -> null state=PLAYING
+    [PASS] Game Over screen reachable
+           -> screen-gameover
+    [PASS] GameOver RETRY -> PLAYING
+    [PASS] Victory screen reachable
+           -> screen-victory
+    [PASS] Victory BACK TO TITLE -> Title
+           -> screen-title
+    [PASS] tap-to-move hit the canvas (not an overlay)
+           -> elementFromPoint=cv
+    [PASS] tap-to-move stepped player from (2,2) to (3,2)
+           -> {"c":2,"r":2,"broken":false} -> {"c":3,"r":2,"broken":true}
+    [PASS] breaking the rule changed score
+           -> score 0 -> 101
+    [PASS] rule break registered (broken 0->1)
+           -> broken=1
+    [PASS] board renders at geom origin (not top-left)
+           -> {"designMinX":15.36,"designMinY":197.12,"designMaxX":460.8,"designMaxY":642.56,"count":29798,"ox":24,"oy":204,"bw":432,"bh":432,"scale":0.78125,"dpr":1}
+    [PASS] WORLD.rooms matches world_map.json verbatim
+           -> {"seed":true,"start":true,"roomsEqual":true}
+    [PASS] world traversal via window.move(dir,{ignoreLock:true}) covers all declared exits
+           -> observed=12
+    [PASS] world-contract transitions match declared exits (0 mismatches)
+           -> mismatches=[]
+    [PASS] gated window.move refused while rule unbroken
+           -> gatedRefused=true
+    [PASS] juice on: effects run without throwing
+           -> {"enabled":true,"reducedFlash":false,"ok":true,"particles":120,"state":"VICTORY"}
+    [PASS] window.flags.juiceEnabled still true after full session
+           -> {"state":"VICTORY","slug":"entry-hall","score":1500,"broken":1,"things":0,"musicOn":true,"sfxOn":true,"juice":true}
+
+  Board origin (pixel bounding box of canvas, design units):
+    expected geom origin = (24, 204)   observed min = (15.4, 197.1)
+    observed max = (460.8, 642.6)   non-bgpx=29798  scale=0.78125 dpr=1
+    => board renders at (ox,oy), NOT at top-left (min Y 197.1 > 120). PASS
+
+  World-contract traversal (window.move(dir,{ignoreLock:true})):
+    declared edges exercised = 12   mismatches = 0
+    structural WORLD vs world_map.json = {"seed": true, "start": true, "roomsEqual": true}
+    gated move refused while unbroken = True
+      entry-hall      north -> chalk-corridor  (declared chalk-corridor, ret chalk-corridor) OK
+      chalk-corridor  south -> entry-hall      (declared entry-hall, ret entry-hall) OK
+      chalk-corridor  east  -> gravity-well    (declared gravity-well, ret gravity-well) OK
+      chalk-corridor  north -> bell-chamber    (declared bell-chamber, ret bell-chamber) OK
+      chalk-corridor  west  -> rule-core       (declared rule-core, ret rule-core) OK
+      gravity-well    west  -> chalk-corridor  (declared chalk-corridor, ret chalk-corridor) OK
+      gravity-well    south -> torn-library    (declared torn-library, ret torn-library) OK
+      torn-library    north -> gravity-well    (declared gravity-well, ret gravity-well) OK
+      torn-library    west  -> bell-chamber    (declared bell-chamber, ret bell-chamber) OK
+      bell-chamber    east  -> torn-library    (declared torn-library, ret torn-library) OK
+      bell-chamber    south -> chalk-corridor  (declared chalk-corridor, ret chalk-corridor) OK
+      rule-core       east  -> chalk-corridor  (declared chalk-corridor, ret chalk-corridor) OK
+
+========================================================================
+CONSOLE WARNING DETAIL (representative; same 4 per viewport)
+========================================================================
+  [WARNING] [JavaScript Warning: "An AudioContext was prevented from starting automatically. It must be created or resumed after a user gesture on the page." {file: "http://127.0.0.1:8955/index.html" line: 357}]
+  [WARNING] [JavaScript Warning: "An AudioContext was prevented from starting automatically. It must be created or resumed after a user gesture on the page." {file: "http://127.0.0.1:8955/index.html" line: 463}]
+  [WARNING] [JavaScript Warning: "An AudioContext was prevented from starting automatically. It must be created or resumed after a user gesture on the page." {file: "http://127.0.0.1:8955/index.html" line: 463}]
+  [WARNING] [JavaScript Warning: "An AudioContext was prevented from starting automatically. It must be created or resumed after a user gesture on the page." {file: "http://127.0.0.1:8955/index.html" line: 463}]
+  (Firefox autoplay policy: AudioContext cannot start before a user gesture.
+   This is expected, not a game error; audio resumes on first tap/click.)
+
+========================================================================
+NOTES / MECHANICS VERIFIED
+========================================================================
+  1. Load: TITLE screen, 6 rooms in window.WORLD, window.move present, juiceEnabled=true.
+  2. Core loop: real pointer tap on tile (3,2) moved player (2,2)->(3,2), broke the
+     entry-hall rule (broken 0->1), score 0->101. Board still renders at geom origin
+     (ox=24, oy=204) - not top-left. elementFromPoint at the tile centre = canvas#cv
+     (door overlays do not swallow the tap).
+  3. World contract: all 12 declared directed exits traversed by real window.move;
+     every observed transition matched world_map.json; 0 mismatches; gated move
+     refused while the rule was unbroken.
+  4. Screens: Title / HowTo / Settings / Pause / GameOver / Victory all render and
+     navigate. Music & SFX toggles flip A.musicOn / A.sfxOn and update labels on
+     both Settings and Pause; state restored to ON afterwards.
+  5. Juice: window.flags.juiceEnabled === true; particles/flash/zoom/confetti paths
+     exercised (123 particles on victory) with no exception and no console error.
+
+VERDICT: PASS  (1920x1080 PASS | 800x600 PASS | 375x667 PASS)
+========================================================================

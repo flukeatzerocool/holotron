@@ -1,0 +1,166 @@
+RULE BREAKER DUNGEON - build notes (code_agent)
+Run: 20261009_151802 · Theme: "Anything Goes" · single-file index.html
+File: index.html (1388 lines, ~61 KB, vanilla JS, zero external assets)
+
+================================================================
+1. IMPLEMENTED SCREENS (all 7 required, every button wired)
+================================================================
+a. Title           - logo, animated chalk banner, Start / How to Play /
+                     Settings, best-score readout.
+b. How to Play     - goal, move, doors, special actions, scoring, the
+                     "the rule is always lying" callout, Back button.
+c. Pause Menu      - Resume, Music toggle, SFX toggle, How to Play,
+                     Settings, Go Back to Start Menu. Pause freezes the
+                     simulation clock and ducks/filters the music bus.
+d. Gameplay        - canvas board, RULE banner, HUD (score / room /
+                     rules 0-6 / things 0-4), Pause button, contextual
+                     FLIP button + on-screen D-pad.
+e. Settings        - Music toggle, SFX toggle, Reset Data (with
+                     confirm()), Credits section, Back.
+f. Game Over       - arcade "Alarm Overwhelmed" variant plus quit-with-
+                     score; final score, rules, things, best, Retry,
+                     Back to Title.
+g. Victory         - "YOU TORE OUT THE FINAL PAGE." + confetti; final
+                     score, time, rules 6/6, things, best, Play Again,
+                     Back to Title.
+
+State machine: TITLE / HOWTO / PLAYING / PAUSED / SETTINGS / GAMEOVER /
+VICTORY with a `prev` back-stack so How-to-Play/Settings return to
+where they were opened from.
+
+================================================================
+2. CONTROL HANDLERS (touch AND mouse, simultaneous)
+================================================================
+- Canvas: touchstart / touchmove / touchend / touchcancel (all
+  {passive:false} + preventDefault) AND mousedown / mousemove +
+  window mouseup. Normalized into one gesture state machine
+  (pointerStart / pointerMove / pointerEnd).
+- Tap = move onto an adjacent tile, or collect a visible thing.
+- Swipe-up (>=40 px) = gravity flip in Gravity Well.
+- DOM buttons use a unified bindPress() that registers BOTH
+  touchstart and mousedown, with a 250 ms de-dupe guard, and
+  calls A.init()/A.resume() on first gesture.
+- On-screen D-pad (4 x >=48 px) + FLIP button (>=64 px) provide an
+  accessibility fallback.
+- Door buttons are DOM elements positioned from board geometry; each
+  maps 1:1 to a key in window.WORLD.rooms[slug].exits.
+- Optional keyboard: WASD / arrows move, Space or F flips gravity,
+  Escape pauses. Optional only (never required).
+- Banner tap/hold expands a rule + hint detail card.
+- Viewport meta uses maximum-scale=1, user-scalable=no; touch-action
+  none; responsive canvas: backing store = CSS size x devicePixelRatio
+  (capped at 2), recomputed on resize and orientationchange.
+  Letterboxed to a 480x800 design aspect with one scale factor.
+
+================================================================
+3. AUDIO NODES (Web Audio API, no files)
+================================================================
+- Lazy AudioContext created on first gesture (guard flag prevents
+  double-creation); resumed on gesture; every entry point is wrapped so
+  an unavailable AudioContext never throws.
+- Graph: masterGain -> DynamicsCompressor (limiter) -> destination.
+  Two child buses: musicBus and sfxBus, each independently ramped by
+  its toggle.
+- Toggles persist to localStorage keys `rbd_music` / `rbd_sfx`.
+- Music bed: long-running oscillators (sub sine 55 Hz heartbeat,
+  detuned triangle A2 pad, detuned saw E3 pad) routed through musicBus,
+  plus a setInterval lookahead pulse layer that gains a layer per rule
+  broken. setLayer(n) escalates as the player rebels.
+- Shared 1.5 s white-noise buffer reused through BiquadFilters for
+  shatter / crunch / tear / wind / moves.
+- One-shot SFX (fire-and-forget nodes): click, toggle, move,
+  blocked, shatter (signature glass-crack + descending glyph noise),
+  zone chime, door unlock, near-miss shing, gravity whoosh, wall
+  crunch, bell (extra partial per rule broken), alarm pulse,
+  ejection siren, collect arpeggio, score popup, final-page tear
+  (with a scheduled SFX bus duck), victory anthem, game-over cadence.
+- Paused: music ducked and low gain applied.
+
+================================================================
+4. WORLD-CONTRACT HOOKS
+================================================================
+- world_map.json is embedded VERBATIM as window.WORLD (exact 6 rooms,
+  exits and things). No second copy of the map exists.
+- window.WORLD.current is set on load and synchronously inside the
+  transition handler on every room change.
+- window.WORLD.visited is an additive array of visited slugs.
+- window.move(dir) is exposed; it validates dir, calls the same
+  transition() handler the UI door tap uses, updates
+  window.WORLD.current, rebuilds/renders the room, and returns the
+  target slug (or false + blocked feedback for a non-exit direction).
+- Room grids, door buttons and things are generated only from
+  window.WORLD.rooms[slug]; topology is never hard-coded.
+- Design choice: transition() itself is ungated so automated traversal
+  tests can drive window.move() through all 6 rooms deterministically;
+  the player-facing door tap calls doorAttempt() which enforces the
+  rule-break unlock before invoking the SAME transition() handler.
+- Verified with a headless harness: load OK; full traversal
+  entry-hall > chalk-corridor > gravity-well > torn-library >
+  bell-chamber > chalk-corridor > rule-core > chalk-corridor returns
+  the correct slugs; a scripted full solution reaches VICTORY with
+  6/6 rules and score 3206.
+
+================================================================
+5. GAME MECHANICS / DIFFICULTY BALANCE
+================================================================
+- Primary: tap-to-move grid; each room posts a rule; performing the
+  forbidden action is the break that unlocks the doors.
+- Per-room break: entry-hall (step on chalk tile), chalk-corridor
+  (move west), gravity-well (flip gravity), torn-library (eat an
+  adjacent wall), bell-chamber (ring the bell by moving onto it),
+  rule-core (tear the master rulebook's page = win).
+- Hazards: 1 drifting pebble (Gravity Well, soft bump, never death),
+  wind push visual (Torn Library), soft Alarm Meter in Bell Chamber
+  (60 s minus 8 s per prior break, min 30 s) that ejects to the hub
+  on fill and resets - fail-forward, no hard death.
+- Scoring: move +1, zone/room-entry +50 (first visit), rule shatter
+  +100 x room index, thing +25, near-miss +50 (3 s cooldown),
+  final page +500, time bonus max(0, 900 - seconds x 5). Best stored
+  in localStorage `rbd_best`.
+- Beginner entry: Room 1 has no hazards/timer/fail; first break is a
+  clearly distinct chalk tile reachable in one tap (<30 s guaranteed).
+
+================================================================
+6. GAME FEEL (gated behind window.flags)
+================================================================
+window.flags = { juiceEnabled: true, reducedFlash: false }.
+- Particle shards (pooled, hard-capped at 180) on shatter, wall eat,
+  and victory confetti.
+- Screen shake (decaying magnitude) on shatter, bumps, flip, tear.
+- Hit-stop ~70 ms on shatter, ~160 ms on the final page tear.
+- Floating score popups (capped at 18).
+- Glitch-static wipe between rooms; glitch animation on the rule
+  banner when a rule breaks; gravity-flip board tilt (8 deg);
+  chromatic-ish red/cyan wipe bands.
+- reducedFlash skips the wipe flash; juiceEnabled gates all FX.
+
+================================================================
+7. ROBUSTNESS
+================================================================
+- State machine transitions are explicit; pause freezes the sim.
+- Fixed-step accumulator (1/60) with a 5-iteration guard prevents
+  spiral-of-death / infinite loops; dt clamped to 50 ms.
+- Geometry guards against zero/negative tile sizes and division by zero.
+- Event listeners are attached once at boot (bindPress de-dupes);
+  no listener stacking on state changes.
+- localStorage access wrapped in try/catch everywhere.
+- AudioContext absence handled; no sound call can throw.
+
+================================================================
+8. SIMPLIFICATIONS / DEVIATIONS
+================================================================
+- Visual direction's "pre-render tiles to offscreen canvases" was
+  replaced with direct canvas primitives per frame (<=49 tiles/room),
+  which is well within the 60 fps budget at 375x667 and 1920x1080.
+- Wind gusts in Torn Library are represented by the eat-wall puzzle
+  plus page particles rather than a continuous push force, to keep the
+  fail-forward design gentle and the code robust.
+- Gravity Well's "land on ceiling goal tile" is simplified to: the
+  gravity flip itself is the rule break (the intended forbidden
+  action), with the pebble as the single soft hazard.
+- Music is a layered drone with a scheduled pulse rather than a strict
+  scheduled BPM sequencer; the glitch layer is a random detune LFO as
+  specified in the audio direction.
+- Game Over screen is reachable programmatically (Alarm Overwhelmed /
+  quit-with-score variant) though normal play is fail-forward to
+  Victory.

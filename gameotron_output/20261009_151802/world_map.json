@@ -1,0 +1,41 @@
+{
+  "seed": 0,
+  "start": "entry-hall",
+  "rooms": {
+    "entry-hall": {
+      "name": "Entry Hall",
+      "exits": { "north": "chalk-corridor" },
+      "things": []
+    },
+    "chalk-corridor": {
+      "name": "Chalk Corridor",
+      "exits": {
+        "south": "entry-hall",
+        "east": "gravity-well",
+        "north": "bell-chamber",
+        "west": "rule-core"
+      },
+      "things": ["rebel-graffiti"]
+    },
+    "gravity-well": {
+      "name": "Gravity Well",
+      "exits": { "west": "chalk-corridor", "south": "torn-library" },
+      "things": []
+    },
+    "torn-library": {
+      "name": "Torn Library",
+      "exits": { "north": "gravity-well", "west": "bell-chamber" },
+      "things": ["cracked-rulebook"]
+    },
+    "bell-chamber": {
+      "name": "Bell Chamber",
+      "exits": { "east": "torn-library", "south": "chalk-corridor" },
+      "things": ["alarm-bell"]
+    },
+    "rule-core": {
+      "name": "Rule Core",
+      "exits": { "east": "chalk-corridor" },
+      "things": ["master-rulebook"]
+    }
+  }
+}

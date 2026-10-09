@@ -1,0 +1,250 @@
+AUDIO DIRECTION FOR: Rule Breaker Dungeon
+
+====================================================================
+SECTION 0 — CONCEPT DEVELOPMENT (3 CANDIDATES)
+====================================================================
+Three parallel audio directions were generated against the GDD's
+Audio Design Specs (Section 5), palette (charcoal/slate, chalk white,
+blood-scrawl red, shatter cyan), "Anything Goes" theme, and the
+phone-first, puzzle-veteran target audience. The game's whole thesis is
+that ORDER IS A LIE — a rule is posted and then shattered — so the
+soundtrack must dramatize the tension between rigid structure and
+gleeful destruction.
+
+--------------------------------------------------------------------
+CONCEPT A — "Chalk & Static" (Structural-Industrial Dungeon)
+--------------------------------------------------------------------
+Style: Slow, menacing minimalist dungeon drone in A minor, built from
+detuned sawtooth+triangle pads, a sub-bass heartbeat, and a dry
+chalk-scratch percussion bed. Each cleared room removes a layer of
+"rule" (a ticking metronome, a formal arpeggio) and adds a layer of
+"rebellion" (a dirty square-wave pulse, a distorted bell, noise
+scrapes). The music literally de-structures as you play.
+Instrumentation: 2 detuned osc pads, sub sine, filtered brown-noise
+percussion, square-wave rebellion lead, FM bell motif.
+Mood: oppressive order cracking into chaos; industrial, glitchy,
+claustrophobic but triumphant at the peak.
+Fit: Matches the stark stone palette AND the layered-progression idea
+in GDD §5 ("each room drops in one new layer"). Strong thematic echo.
+Risk: Synthesized industrial drone can feel monotonous on a 3–6 min
+run if the layer evolution isn't readable.
+
+--------------------------------------------------------------------
+CONCEPT B — "Shatterglass Cathedral" (Gothic Chiptune Rebellion)
+--------------------------------------------------------------------
+Style: A minor church-organ chord progression played on pulse waves,
+answered by a fast rebellious chiptune lead that "breaks" the harmony
+by stepping outside the key on every rule shatter. Big glass-crack
+transients splice into the loop as rhythmic accents. Feels like a
+Gothic castle scored by a Game Boy that has learned to swear.
+Instrumentation: pulse-wave organ, triangle bass arpeggio, noise-
+channel drums, crystalline FM glass-tine, vibrato square lead.
+Mood: mischievous, theatrical, energetic, punk-Gothic.
+Fit: Excellent for the "meta-game fans / 'aha' inversion" audience and
+the ransom-note/graffiti visual identity. Very catchy.
+Risk: High melodic density competes for attention with puzzle reading;
+chiptune church-organ is a strong flavor that may clash with the
+"stark, minimal" stone aesthetic and the glitch-static sting SFX.
+
+--------------------------------------------------------------------
+CONCEPT C — "Broken Rulebook" (Ambient Glitch-Drone, Hybrid)
+--------------------------------------------------------------------
+Style: A low, slow-changing A-minor ambient drone that is periodically
+"glitched" — short stutters, dropped samples, pitch-dives — as if the
+soundtrack is a corrupted tape. As rooms clear, the glitches become
+more frequent and musical, resolving the noise into a confident minor
+groove by the finale. Combines Concept A's structural layering with
+Concept B's glassy motif but keeps melodic content sparse so the
+puzzle-reading stays clean.
+Instrumentation: layered detuned pads + sub sine bed; sparse FM bell
+"shatter motif"; glitch stutter/dropout buffer; one rising pulse added
+per cleared room; final room unlocks a driving square lead.
+Mood: ominous, procedural, untrustworthy — the score itself feels like
+it's hiding something, then breaks free.
+Fit: Best thematic match (the score obeys a "rule" then violates it),
+best for clarity during puzzle solving, and lean enough to layer
+cleanly per the GDD's escalation without overwhelming the small-screen
+phone mix. Its sparse mid-band leaves room for the signature
+glass-crack SFX to cut through.
+Risk: Ambient can feel under-dramatic for the Bell Chamber's tension
+peak — mitigated with an escalating alarm layer that rides the music
+bus.
+
+====================================================================
+SECTION 1 — EVALUATION MATRIX
+====================================================================
+Criteria (weighted): Theme/Mood fit (25%), Genre/audience fit (20%),
+Clarity during puzzle-solving (20%), Layered-progression feasibility
+as described in GDD §5 (20%), Synth-only feasibility in one file (15%).
+Scores 1–5.
+
+Concept                         Theme  Genre  Clarity  Layers  Feasible  Weighted
+A "Chalk & Static"               5      3      4        5       4         4.25
+B "Shatterglass Cathedral"       4      5      2        3       3         3.55
+C "Broken Rulebook"              5      5      5        5       5         5.00
+
+--------------------------------------------------------------------
+SELECTION: CONCEPT C — "Broken Rulebook"
+--------------------------------------------------------------------
+Transparent rationale: Concept C wins because it is the only direction
+that satisfies all five criteria simultaneously. It preserves the
+GDD's explicit "score breaks its own rules as rebellion grows" design
+(highest marks alongside A on Theme and Layers) while beating Concept
+B decisively on Clarity — critical for a tap-to-move puzzle where the
+player must read and distrust an on-screen instruction. B is the most
+fun to listen to in isolation but its dense melodic chiptune competes
+with the puzzle and with the glass-crack SFX that is described as the
+signature sound (GDD §5); it scored lowest on Clarity and Synth
+feasibility. A is nearly equal but its unrelenting industrial density
+risks monotony and offers fewer clear escalation layers than C's
+"glitch resolve" arc. C is also the cheapest to realize with WebAudio
+primitives (pads + noise + sparse FM bell + gain-scheduled stutters)
+inside a single HTML file. Concept C is selected; B's glass-tine
+motif and the "organ" grandeur are folded in as the Bell Chamber
+motif only, and A's sub-heartbeat is used as the drone bed.
+
+====================================================================
+SECTION 2 — SELECTED AUDIO DIRECTION
+====================================================================
+
+MUSIC:
+A low, looping A-minor "corrupted tape" dungeon drone. The base bed is
+two detuned triangle/saw pads (A2 + E3, ±7 cents) plus a sub-sine
+heartbeat at 44 Hz pulsing ~ every 1.6 s. Over it sits a sparse FM
+"shatter-bell" motif (one bell note per phrase, in A natural minor).
+The loop periodically *glitches* — 60–120 ms buffer-style stutters,
+pitch-dive of the pads, and a noise dropout — so the soundtrack feels
+like a rulebook with pages torn out.
+
+Progression (the music breaks its own rules as the player rebels):
+- Start / Title: drone + sub only; slow, minimal, watchful.
+- Rooms 1–2 cleared: layer in a dry chalk-scratch percussion tick
+  (filtered brown noise), one pulse per beat.
+- Rooms 3–4 cleared: glitch frequency rises; add a distant clean
+  square-wave "rebellion" motif (8th-note arpeggio, very low gain).
+- Room 5 (Bell Chamber): music ducks under an escalating metallic
+  alarm layer; alarm pulse rate rises with the Alarm Meter
+  (0.8 Hz at 0% → 3.2 Hz at 100%).
+- Room 6 / Victory: all layers resolve into a confident major-key
+  rendition of the drone (A major), driving square lead, doubled
+  bell motif — the "rebel anthem."
+
+Key: A minor → A major at victory. Tempo/label: none (free ambient
+bed, no strict BPM) but the percussion layer implies a slow ~70 BPM;
+the final anthem locks to ~100 BPM. Music bus is independently
+toggleable (`rbd_music`). Ducking: on final-page tear the music bus is
+ducked 12 dB for ~1.2 s; on PAUSED the whole music bus ducks to −18 dB
+and low-pass filters to 400 Hz.
+
+Soundtrack loop target length: 16–24 s seamless (gain-crossfade loop
+points, no hard edit).
+
+SOUND EFFECTS (all WebAudio-synthesized; respect the SFX toggle):
+- UI button click: crisp short 2 ms click (square transient + band-pass
+  noise), on every button press (Start, Resume, Back, Retry, Play
+  Again, Credits, Reset confirm).
+- UI toggle tick: soft filtered tick (high sine blip + short noise),
+  on Music/SFX toggle state change in Pause and Settings.
+- Move (tap-to-move): soft chalk-scratch tick — 40 ms band-passed
+  noise burst with a brief downward pitch, on each successful tile
+  step.
+- Blocked move / wall bump: dull muted thud (low sine 90 Hz with fast
+  decay + low-passed noise), when moving into a non-exit direction or
+  a solid wall.
+- Rule shatter (SIGNATURE): bright glass-crack — layered high-frequency
+  noise burst with a fast attack + several detuned high sine partials
+  (glass inharmonicity) — followed by a descending glyph-noise burst
+  (pitch-swept noise from 4 kHz → 300 Hz over ~350 ms). Plays on every
+  rule break; intensity scales with room index (louder/more partials in
+  later rooms).
+- Room-entry / zone fanfare: warm two-note progression chime (perfect
+  fifth interval, sine + soft FM bell, ~400 ms), on first entry to a
+  new room and on zone-bonus award.
+- Door unlock: short rising "clunk-open" (low thud + rising filtered
+  noise sweep), the moment doors light up after a shatter.
+- Near-Miss: short tight "shing" sting — a single quick high FM bell
+  tine with <150 ms decay, when passing within 0.75 tile of a hazard
+  (respects 3 s cooldown per GDD §3.3).
+- Gravity flip: rising whoosh with shimmering pitch bend (noise through
+  an upward-swept band-pass + detuned sine glide), on FLIP button or
+  swipe-up; a secondary low "whoomp" accompanies the 8° screen tilt.
+- Wall eat: crunchy bit-crunch chomp — 2–3 rapid downward-pitched
+  square blips + short noise crunch, when eating a wall in Torn
+  Library.
+- Wind gust: soft airy noise swash (band-passed noise swell/fall,
+  ~500 ms), looped/triggered while in Torn Library gusts.
+- Bell ring: metallic rising clang — additive inharmonic bell partials
+  with a rising pitch envelope, when ringing the Bell Chamber bell;
+  each previously-broken rule adds one extra partial (rings louder the
+  more you've rebelled, per GDD §1.3).
+- Alarm pulse: escalating metronomic beep/whoomp.tick that accelerates
+  with the Alarm Meter (ties to music bus alarm layer; distinct SFX
+  layer at low gain so it reads on small speakers), during Bell
+  Chamber.
+- Alarm overheard / ejection: descending siren + whoosh, when the
+  Alarm Meter fills and the player is ejected to Chalk Corridor (soft
+  fail).
+- Thing collected: bright sparkle arpeggio (3 quick ascending bell
+  notes), on collecting rebel-graffiti / cracked-rulebook / alarm-bell
+  / master-rulebook.
+- Score popup: tiny high tick (optional, very low gain) on floating
+  score popups; grouped so spam is rate-limited.
+- Final page tear: sustained ripping-paper (modulated noise) + deep
+  boom (60 Hz sine with long decay) + glass cascade (many rapid glass-
+  crack partials), with a brief hit-stop silence (~120 ms) before the
+  boom for impact.
+- Victory: triumphant major-key sting resolving the anthem (brass-like
+  detuned saw stack chord + bell), on reaching the Victory screen.
+- Game Over (arcade/quit variant): descending minor cadence / low
+  somber tone, on Game Over screen entry.
+- Pause in/out: short low-pass "blip" duck, on entering and leaving
+  PAUSED.
+
+TECHNICAL APPROACH:
+- Single `index.html`, vanilla JS, no external assets, no network.
+  Every sound is generated at runtime with the Web Audio API;
+  oscillators + short noise buffers for all SFX. No audio files,
+  no data-URIs, no base64 samples.
+- One lazily-created `AudioContext`, created on the first user gesture
+  (first tap/click) and resumed there — required for mobile autoplay
+  policy. A guard flag prevents double-creation.
+- Signal graph: `masterGain → destination`; two child buses
+  `musicGain` and `sfxGain` feed master. SFX that are rhythmic
+  (alarm, percussion) may route through `sfxGain` only; the music bed
+  through `musicGain`. Toggles flip bus gain between 0 and target
+  (ramped ~20 ms to avoid clicks) and persist to `rbd_music` /
+  `rbd_sfx` via localStorage (try/catch guarded).
+- A shared noise buffer (1–2 s of white noise) is created once and
+  replayed through filters for shatter/crunch/wind/tear to save CPU.
+- Voices are fire-and-forget: each SFX builds its own small node graph
+  (osc/noise → filter → gain envelope → bus), starts it, and schedules
+  `stop()`; nodes are not kept. A lightweight voice-cap counter drops
+  the oldest/quietest when > 24 simultaneous voices to protect 60 fps
+  on 375×667 phones.
+- Music is a scheduled loop using `AudioContext.currentTime` lookahead
+  (a ~100 ms scheduling window via `setInterval`/rAF), not
+  `setTimeout` per note, so timing survives tab throttling. The
+  glitch layer is implemented as scheduled short gain dropouts and a
+  detune LFO on the pads, triggered randomly and more often as rooms
+  clear.
+- Mute-on-pause: entering PAUSED ducks music to −18 dB and applies a
+  400 Hz low-pass; the Alarm Meter and its audio pause with the
+  simulation clock (GDD §6). Resuming reverses the ramp.
+- Final-page tear ducks the SFX/other buses briefly for drama
+  (GDD §5) — implemented as a scheduled gain automation, restored
+  after the boom.
+- Accessibility/mix: all one-shot SFX peak-safe via a master limiter
+  (`DynamicsCompressorNode` on master) to prevent clipping; keep
+  puzzle-critical feedback (move tick, blocked thud, shatter) in
+  distinct frequency bands so they remain separable on phone speakers.
+- Everything must be driven from existing game events (move success,
+  move blocked, shatter, room change, hazard proximity, alarm fill,
+  collect, victory, UI toggles); no new game logic is introduced by
+  audio — the audio layer only listens to state.
+- Performance budget: audio work must not allocate per-frame; no
+  oscillators created inside the render loop except via scheduled
+  events. Target < 2 ms audio CPU per frame at peak in Bell Chamber.
+
+====================================================================
+END AUDIO DIRECTION
+====================================================================

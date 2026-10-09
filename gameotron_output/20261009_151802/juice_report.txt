@@ -1,0 +1,36 @@
+JUICE REPORT - Rule Breaker Dungeon
+Target: gameotron_output/20261009_151802/index.html
+Baseline: 1436 lines -> Result: 1581 lines (+145 lines, additives only)
+Syntax: node --check on extracted <script> => SYNTAX OK
+Guard: all additions wrapped in window.flags.juiceEnabled; flash/zoom also honour window.flags.reducedFlash
+
+JUICE FEATURES ADDED:
+- [PARTICLES] Ambient per-room motes (chalk dust / cyan drift / paper / alarm embers / rule-core glow) — separate capped array, <=50 concurrent. location: ~lines 597-653 (AMBIENT_STYLE + emitAmbient) and integration ~line 1430; render ~line 1471.
+- [PARTICLES] Footstep dust on every successful move (6 motes) — location: footstepDust ~lines 598-610, called in movePlayer ~line 837.
+- [PARTICLES] Collectible gold sparkle burst (10 radial sparks) on every thing pickup — location: collectSparkle ~lines 611-622, called in collectThing ~line 850.
+- [PARTICLES] Near-miss gold sparkle burst (reuses collectSparkle) — location: nearMiss ~line 963.
+- [PARTICLES] Drifting pebble dust trail in Gravity Well, capped emitter, 60ms cadence — location: stepHazards ~lines 902-913.
+- [SCREEN TRANSITIONS] Rule-break impact flash + 1.035x zoom, final-page 0.7 alpha white flash + 1.06x zoom; skipped when reducedFlash — location: breakRule ~line 730, tearPage ~line 745.
+- [SCREEN TRANSITIONS] Victory 1.08x zoom ease-back — location: triggerVictory ~line 1022; rendering transform render() ~lines 1457-1461.
+- [VISUAL FEEDBACK] Spark glow (shadowBlur) on 'spark' kind particles — location: render() ~line 1487.
+- [VISUAL FEEDBACK] SFX ring-wave sprites expanding from score events — location: rippleAt ~lines 623-629, updateFX ~lines 1437-1440, render ~lines 1504-1512.
+- [ANIMATION EASING] Player squash/stretch (1+0.16 / 1-0.22) driven by room.movePop, decaying — location: buildRoom ~line 665, drawBoard player token ~line 1398.
+- [SOUND COMPLEMENT] Ring-wave visual tied to shatter/collect/near-miss SFX — location: shatterFX ~line 887, collectSparkle, nearMiss.
+
+INTEGRATION: 5 distinct categories, no duplication of existing shake/hit-stop/popup/particle-burst systems.
+CAPS: ambient <=50; ripples <=8; event particles share existing pushFX(particles,180).
+MOTION: shake unchanged (existing); zoom capped <=1.08; hit-stop untouched (<=5 frames policy still honoured by existing 70/160ms).
+
+SKIPPED:
+- [SCREEN SHAKE] Already implemented (break/block/flip/pebble/eject triggers) — not duplicated.
+- [HIT-STOP] Already implemented (70ms/160ms) — not duplicated.
+- [SCORE/TEXT POPUPS] Already implemented via addScore/popups[] — not duplicated.
+- [SCREEN TRANSITIONS] Glitch wipe/banner glitch already implemented — only added the missing impact flash/zoom layer.
+- [CAMERA] Look-ahead/deadzone — out of scope: static fit-to-board, no scrolling camera in this design.
+- [POPUPS] Combo text — no combo mechanic exists in the GDD.
+
+VERIFICATION:
+- node --check on extracted script: SYNTAX OK (54855 bytes extracted).
+- Existing systems intact: burst, shatterFX, confetti, addScore, flashWipe, transition, nearMiss, particles/popups/shake/hitstop vars all present.
+- Name-collision check: flash, zoom, ambient, ripples, ambientT, trailT — no conflicts with existing identifiers.
+- Changes are surgical lines added in place; no original lines deleted (remove == 0 in edits).
