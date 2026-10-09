@@ -166,6 +166,10 @@ After `code_agent` creates `index.html`:
 - Log file: `YYYYMMDD_HHMMSS.log` in that folder — new file each run (never append)
 - Log every operation with `[HHmmss]` timestamps: phase transitions, agent execution, decisions, data passing, token usage, errors, game-specific results (theme, scores, review cycle, juice status, deployment result)
 
+## Changelog
+
+- Update `CHANGELOG.md` before committing any semantic change, per the `changelog-before-commit` skill (date-stamped/bulleted format).
+
 ## Common mistakes
 
 1. **Missing data passing:** Orchestrator must explicitly pass outputs between dependent tasks
