@@ -7,14 +7,19 @@ Implement a complete browser game as a single HTML file using Vanilla JS based o
 - Game Design Document
 - Audio Direction
 - Visual Direction
-- world_map.json (the validated spatial world from world_agent, when present)
+- world_template.json (the validated spatial world template from world_agent, when present)
 
 ## World Contract (Holotron)
-When `world_map.json` is provided, embed it **verbatim** as `window.WORLD` and use it as
-the single source of truth for level generation. Set `window.WORLD.current = "<slug>"` on
-every room transition, and expose `window.move(dir)` that invokes the **same** transition
-handler the UI uses (a thin hook, not a parallel path) so automated tests can traverse the
-world deterministically. Never diverge from the embedded world.
+When `world_template.json` is provided, embed it **verbatim** as `window.TEMPLATE` and use
+it as the single source of truth for level generation. Generate the floor layout at runtime
+from `window.TEMPLATE`; never diverge from its archetypes, connectivity rules, or required
+things. Seed generation deterministically from `window.SEED` (an integer — default to a
+random seed at boot, but allow override via a URL parameter and a Settings control so tests
+can pin it). Expose `window.worldState()` returning the generated world as
+`{ seed, start, rooms: { "<slug>": { "name": "<display>", "exits": { "<dir>": "<slug>" }, "things": ["<slug>"] } } }`,
+and expose `window.move(dir)` that invokes the **same** transition handler the UI uses (a
+thin hook, not a parallel path) so automated tests can traverse the generated world
+deterministically.
 
 ## Capabilities
 - Game implementation

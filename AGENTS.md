@@ -13,7 +13,7 @@ OpenCode agent workspace for Gameotron game jam. No source code — only agent `
 ├── ideation_agent.md       ← Concept generation
 ├── browsergame_expert.md   ← Expert concept review (@-mentionable)
 ├── evaluation_agent.md     ← Concept scoring and ranking
-├── world_agent.md          ← World-model authoring/validation via the Holonovel MCP (Design phase)
+├── world_agent.md          ← World-template authoring/validation via the Holonovel MCP (Design phase)
 ├── gdd_agent.md            ← Game Design Document
 ├── audio_agent.md          ← Audio direction
 ├── visual_agent.md         ← Visual direction
@@ -45,7 +45,7 @@ Create game with theme: One Way Ticket
 |-------|-------|-------|
 | 1. Discovery | `theme_agent` | Get Gameotron theme (or use theme override) |
 | 2. Ideation | `ideation_agent` → `browsergame_expert` review → **user approval** → `evaluation_agent` | Expert scores HOOK/TOUCH/THEME (1-5); evaluation uses weighted scoring (HOOK 30%, TOUCH 25%, THEME 45%) |
-| 3. Design | `world_agent` → `gdd_agent` | World authored/validated via Holonovel (`world_map.json`/`world_map.txt`), then Game Design Document |
+| 3. Design | `world_agent` → `gdd_agent` | World template authored/validated via Holonovel (`world_template.json`/`world_template.txt`), then Game Design Document |
 | 4. Concept Art | `audio_agent` + `visual_agent` | **Parallel execution** |
 | 5. Implementation & Review Loop | `code_agent` → [`review_agent` + `puppeteer_agent` → `bugfix_agent`] × N | Max 3 cycles; stop when no CRITICAL/HIGH/MEDIUM remain |
 | 5.5 Polish | `juice_agent` | Particles, screenshake, hit-stop, transitions, popups — surgical additions only |
@@ -108,11 +108,11 @@ Agents don't share state — orchestrator must explicitly pass file contents bet
 | ideation_agent | `concepts.txt` | `theme.txt` |
 | browsergame_expert | `concepts_with_review.txt` | `concepts.txt` |
 | evaluation_agent | `selected_concept.txt` | `concepts.txt` + `concepts_with_review.txt` |
-| world_agent | `world_map.json`, `world_map.txt` | `selected_concept.txt` + `concepts_with_review.txt` |
-| gdd_agent | `gdd.md` | `selected_concept.txt` + `concepts.txt` + `concepts_with_review.txt` + `world_map.json`/`world_map.txt` |
+| world_agent | `world_template.json`, `world_template.txt` (+ `world_map.json`, `world_map.txt` exemplar) | `selected_concept.txt` + `concepts_with_review.txt` |
+| gdd_agent | `gdd.md` | `selected_concept.txt` + `concepts.txt` + `concepts_with_review.txt` + `world_template.json`/`world_template.txt` |
 | audio_agent | `audio_direction.txt` | `gdd.md` |
 | visual_agent | `visual_direction.txt` | `gdd.md` |
-| code_agent | `index.html` | `gdd.md` + `audio_direction.txt` + `visual_direction.txt` + `world_map.json` (embed as `window.WORLD`) |
+| code_agent | `index.html` | `gdd.md` + `audio_direction.txt` + `visual_direction.txt` + `world_template.json` (embed as `window.TEMPLATE`; seed from `window.SEED`; expose `window.worldState()`) |
 | review_agent | `buglist_HHmmss.txt` | `index.html` |
 | puppeteer_agent | `runtime_errors_HHmmss.txt`, `test_report_HHmmss.txt` | `index.html` (+ `testcases.txt` if exists) |
 | bugfix_agent | fixed `index.html` + appended buglist | `index.html` + `buglist_HHmmss.txt` |
@@ -124,7 +124,8 @@ Agents don't share state — orchestrator must explicitly pass file contents bet
 - **theme_agent:** Must validate jam theme fetch. Source is gameotron.whiterabbitfactory.com, NOT itch.io directly
 - **ideation_agent:** Output section specifies 20 concepts numbered 1-20 (consistent with orchestrator spec).
 - **gdd_agent:** Screen Inventory must include 6+ screens with Pause Menu containing music/SFX toggles and How To Play button
-- **world_agent:** Runs at Design before gdd_agent. Calls `set_badge(game_master)` → `manage_novel(create)` → `manage_world(convert)` → reads `world://map`; emits `world_map.json` (slug-keyed) + `world_map.txt`. One `convert` per fresh Novel (re-convert ⇒ `STATE_CONFLICT`). `generate` is forbidden (content-absent ruleset-free).
+- **world_agent:** Runs at Design before gdd_agent. Calls `set_badge(game_master)` → `manage_novel(create)` → `manage_world(convert)` → reads `world://map`; emits `world_template.json` (archetypes + connectivity rules + required things) + `world_template.txt`, and the concrete `world_map.json`/`world_map.txt` exemplar. One `convert` per fresh Novel (re-convert ⇒ `STATE_CONFLICT`). `generate` is forbidden (content-absent ruleset-free, REQ-431).
+- **code_agent:** Embeds `world_template.json` as `window.TEMPLATE`, generates levels from it seeded by `window.SEED`, and exposes `window.worldState()` + `window.move(dir)` for the Phase 2 check. Do not use `window.WORLD`.
 - **review_agent:** Checks GDD compliance, game feel features (particles, screenshake, hit-stop), and all screens from Screen Inventory
 - **puppeteer_agent:** Tests at exactly 3 viewports (1920×1080, 800×600, 375×667) — touch events on mobile, mouse on desktop
 - **bugfix_agent:** Must append fix summary to existing buglist, never rewrite `index.html` wholesale. Make minimal surgical changes.

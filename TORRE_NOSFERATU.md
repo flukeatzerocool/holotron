@@ -193,20 +193,23 @@ Victory (escape). Plus in-scene overlays for combat and social encounters.
 - **Optional keyboard:** WASD/arrows/Space only if "full controls" is requested.
 - Finger-sized targets (≥48 px); viewport-aware; responsive canvas.
 
-## 14. World-model contract (coordinate with the Holonovel integration session)
+## 14. World-model contract (settled)
 
-Per the **template + seeded procgen** decision:
+Procgen lives **in the game**; `world_agent` authors and `manage_world(convert)` validates a
+static **tower template** (room archetypes — exploration / combat / social / puzzle /
+treasure / exit — the connectivity rules between them, and the thing/encounter roster: wax,
+matches, key, creatures, NPCs). It emits `world_template.json` + `world_template.txt`.
 
-- `world_agent` authors and `manage_world(convert)` validates a **tower template**:
-  room archetypes (exploration / combat / social / puzzle / treasure / exit), the
-  connectivity rules between them, and the **thing/encounter roster** (wax, matches,
-  key, creatures, NPCs).
-- The game **procedurally generates floors from the template by seed**, and exposes a
-  **deterministic seeded mode** for testing (a fixed seed produces a known layout).
-- The Phase 2 behavioral check is adapted: it validates a **fixed seed's** generated
-  layout against the template's constraints (room types present, connectivity legal,
-  required things placed) rather than a 1:1 fixed map.
-- Contract to be finalized with the other session; this brief is the requirements side.
+- `code_agent` embeds the template as `window.TEMPLATE`, generates floors from it seeded by
+  `window.SEED` (default random, overridable), and exposes `window.worldState()` (the
+  generated rooms/exits/things) + `window.move(dir)`.
+- The game exposes a **deterministic seeded mode** for testing (a fixed seed ⇒ a known layout).
+- The Phase 2 behavioral check validates a **fixed seed's** generated layout against the
+  template's constraints (archetypes present within count bounds, connectivity legal,
+  required things placed and reachable) rather than a 1:1 fixed map. Rule Breaker's 1:1 graph
+  check remains the sensitivity control.
+- Holonovel's `manage_world(action: generate)` is **not** used: it is ruleset-table-driven
+  and content-absent ruleset-free (REQ-431).
 
 ## 15. Must-haves / must-nots
 
@@ -214,6 +217,9 @@ Per the **template + seeded procgen** decision:
 - Single `index.html`, vanilla JS, embedded HTML/CSS/JS (per `COMPLIANCE.md`).
 - Candle-as-clock; wax/matches/key; grace on wax-out; four NPCs; ~6 social actions; a single 0–8 Dread dial; avoidance combat.
 - Touch + mouse; responsive; ≥6 screens; music/SFX toggles.
+- **Staged delivery:** ship the floor-1 core first (candle, wax/matches, key, exit, seeded
+  floors, one creature type) as wave 1; social + Dread land as wave 2 (floor 2–3). This keeps
+  the mandatory game shippable even if wave 2 is cut at T-6h.
 
 **Must not:**
 - No traditional fight-the-monster battle system.

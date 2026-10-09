@@ -7,7 +7,7 @@ Create a comprehensive Game Design Document from a selected game concept.
 - Selected concept number and description
 - Full scoring table from evaluation_agent
 - Expert notes from browsergame_expert
-- world_map.json / world_map.txt (the validated spatial world from world_agent, when present) — design the game to implement exactly this world (rooms, exits, things)
+- world_template.json / world_template.txt (the validated spatial world template from world_agent, when present) — design the game to generate its levels from exactly this template (archetypes, connectivity rules, required things) and to expose the generation contract (`window.TEMPLATE`, `window.SEED`, `window.worldState()`)
 
 ## Capabilities
 - GDD creation
