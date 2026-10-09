@@ -6,6 +6,10 @@ awaiting `plan-review` + user confirmation before execution.
 at the Design phase, wire it additively into the GAMEOTRON orchestrator, and add a
 Phase 2 game↔world consistency check. Deployment is planned separately in
 `PLAN_DEPLOY.md` (critical path).
+**Role in the submission:** this integration is proven on **#7 "Rule Breaker Dungeon"**
+(the integration vehicle, already deployed). The jam **submission game is Torre
+Nosferatu** (`TORRE_NOSFERATU.md`), which reuses this integration with a **template +
+seeded procgen** variant.
 **Mode boundary:** PLAN is read-only. BUILD starts only on user confirmation.
 
 ---
@@ -38,10 +42,11 @@ test, and the smoke test must never be treated as the submission.
 Holonovel, and *demonstrate* that the generated game matches it — so "the world is
 reliable" is evidenced, not asserted.
 
-**Concept.** The approved game is **#7 Rule Breaker Dungeon** (grid rooms + exits +
+**Concept.** The integration vehicle is **#7 Rule Breaker Dungeon** (grid rooms + exits +
 things → a literal spatial world the Holonovel world model can represent). This
 **replaces #20 The Everything Button**, which has no spatial world; the Everything
-Button build is abandoned (user decision, grill-me). Its run artifacts in
+Button build is abandoned (user decision, grill-me). #7 is the **integration proof**
+(already deployed); the jam **submission game is Torre Nosferatu** (`TORRE_NOSFERATU.md`). Its run artifacts in
 `gameotron_output/` are retained as historical process evidence.
 
 **Done-bar (Phase 1+2 exit).** On a fresh GAMEOTRON run whose phase order and

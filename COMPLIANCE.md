@@ -2,6 +2,8 @@
 
 Source: https://itch.io/jam/gameotrongamejam (window: Oct 9 2026 10:00 → Oct 11 2026 12:00).
 
+**Submission game:** **Torre Nosferatu** — see `TORRE_NOSFERATU.md`. (#7 "Rule Breaker Dungeon" is the Holonovel integration proof/baseline, already deployed.)
+
 A valid entry demonstrates **both**:
 1. A playable browser game generated through GAMEOTRON.
 2. A documented process showing how GAMEOTRON was used, configured, or improved.

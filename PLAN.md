@@ -12,6 +12,8 @@ A valid entry requires **both**:
 
 The mandated phase order and the **mandatory ideation approval gate** are preserved; the orchestrator is modified **additively only**. (The jam explicitly permits *adapting* GAMEOTRON, so an additive fork remains a valid "generated through GAMEOTRON" entry.)
 
+**Submission game:** **Torre Nosferatu** — a turn-based gothic-horror candle roguelike (see `TORRE_NOSFERATU.md`) — generated through the pipeline. #7 "Rule Breaker Dungeon" is the **Holonovel integration proof/baseline** (already produced + deployed; see `PROCESS.md`), not the submission.
+
 **Done-bar:** *A playable `index.html` produced through a GAMEOTRON run whose phase order and approval gate are intact, whose game world is authored as Holonovel assertions, validated by `manage_world(convert)`, and post-generation-checked against `world://map`; plus a public GitHub fork and a `PROCESS.md` with one before/after metric.*
 
 ## 2. Approach (decided)
@@ -32,7 +34,7 @@ The mandated phase order and the **mandatory ideation approval gate** are preser
 
 1. `holotron` — public **GitHub** fork of GAMEOTRON (PolyForm Noncommercial license + `Required Notice:` preserved).
 2. Modified pipeline: `opencode.json` (MCP mount), `.opencode/agents/world_agent.md`, and an additive edit to `.opencode/agents/gameotron.md` invoking it.
-3. Generated `index.html` meeting all baseline requirements.
+3. Generated `index.html` for **Torre Nosferatu** (the submission game), meeting all baseline requirements.
 4. `PROCESS.md` — use/configuration/improvement narrative + one before/after metric.
 5. Published artifacts: GDD, visual/audio directions, review/runtime/test/juice reports, process logs.
 6. itch.io entry submitted before cutoff.
@@ -93,7 +95,7 @@ The mandated phase order and the **mandatory ideation approval gate** are preser
 
 - [ ] Public GitHub fork; license + notices preserved
 - [ ] `@gameotron` run with phase order and approval gate intact
-- [ ] `index.html` meets all baseline requirements
+- [ ] `index.html` for Torre Nosferatu meets all baseline requirements
 - [ ] `world_agent` integrated additively + consistency check passes
 - [ ] `PROCESS.md` + before/after metric
 - [ ] Pipeline artifacts published

@@ -3,6 +3,10 @@
 > The "documented process" half of the valid-entry requirement. Every claim below is
 > backed by an artifact in `gameotron_output/20261009_151802/` or a command in this
 > repo. Run log: `gameotron_output/20261009_151802/20261009_151802.log`.
+>
+> **Note:** the run documented here (#7 "Rule Breaker Dungeon") is the **Holonovel
+> integration proof/baseline**. The jam **submission game is Torre Nosferatu**
+> (`TORRE_NOSFERATU.md`); this document is extended with the Torre run once it completes.
 
 ## 1. Summary
 

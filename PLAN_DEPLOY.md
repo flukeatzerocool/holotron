@@ -151,4 +151,4 @@ step; everything after is deterministic. If `butler login` cannot run headless, 
 
 This is the **critical path**: Phase 1+2 produces the game; Phase 3/4 is what makes it a
 submission. If time runs short, **deployment outranks the Holonovel integration** — a
-shipped, plainly-generated #7 game scores; an unshipped integrated one does not.
+shipped, plainly-generated **Torre Nosferatu** game scores; an unshipped integrated one does not.
