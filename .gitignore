@@ -1,8 +1,20 @@
-node_modules
+# dependencies (repo policy: no npm/node/bun)
+node_modules/
 package.json
 package-lock.json
 bun.lock
-.gitignore
+
+# local machine state / scratch
 .tools/
 .holonovel-state/
 .spike/
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# editors
+.vscode/
+.idea/
+*.swp
+*~
