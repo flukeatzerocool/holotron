@@ -1,0 +1,83 @@
+BUTLER DEPLOY-PREP LOG — Torre Nosferatu
+Run folder: gameotron_output/20261010_095651
+Agent: deployment_agent (Gameotron/Holotron) — PREPARE ONLY, NO PUSH
+Timestamp: 2026-10-10 (jam deadline 2026-10-11 12:00 local)
+========================================================================
+
+1. BUTLER LOCATION / VERSION
+----------------------------
+- Path: /home/fluke/Holotron/.tools/butler/linux-amd64/butler
+  (gitignored — .tools/ is in .gitignore)
+- Installed by: scripts/install-butler.sh (pinned BUTLER_VERSION=v15.32.0,
+  downloaded from the GitHub release asset; canonical broth.itch.ovh does
+  not resolve on this machine).
+- Installer output: "downloading .../v15.32.0/butler-linux-amd64.zip"
+  then "installed: v15.32.0, built on Oct 6 2026 @ 00:11:19".
+- Version: v15.32.0, built on Oct  6 2026 @ 00:11:19, ref 336f9541
+- $BUTLER_PATH: empty (not set). butler not on PATH before install.
+- NOTE: per PROCESS.md and the Linux section of deployment_agent.md, butler
+  reads its token from ~/.config/itch/butler_creds (the -i/--identity file),
+  NOT from $BUTLER_API_KEY. $BUTLER_API_KEY is empty/unset here.
+
+2. AUTH CHECK (butler status — no login performed)
+--------------------------------------------------
+Command: ./.tools/butler/linux-amd64/butler status flukeatzerocool/holotron:html5
+Output:
+  +---------+-----------+------------+---------+
+  | CHANNEL |  UPLOAD   |   BUILD    | VERSION |
+  +---------+-----------+------------+---------+
+  | html5   | #19660585 | \u2713 #2095371 | 0.1.0   |
+  +---------+-----------+------------+---------+
+Result: AUTH OK. Credentials in ~/.config/itch/butler_creds are valid and
+resolve the existing baseline project (holotron), confirming the account
+username is "flukeatzerocool".
+
+Command: ./.tools/butler/linux-amd64/butler status flukeatzerocool/torre-nosferatu:html5
+Output: "listing channels: itch.io API error (400): /wharf/channels: invalid game"  (exit 1)
+Result: EXPECTED — the new Torre project does not exist yet. The user is
+creating it (plan P0.4, still pending). Auth itself is fine (see above).
+
+3. INTENDED PUSH TARGET (WOULD-BE COMMAND)
+------------------------------------------
+- Account username: flukeatzerocool  (confirmed via butler status)
+- Project: **TBD** — the new Torre Nosferatu project, created by the user
+  in the itch.io web UI (plan P0.4, pending). Candidate slug: torre-nosferatu.
+- Target: flukeatzerocool/<torre-project>:html5   (project slug TBD)
+- WOULD-BE COMMAND (do NOT run until user confirms):
+    ./.tools/butler/linux-amd64/butler push build/ flukeatzerocool/<torre-project>:html5 --userversion <ver>
+  With the placeholder project resolved, e.g.:
+    ./.tools/butler/linux-amd64/butler push build/ flukeatzerocool/torre-nosferatu:html5 --userversion 1.0.0
+
+4. BUILD ARTIFACT
+-----------------
+- Copied: gameotron_output/20261010_095651/index.html -> build/index.html
+- Size: 101207 bytes (100 KiB), 2109 lines
+- SHA-256 (source == build, verified identical):
+  13ad24457c725de4f5e87afab2fec983a84eedae556bdfa6ab08e8ff8cd431c5
+- Target dir "build/" referenced by convention at the repo root.
+
+5. PRE-FLIGHT CHECKLIST (from PROCESS.md / plan §7.4)
+-----------------------------------------------------
+[ ] P0.4  User creates the NEW itch.io project for Torre Nosferatu (web UI)
+[ ] P0.4  User joins the Gameotron jam with the new project
+[ ]      Account email VERIFIED  (itch.io returns 400 on first upload otherwise)
+[ ] P5.2  Project set to Public  (private project => .itch.io/<project> page won't resolve)
+[ ]      Kind set to HTML (HTML5) and channel target is :html5
+[ ]      User explicitly confirms deployment in the current session
+[ ]      (then) run butler push build/ <user>/<project>:html5 --userversion <ver>
+[ ] P5.2  Confirm the page resolves live + jam entry is in, before 2026-10-11 12:00
+
+6. SAFETY CONFIRMATION
+----------------------
+NOTHING WAS PUSHED. No `butler push` was run. No `butler login` was run.
+Only prepare steps were performed: build copy, description/tags, butler
+install + `butler status` auth check.
+
+7. DISCREPANCY NOTE
+-------------------
+AGENTS.md/deployment notes describe build/ as "gitignored per convention",
+but this repo's .gitignore does NOT list build/, and build/index.html is
+currently TRACKED by git (an older 69879-byte file was overwritten by this
+deploy-prep copy). Flagged for the user: either add build/ to .gitignore or
+intentionally track the deployed artifact. No commit was made.
+========================================================================

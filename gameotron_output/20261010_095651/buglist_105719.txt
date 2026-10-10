@@ -1,0 +1,148 @@
+========================================================================
+BUGLIST — Torre Nosferatu (Dread Weather)
+review_agent FINAL STATIC RE-REVIEW (cycle-2 fixes)
+run 20261010_095651 · target index.html (1961 lines)
+Sources checked: index.html, gdd.md, direction.txt, world_template.json
+Prior buglist re-verified: buglist_104132.txt (with FIXED BUGS appended)
+Generated: 2026-10-10 10:57:19
+Method: full static read + Node vm harness against the REAL game JS
+        (IIFE unwrapped) on the pinned seed 20261010; DOM-stub execution
+        confirmed in the pass lines below. No other agents invoked.
+========================================================================
+
+SUMMARY OF COUNTS
+  CRITICAL: 0
+  HIGH:     0
+  MEDIUM:   0
+  LOW:      13   (1 NEW side-effect from the cycle-2 fix; 12 carried/residual)
+  TOTAL:    13
+  NEW CRITICAL/HIGH/MEDIUM introduced by the cycle-2 fix: 0
+  Regression: none observed.
+
+========================================================================
+PRIOR-FIX RE-VERIFICATION (buglist_104132 · cycle-2 fixes)
+========================================================================
+  HELD  H1 — Borrowed-door choice modal + BOTH win paths.
+        attemptExit() (1235-1243) computes canBorrow = borrowedOpen &&
+        borrowedTurns>0 and routes:
+          canBorrow && G.key -> openExitChoice() modal (1235-1252)
+          canBorrow          -> win('borrowed')
+          G.key only         -> win('full')
+          neither            -> locked toast
+        Harness (real JS, state forced at MAX_DEPTH):
+          key+borrow  -> encTitle "The ground-floor door", modal active  OK
+          borrow only -> wonType 'borrowed', title "You slipped out in
+                         another's wake."                               OK
+          key only    -> wonType 'full'                                  OK
+          neither     -> locked toast, no win                            OK
+        openExitChoice() reuses #modal-encounter + mkBtn(); Space/1/2
+        keyboard selection is wired (1937-1941). Borrowed ending is now
+        genuinely reachable once any survivor opens the door (harness:
+        openBorrowedDoor fires with all wave-3 flags OFF).
+
+  HELD  M1 — Near-Miss Bonus is now per-room "+50 each".
+        Guard keyed on 'nm:'+depth+':'+slug in G.nearMissSet (1182-1183);
+        G.nearMissSet initialised in makeState (725). Harness: creature
+        room A -> nearMiss 1; re-enter A -> stays 1; creature room B ->
+        nearMiss 2. computeScore() row 'Near-miss ×50' scales (1523).
+
+  HELD  M2 — npcItemSweep protects exit-key AND REQ_THINGS.
+        Candidate loop skips 'exit-key' and any REQ_THINGS item (1274-1278).
+        Harness: required-only room (wax-cake+matches) survived 50 sweeps
+        unchanged; a room with an added non-required item still allows the
+        non-required item to be taken. Per-floor required-things guarantee
+        now holds independently of the borrowed door.
+        NOTE: see NEW LOW L13 — the protection is now so complete that the
+        npcItemUse flag has no reachable effect (side-effect, not a defect).
+
+  HELD  Flags do NOT gate required endpoints / hooks.
+        Harness with ALL wave-3 flags set false:
+          social('share-light') still resolves and mutates Dread/NPC state
+            (socialLog grew; vlask numeric -1 -> +1);
+          REQ_ENC placement unaffected (bats on floor 1, vlask on floor 2);
+          simNpcs() + openBorrowedDoor() still run (door opened,
+            borrowedTurns=4, an NPC escaped).
+        No flag wraps social(id), required encounters, or the Dread clock.
+
+  HELD  Hooks intact.
+        window.TEMPLATE, SEED, worldState, systemState, move, social,
+        pristineWorldState/pristineState/pristineSystemState all present.
+        worldState() active floor depth=1, every room tagged with archetype.
+        SEED === TEMPLATE.test_seed === 20261010.
+
+  HELD  Determinism / clean boot.
+        Two fresh boots -> byte-identical pristineWorldState() (2306 B).
+        vm boot raised no exception; node --check on the extracted script:
+        syntax OK. All getElementById targets exist (no boot crash).
+
+========================================================================
+NEW FINDINGS (introduced/left by the cycle-2 fix)
+========================================================================
+
+[LOW] L13 — npcItemUse flag is now inert (side-effect of the M2 fix)
+  Location: index.html:1274-1278 (npcItemSweep) vs. generation at
+            632-638 (only wax-cake/matches/lore-fragment/exit-key placed)
+  The M2 fix now refuses to take any item that is 'exit-key' or listed in
+  REQ_THINGS. Every item the generator places is one of those (candle-nook
+  = wax-cake+matches, scribe-alcove = lore-fragment, descending-stair =
+  exit-key). Therefore npcItemSweep's candidate index can never be >= 0 in
+  normal play, so the "NPCs take / use items" Settings toggle has no
+  observable effect on any generated floor.
+  Explanation: a shipped, advertised wave-3 toggle that does nothing is a
+  minor UX/polish defect (GDD §5 lists the flag as live simulation detail).
+  Fix approach (optional, LOW): introduce at least one non-required
+  flavour/consumable item into the item pool (or make exit-key optional in
+  some rooms) so the flag has something it may legally take; keep the
+  required-item guard.
+
+========================================================================
+[LOW] FINDINGS — carried/residual from buglist_104132 (all still present)
+========================================================================
+  L1  turn-cost effect is a flat 2-wax burn, not a lost turn
+      (index.html:1399; GDD/world_template spiders effect 'turn-cost').
+  L2  Encounter room charges two turns: the entry move is paid in tryMove
+      after openEncounter (1209-1211) and resolution pays another
+      (1418/1433). Net ~2 wax + 2 NPC/Dread sim steps per encounter room.
+  L3  Lore text hard-coded in LORE_TEXT (1145-1151) rather than authored
+      world-template `read_text` (GDD §5.1).
+  L4  loreSet key uses G.depth+':'+room.name (1160); repeated room names
+      on one floor collide, silently dropping a fragment.
+  L6  Audio.dreadShift (891) defined but never called — no Dread-tier sting.
+      (grep: single occurrence, definition only.)
+  L7  Dead CSS selector #talkBtn (65); real id is btn-talk (182).
+  L8  Duplicate renderHUD()/refreshToggles() in newRun (1852-1853) and
+      boot (1865) — harmless redundancy.
+  L9  endGame() called with an ignored argument: endGame(false) at 1123,
+      function endGame() has no parameters (1541).
+  L10 attemptExit() silently no-ops when G.depth < MAX_DEPTH (1236).
+  L12 Candle-radius upgrade path unreachable: G.baseRadius is never
+      increased (720, 763); RADR.max 7 unreachable despite GDD §4.2.
+  L14 (GDD nit) GDD §2.9 says "creatures gather near the exit" while the
+      borrowed door is open; no such adversary behaviour is implemented
+      (only the Dread +1/2-turn tick at 1327). Cosmetic/design gap.
+  L15 (GDD nit) GDD §3.1 lists a free "long-press a tile -> inspect"
+      gesture; only hover highlight (1636-1641) exists. Optional gesture,
+      no gameplay impact.
+
+  Explicitly DEFERRED (not counted as a finding this run):
+    - screenshake and hit-stop absence (particles = 10 dust motes,
+      1773-1780) — assigned to juice_agent per brief (was prior M3).
+
+========================================================================
+REGRESSION / STABILITY
+========================================================================
+  - No CRITICAL regression: boot clean, generation terminates (all loops
+    bounded), no new infinite loops, every DOM id referenced exists.
+  - No new syntax/parse error: node --check on the extracted game script
+    returns OK.
+  - Determinism preserved on the pinned seed: two boots produce identical
+    pristineWorldState() JSON.
+  - Hook/flag semantics preserved: all six hooks present and callable;
+    flags do not gate social(id), required encounters, or NPC/Dread state.
+  - Both ending paths reachable: full (key) and borrowed (choice modal or
+    no-key branch) verified by driving the REAL attemptExit().
+  - No regression found in any cycle-2-edited path (attemptExit/
+    openExitChoice 1235-1252; near-miss 1180-1184; npcItemSweep 1267-1284).
+========================================================================
+END OF BUGLIST
+========================================================================

@@ -1,0 +1,117 @@
+PHASE 2 — WORLD-MODEL CHECK REPORT (FINAL re-check, post cycle-2 fixes)
+Target: /home/fluke/Holotron/gameotron_output/20261010_095651/index.html
+World model: /home/fluke/Holotron/gameotron_output/20261010_095651/world_template.json
+Checker: /home/fluke/Holotron/scripts/check_template.mjs (dependency-free, node v24.18.0)
+Generated: 2026-10-10 11:09:10 (timestamp 110910)
+State file: state_20261010.json
+
+======================================================================
+DETERMINISM
+======================================================================
+  window.TEMPLATE.test_seed = 20261010 (non-null, typeof number).
+  window.SEED pinned to 20261010 via context.addInitScript BEFORE the app script ran.
+  Reload had NO ?seed= query; verified window.SEED === window.TEMPLATE.test_seed === 20261010.
+  Determinism: VERIFIED.
+
+======================================================================
+EXTRACTION (pristine boot, before any move)
+======================================================================
+  Exported in-page at the title screen, pre-mutation:
+    state_20261010.json = { "world": worldState(), "systems": systemState() }
+  worldState(): active floor depth=1, start="d1-spire-entry-1", 12 rooms.
+  EVERY room carries `archetype` (archetype role+count check therefore exercised):
+    spire-entry x1, stair-corridor x3, candle-nook x2, scribe-alcove x2, shadow-hall x2,
+    descending-stair x2, survivor-camp x0.
+  All per-archetype counts are within the template's declared [min,max] bounds, and the start
+  room's archetype is the declared `entry` role (spire-entry).
+  required_things placed on reachable floor-1 rooms: wax-cake x2, matches x2, lore-fragment x2.
+  required_encounters placement: bats on d1-shadow-hall-1/-2 (active floor 1, reachable).
+  Defensive clock normalization applied: clocks[...].value ?? .current ?? 0 ->
+    wax {value:30,min:0,max:30}, dread {value:0,min:0,max:8}.
+
+  Behavioral socialLog SYNTHESIZED per spec (>=1 warm + >=1 cold), reading Dread before/after:
+    {"id":"steal",       "dreadBefore":0, "dreadAfter":1}   (cold, +1)
+    {"id":"share-light", "dreadBefore":1, "dreadAfter":0}   (warm, -1)
+  systems.socialLog written into state_20261010.json.
+
+======================================================================
+CHECKER RUN (exact command + result)
+======================================================================
+COMMAND:
+  node scripts/check_template.mjs \
+    --template gameotron_output/20261010_095651/world_template.json \
+    --state    gameotron_output/20261010_095651/state_20261010.json \
+    --fail-on spatial
+
+OUTPUT (verbatim):
+  0 mismatch(es) — spatial 0, systemic 0 (mode=all, fail-on=spatial)
+  PASS — no spatial mismatch
+
+EXIT CODE: 0
+  spatial mismatches  : 0  (HARD — pass)
+  systemic mismatches : 0  (advisory — pass)
+VERDICT: PASS (spatial hard, systemic advisory).
+
+======================================================================
+CONTROL / TRUST TESTS (run before trusting the green result)
+======================================================================
+  1) golden_template.json + golden_state.json         -> spatial 0, systemic 0, exit 0  PASS (expected)
+  2) golden_template.json + malformed.json            -> spatial 4, systemic 8, exit 1  PASS (>=2 spatial, exit 1)
+  3) golden_template.json + malformed_archetypes.json -> spatial 3, systemic 0, exit 1  PASS (>=2 spatial, exit 1)
+  4) golden_template.json + malformed_systems.json    -> spatial 0, systemic 7, exit 0  PASS (>=2 systemic, advisory, exit 0)
+  All four controls behave exactly as specified -> the checker is trustworthy and not vacuously green.
+
+======================================================================
+B7 GATE
+======================================================================
+  B7.1 dread clock non-null at pristine boot:
+       systemState().clocks.dread = {value:0, min:0, max:8}   -> NON-NULL  PASS
+  B7.2 >=1 NPC at pristine boot:
+       systemState().npcs length = 5 (vlask@2, sister-marta@2, ilona@3, petr@2, nadja@3),
+       all floor-assigned on test_seed                          -> PASS
+  B7.3 window.social(id) live and drives the shared handler:
+       steal raised Dread 0->1 (cold, +1); share-light lowered 1->0 (warm, -1)  -> PASS
+  B7.4 a required_encounters entry reachable on test_seed:
+       required_encounters = [bats(f1), vlask(f2), rats(f2)].
+       "bats" is PLACED on the active floor 1 (d1-shadow-hall-1/-2); all 12/12 floor-1 rooms are
+       graph-reachable from d1-spire-entry-1 -> bats reachable on the active floor.
+       systemState().encounters contains the full roster incl. bats/vlask/rats.
+       vlask/rats reachable after descent on floor 2 (floors generated for d=1..6).  PASS
+  B7.5 wave-3 flags toggle WITHOUT gating hooks:
+       npcItemUse, creatureAttacksNpc, npcTrapTrip, allianceRadius, juiceEnabled each flipped
+       true<->false via real #flag-* button clicks; worldState()/systemState()/move()/social()
+       remained callable throughout -> PASS
+  B7 VERDICT: PASS
+
+======================================================================
+FAIL-CLOSED CHECK
+======================================================================
+  window.worldState  present (function)
+  window.systemState present (function)
+  window.move        present (function)
+  window.social      present (function)
+  window.TEMPLATE    present (object, test_seed 20261010)
+  window.SEED        present (20261010)
+  socialLog          produced (non-empty, warm+cold)
+  => Not unverified. Result is a genuine, exercised PASS.
+
+======================================================================
+CYCLE-2 FIX INTERACTION WITH THE WORLD MODEL
+======================================================================
+  The cycle-2 borrowed-door choice was exercised at runtime in the browser (see
+  test_report_110910.txt §CYCLE-2): key+ajar -> choice modal (full 1000 / borrowed 400);
+  no-key+ajar -> borrowed; key+no-ajar -> full; neither -> locked. A genuine un-instrumented
+  natural playthrough reached the ground-floor stair on turn 40, the door ajar while there,
+  and produced the choice modal -> borrowed victory (wonType 'borrowed').
+  This does not affect the world-model check (spatial 0, systemic 0); it confirms the open
+  HIGH finding H1 from the prior run is now resolved.
+
+======================================================================
+FINAL PHASE 2 VERDICT
+======================================================================
+  spatial mismatches : 0   (hard)       -> PASS
+  systemic mismatches: 0   (advisory)   -> PASS
+  checker exit code  : 0
+  B7 gate            : PASS
+  UNVERIFIED flags   : none
+  PHASE 2: PASS

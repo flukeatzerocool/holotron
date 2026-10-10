@@ -1,0 +1,287 @@
+VISUAL DIRECTION FOR: TORRE NOSFERATU (Dread Weather)
+Run: 20261010_095651 · test_seed: 20261010 · single-file index.html, canvas-drawn, no external assets.
+
+======================================================================
+0. CONCEPT SELECTION (5 candidates evaluated)
+======================================================================
+Constraint: the light IS the artwork — every frame composed around a radial
+candle mask over absolute black; ≤3 hues; 375 px hard floor.
+
+| # | Concept | Orig. | Theme | Impl. | Appeal | Total |
+|---|---------|:---:|:---:|:---:|:---:|:---:|
+| 1 | **Void-Carve (SELECTED)** — torch-lit Expressionist silhouette; the mask edge is the only visible line; everything is carved from #000 | 5 | 5 | 5 | 5 | **20** |
+| 2 | Painted 1922 film-stock — sepia grain, vignette, intertitle cards | 5 | 5 | 3 | 4 | 17 |
+| 3 | Vector heraldic stained-glass — glowing tracery windows as light sources | 4 | 3 | 4 | 4 | 15 |
+| 4 | Isometric pixel gothic (16×16) — cute-dark contradiction | 3 | 2 | 5 | 3 | 13 |
+| 5 | Flat neo-noir iconography — high-contrast 2-tone posters | 4 | 4 | 4 | 2 | 14 |
+
+SELECTED: **Concept 1 — Void-Carve.**
+Rationale: it is the only concept where the signature ("the light is the
+artwork") is the *rendering model itself* rather than a filter over it. The
+mask is the frame; silhouette carries all meaning; the ≤3-hue rule and the
+375 px floor are naturally satisfied because nothing depends on fine detail.
+It is also the cheapest to implement canvas-only (one radial gradient, a
+silhouette pass, and a small flicker function) with the best atmospheric
+payoff. All five concepts — and this one — include Atmospheric Effects
+(void breathing pulse + spill ring + flicker), per spec.
+
+======================================================================
+1. ART STYLE
+======================================================================
+**Void-Carve.** Canvas-2D, flat shapes lit only by a single radial candle
+mask. The world has no ambient fill: any pixel outside the mask is `#000`.
+Inside the mask, geometry is drawn as **solid silhouettes** (no outlines, no
+gradients except the candle's own falloff) and coloured by a per-archetype
+stone/wood/iron tint. The mask's soft edge + spill ring are the *only*
+lighting model. Reads as German-Expressionist woodcut / 1922 Nosferatu:
+stark warped angles, long clawed outlines, low-key. **Silhouette first** —
+if a shape is not identifiable as a black cut-out at the radius edge, it is
+drawn wrong.
+
+No anti-aliased detail; no textures; no external images or fonts. All glyphs
+drawn from primitives (`arc`, `rect`, `path`, `triangle`, `quadraticCurveTo`).
+
+======================================================================
+2. COLOR PALETTE
+======================================================================
+Three hue families only. Absolute black is a *value*, not a hue — it never
+tints. Reserved red is a hue but is **never** used for anything but danger.
+
+- Primary (void / ink):        #000000   — absolute black. HARD LOCK: never
+  lightened above #050403 (see "void discipline" below).
+- Secondary (flame core):      #FFD27A   amber-gold core, hottest point
+- Secondary (flame mid):       #E8912B   amber body of the flame / lit-object key
+- Secondary (flame deep):      #8A3D12   ember base, candle-stand glow, mask mid
+- Tertiary (cold stone):       #4C5A6B   desaturated grey-blue at the radius edge
+- Tertiary (cold stone dim):   #2A333D   deep stone in the spill ring
+- Reserved (danger/Orlok):     #C01A1A   arterial red — Orlok, blood, damage,
+                                          near-miss flash edge. NOTHING else.
+
+Derived (no new hues, alpha/luma only): warm falloff = radial gradient
+#FFD27A → #E8912B → #8A3D12 → transparent; spill = dim grey-blue alpha
+0.10–0.16; void breathing tint shift uses alpha on #000 only.
+
+**Void discipline (rule):** black stays `#000000`–`#050403`. It must never
+drift toward grey. The known/unknown border is the one line that must always
+be readable, so the *cold* hues live only inside/beyond the spill ring and
+never in the void proper. Test: screenshot a scoping-room frame — if the
+black reads as charcoal rather than void, fail.
+
+**Three-hue audit:** on any gameplay frame, count hues = amber/gold (1),
+grey-blue (1), red (1, only if danger present). That is the ceiling.
+
+======================================================================
+3. MOOD / ATMOSPHERE
+======================================================================
+Claustrophobic, patient, candle-close. Empty black is the antagonist; the
+flame is a character you are always about to lose. Light is never "on" — it
+*leans*, *breathes*, and *closes in*. The mood must be calm enough that a
+hard snuff (instant black) hits like a slammed door and a snuff reads
+differently from the slow guttering dark. Dread is weather: the colour of the
+dark shifts, not the geometry.
+
+======================================================================
+4. KEY VISUAL ELEMENTS (canvas-drawn)
+======================================================================
+- **Candle mask** — radial gradient light on the player; the signature. (5.)
+- **Flame sprite (as a character)** — irregular low-amplitude flicker at
+  rest (2–4 px lateral wander, 8–14 Hz with a slow 1.2 s beat); leans toward
+  the direction of last movement and toward the room's lit neighbour;
+  **guttering** = slow 0.6 Hz wobble, tall thin taper, radius trailing to 1;
+  **snuff** = frame-hard cut to full black, then a single match-strike
+  ember drawn one frame (~120 ms) at the player position.
+- **Player survivor** — long-coat silhouette, small warm rim only.
+- **Five NPC silhouettes** — distinct outlines readable at the edge:
+  Vlask (hunched, boxy, holds a lantern-cage = hoard), Sister Marta (tall,
+  rectangular veil/book), Ilona (curved, hunched, one shoulder dropped =
+  bitten), Petr (small, round-headed, sticks close), Nadja (lean, angular,
+  satchel, mid-stride).
+- **Six creature silhouettes** — must read as pure black cut-outs:
+  bats (scalloped wings), rats (low pellet cluster + tail), spiders
+  (long segmented legs), wolves (long quadruped, low head), shades
+  (tall wavering sheet with a gap where the face should be), light-eater
+  (a black void-within-void, inverse silhouette that *eats* the mask edge).
+- **Orlok** — the only red subject: tall, bald, long clawed coat, pointed
+  ears, one-frame red outline at the mask edge as he closes. Never a normal
+  encounter sprite.
+- **Gothic set pieces** — arches, iron sconces, caged stairwells (bars
+  drawn as thin silhouettes over warm stair interior), warped Expressionist
+  cabinet angles; ancestral portraits are black canvases with two warm
+  eye-glints that track the player's flame (cheap: two 2 px gold dots whose
+  x/y lerp toward the player each second).
+- **Archetype tints** (silhouette fill only, all within palette):
+  spire-entry = near-black stone; stair-corridor = cold grey-blue
+  #2A333D; candle-nook = warm ember #8A3D12; shadow-hall = black + red
+  glints; scribe-alcove = cold grey with amber paper glint; survivor-camp
+  = warm amber edge #E8912B; descending-stair = deep ember + arc.
+- **Atmospheric effects (required)** — (a) **void breathing**: full-screen
+  black overlay alpha 0.00↔0.04, 6 s period, brightness swells inward
+  (never tints — value pulse only); (b) **spill ring** shimmer; (c) **mask
+  edge red pulse** on near-miss / damage; (d) **dust motes**: 8–14 slow gold
+  specks inside the mask only; (e) ember sparks on a wax pickup.
+
+======================================================================
+5. THE CANDLE MASK / FALLOFF SPEC (signature — implement exactly)
+======================================================================
+Coordinates: mask is centred on the player's tile-centre, in *tile units*,
+converted to device pixels. Radius `R_px = R_tiles × tile_px × tile_px`.
+
+`R_tiles` = GDD radius formula: `clamp(base − penalty(wax), 1, base)`,
+base 3→7, penalty 0/1/2/3/4 by wax band (0 for ≥24 … 4 for 1–5), and at
+wax = 0 → R = 1 (guttering). Radius changes are tweened over 220 ms so the
+frame visibly *closes in* rather than jumping.
+
+Gradient stops (normalised to R):
+  0.00  rgba(255,210,122, 0.98)   core
+  0.10  rgba(255,210,122, 0.92)
+  0.28  rgba(232,145, 43, 0.80)   body
+  0.55  rgba(138, 61, 18, 0.55)   ember falloff
+  0.82  rgba( 76, 90,107, 0.22)   cold stone enters
+  1.00  rgba( 76, 90,107, 0.00)   soft edge
+
+**Soft edge:** the last 18% of R is a fade band — no hard circle. Objects
+must resolve *through* the edge, not pop.
+
+**Spill ring (second, dimmer halo):** centre same; stops at 1.00–1.30×R:
+  1.00  rgba(76,90,107, 0.16)
+  1.15  rgba(76,90,107, 0.09)
+  1.30  rgba(76,90,107, 0.00)
+Near-things resolve in the spill before entering the main radius (this is
+how a creature is spotted at the edge). Spill is cold-grey-blue only — it is
+where the *stone* hue lives.
+
+**Implementation:** render the room to an offscreen canvas (silhouettes at
+full opacity), then composite through the mask: draw offscreen, then
+`globalCompositeOperation = 'destination-in'` with the radial gradient, then
+draw the result over the black background. Draw the spill pass separately
+at low alpha. Keep the void as a true `#000` clear each frame.
+
+**Mask-edge danger flash:** on near-miss or damage, stroke the outer edge
+(0.92–1.00 R) with rgba(192,26,26,a) where a = 0.5 decaying over 350 ms, plus
+1-frame full-radius red alpha 0.12. Red ONLY here + Orlok + blood.
+
+**Weather on the mask (wax + Dread):** the falloff's cold end shifts with
+Dread (see §6); low wax tightens the gradient (core band compressed, edge
+band widened so the shrinking reads). Guttering: gradient pulses with the
+slow wobble; snuff: mask alpha → 0 on one frame.
+
+======================================================================
+6. PER-DREAD-TIER ATMOSPHERE SHIFTS
+======================================================================
+No new hues. Escalation is saturation, the cold end of the falloff, the
+void-breathing rate, and edge red leakage. Colour-shift values:
+
+| Tier | State | Cold stone end | Flame core | Void breathe | Edge red | Notes |
+|------|-------|----------------|-----------|--------------|----------|-------|
+| T0 0–1 | Calm | #4C5A6B @ a.22 | #FFD27A | 6.0 s, a.03 | none | baseline, warm |
+| T1 2–3 | Watched | #46505F @ a.24 | #F6C56E | 5.2 s, a.04 | none | slightly cooler core |
+| T2 4–5 | Marked | #3E4753 @ a.26 | #E8912B | 4.4 s, a.05 | faint 0.03 | warm acts flicker red |
+| T3 6–7 | Hunted | #333A45 @ a.28 | #D67C22 | 3.4 s, a.06 | 0.05 pulse | stone chills, breathing quick |
+| T4 8   | Hunted (full) | #2A333D @ a.30 | #C56E1E | 2.4 s, a.07 | 0.08 steady | near-monochrome cold; Orlok red |
+
+Transition between tiers: 600 ms cross-fade of the gradient stops (Dread
+"weather rolls in"), never a snap. Snuff / guttering add their own overlays
+on top and are visually distinct from any Dread tier: **snuff = instant
+black**; **guttering = slow wobble + swelling dark**, no red until Orlok
+arrives.
+
+======================================================================
+7. TILE / SPRITE GUIDANCE (canvas primitives only)
+======================================================================
+- **Tile size:** `tile_px = max(48, floor(min(vw, vh) / 12))` at runtime;
+  48 px is the hard floor. At 375×667 → 48 px tiles, ~7 tiles across. The
+  mask radius (3–7 tiles) is therefore legible at every viewport.
+- **Grid:** rooms drawn as filled quads per tile; walls as 3–4 px dark
+  strokes inset from tile edge; no texture. Doors/stairs = single bright
+  glyph (arch = 2 arcs + amber fill).
+- **Silhouette rule:** every entity is a filled `path` in near-black
+  (#050403) with ONE warm rim (1 px #E8912B) on the side facing the flame.
+  The rim is what makes it readable inside the mask; without it, entities
+  vanish into the stone tint.
+- **Animation:** 2-frame idle only (flame more; entities a 1 px bob). No
+  sprite sheets, no rotation beyond ±20° Expressionist lean. Everything is
+  procedural.
+- **Camera:** 1-tile glide (120 ms ease-out) on each move — movement is
+  punctuation. The camera and the mask centre glide together so the light
+  *travels* with you.
+- **Damage/near-miss:** the affected entity flickers red for 2 frames; the
+  mask edge flashes red (§5).
+- **Performance guard:** silhouette pass to offscreen canvas; mask via one
+  `destination-in` composite; cap dust motes at 14; all effects are
+  additive overlays, never re-rendered geometry.
+
+======================================================================
+8. HUD VISUAL TREATMENT
+======================================================================
+Diegetic-gothic, low-key, never brighter than the gameplay flame. HUD ink is
+grey-blue #4C5A6B on black with amber #E8912B for live values; red #C01A1A
+ONLY for danger.
+
+- **Wax meter:** a vertical candle vector on the left — a tall rounded rect
+  in #E8912B whose height is wax/30, topped by a 6 px flickering #FFD27A
+  flame. Numeric wax in #FFD27A beside it. When wax ≤ 6 the flame flickers
+  red-tinted and the meter shakes 1 px. This is the clock; make it the
+  loudest HUD element.
+- **Matches:** small struck-match icons (fire + stem) in amber; count above.
+- **Key:** an iron key glyph in cold grey; **lit amber when held**.
+- **Dread weather read-out:** a small 0–8 horizontal gauge in cold stone
+  #2A333D with 8 pips; filled pips tint from warm #E8912B (low) to red
+  #C01A1A (8), with the tier NAME ("Calm/Watched/Marked/Hunted") in
+  grey-blue. No numbers-as-color; the gauge colour carries the weather.
+- **Active-floor map:** revealed rooms only, drawn as dim grey-blue filled
+  quads on black; unexplored = pure black. Player = 3 px amber dot; radius
+  ring faintly sketched.
+- **Action tray / buttons:** rounded rects, 1 px #4C5A6B stroke, black fill,
+  amber label text; pressed = amber fill flash. All hit areas ≥ 48 px (spec).
+- **Overlays (encounter/social/journal):** full-screen black at a = 0.82 with
+  a soft warm-edged panel drawn in the same ink; Run/Endure buttons carry the
+  red/grey danger language; social polarity shown as a warm→cold gradient
+  bar per action (amber = warm, red-edged = cold). Journal text rendered as
+  text from `read_text`, never HTML, in grey-blue on black.
+- **Title screen:** the logo "TORRE NOSFERATU" as warped Expressionist
+  letters (drawn paths), lit by a single radial mask centred on the word
+  "NOSFERATU"; Start/How to Play buttons in the HUD button style. One idle
+  candle flame burns alone bottom-centre. Void breathing runs here too.
+- **Game Over / Victory:** same black + mask treatment; Game Over = mask
+  radius collapsed to a red-rimmed ember; Victory = mask radius wide and warm
+  (#FFD27A) with the score breakdown in amber. No new colours.
+- **Consistency:** every screen is the same renderer — a radial mask over
+  absolute black. Never show a flat full-bright screen; even menus are lit
+  by a candle.
+
+======================================================================
+9. TECHNICAL NOTES
+======================================================================
+- Canvas 2D only; responsive to `window.innerWidth/Height` and DPR (cap
+  at 2× to protect perf). `requestAnimationFrame` loop for flicker/breathe/
+  glide; gameplay logic remains turn-driven (visuals are overlays on state).
+- No external assets: no images, no web fonts, no audio samples. All shapes
+  from primitives; all text from system fonts (sans/serif fallback stack).
+- Mask compositing is the perf hotspot: one offscreen silhouette canvas +
+  one `destination-in` gradient pass + one spill pass per frame. Never
+  stroke per-tile gradients; batch to the offscreen buffer.
+- The mask radius, Dread tier colour, and guttering state are read from the
+  same game state the HUD reads — single source of truth, no duplicated
+  constants.
+- Accessibility/readability guard: at 375 px, verify (a) every creature
+  silhouette still reads as a distinct cut-out at the spill edge, (b) all
+  tappable targets are ≥ 48 px, (c) black never greys out. If any fails,
+  reduce detail — never add it.
+- Reduced-motion: if `prefers-reduced-motion`, halve flicker amplitude,
+  freeze the void breathe at a.03, keep the 1-tile glide but shorten to
+  80 ms. The mask/falloff and red flashes always remain (they carry meaning).
+
+======================================================================
+10. BRIEF §11 COMPLIANCE CHECK
+======================================================================
+[x] Signature: light is the artwork, radial candle mask over #000, composed
+    around the flame (§5, §8).
+[x] Palette ≤3 hues; void #000 never greys; red reserved (§2).
+[x] Radial mask soft edge + dimmer spill ring; radius tied to wax (§5).
+[x] Flame as character: flicker / guttering wobble / hard snuff blackout (§4).
+[x] Gothic vocabulary: arches, sconces, caged stairwells, warped angles,
+    tracking portraits, 1922 silhouette look (§4).
+[x] Readability: 375 px floor, silhouette-identified threats, tiles ≥48 px (§7).
+[x] Weather legibility: wax + Dread as atmosphere, red flash on mask edge (§6, §5).
+[x] Motion reserved: 1-tile camera glide + slow void breathing (§4, §7).
+[x] Atmospheric effects present in all five concepts and in the selected one (§0).

@@ -1,0 +1,248 @@
+========================================================================
+BUGLIST — Torre Nosferatu (Dread Weather)
+review_agent STATIC RE-REVIEW of the FIXED build
+run 20261010_095651 · target index.html (1944 lines; was 1882 pre-fix)
+Sources checked: index.html, gdd.md, direction.txt, world_template.json
+Generated: 2026-10-10 10:41:32
+Prior buglist re-verified: buglist_102001.txt (with FIXED BUGS appended)
+========================================================================
+
+SUMMARY OF COUNTS
+  CRITICAL: 0
+  HIGH:     1
+  MEDIUM:   3
+  LOW:      12
+  TOTAL:    16
+  (1 of the HIGH is a re-opened prior fix; the rest are new/residual.)
+
+--------------------------------------------------------------------
+PRIOR-FIX RE-VERIFICATION (buglist_102001)
+--------------------------------------------------------------------
+  HELD   Q-key descent gated.
+         descend() guards on archetype==='descending-stair' (1216).
+         Harness: pressing q on the Spire (spire-entry) left depth=1.
+  PARTIAL / NOT HELD — Borrowed-door / lesser ending reachable.
+         The NPC side now works: simNpcs migration (1270-1279) drives
+         survivors to floor 6 and openBorrowedDoor() (1298-1304, 1319)
+         fires. Harness observed ilona/petr reaching floor 6.
+         BUT the player-facing win is still unreachable — see [HIGH] H1.
+  HELD   No creature double-charge.
+         spill table (1380) yields 0 for turn-cost/snuff and the task
+         applies once; duplicate wax-drain branch removed.
+  HELD   Dread starting disposition applied.
+         checkCoLocation() calls seedDispoForFloor() once per NPC
+         (n.seeded guard) at 1335.
+  HELD   Encounters advance the turn.
+         resolveCreature()/resolvePuzzle() call takeTurn('encounter')
+         (1401, 1416).
+  HELD   test_seed default honored.
+         SEED falls back to TEMPLATE.test_seed before Math.random()
+         (533-536). Harness: window.SEED === 20261010.
+  HELD   Hooks preserved.
+         TEMPLATE, SEED, worldState, systemState, move, social,
+         pristineWorldState/State/SystemState all present (1771-1809).
+         Harness confirmed each is a function/object.
+  HELD   Flags do not gate required endpoints.
+         With all wave-3 flags OFF, window.social('share-light') still
+         resolves and mutates Dread/NPC state; REQ_ENC placement and
+         NPC/Dread state are flag-independent. No flag wraps social(id),
+         required encounters, or NPC/Dread state.
+
+COMPLIANCE SNAPSHOT (pass items NOT listed below)
+  [OK] 7 screens (title/howto/settings/pause/over/victory + HUD); pause
+       has resume + how-to + settings + title + music/SFX toggles.
+  [OK] Touch + mouse bound; WASD/arrows/Space/Q; viewport meta present.
+  [OK] Boot clean in harness (vm sandbox): no exception, determinism held
+       (two boots of the pinned seed → identical pristineWorldState()).
+  [OK] All getElementById targets exist (no boot crash).
+
+========================================================================
+[HIGH] FINDINGS
+========================================================================
+
+[HIGH] H1 — Borrowed-door (lesser ending) is STILL unreachable in play
+  Location: index.html:636 (every descending-stair things=['exit-key']),
+            1168 (pickup auto-grants G.key), 1198-1203/1214-1216 (descent
+            requires a descending-stair), 1234-1238 (attemptExit)
+  The prior fix claimed the borrowed ending was RESOLVED and "attemptExit()
+  wins with wonType==='borrowed'." That is only true if G.key is false.
+  In real play G.key can never be false once the player has descended:
+  every descending-stair room carries exit-key (636), pickup() auto-grants
+  it on room entry (1168), and descending (the only route to the ground
+  floor) requires standing in a descending-stair (1216). npcItemSweep never
+  removes exit-key (1261). So by the time the player stands on the
+  ground-floor stair, G.key is true and attemptExit() takes the key branch
+  first (1236), shadowing the borrowed branch (1237).
+  Evidence (harness key trace): keyVal == "KEY HELD" on floor 1 BEFORE the
+  first descent, and at every depth thereafter; a full descent + Escape
+  produced winTitle "You escaped on your own light." (full), never borrowed.
+  GDD §2.9 lists the borrowed door as a first-class lesser ending (400 pts,
+  "you slipped out in another's wake"), and §8 screen inventory names a
+  borrowed victory banner. The feature is dead in practice.
+  Fix: gate the key branch — e.g. offer borrowed escape when the door is
+  open even if the key is held (player choice), or make exit-key optional
+  (place it on only one route / do not auto-collect), or make the borrowed
+  door a mutually-exclusive route. Also ensure attemptExit prioritises the
+  borrowed offer when borrowedOpen.
+
+========================================================================
+[MEDIUM] FINDINGS
+========================================================================
+
+[MEDIUM] M1 — Near-Miss Bonus is now once-per-run, not "+50 each"
+  Location: index.html:1180-1183 (G.nearMissFlag set globally at 1182)
+  The prior LOW fix over-corrected. G.nearMissFlag is a single global boolean
+  set on the first award and never cleared, so at most ONE +50 near-miss can
+  be scored in an entire run. GDD §2.9/§4.4 define it as "+50 each" for
+  grazing a creature or escaping a room at wax ≤ 3, a first-class always-
+  available reward. The guard should be keyed per room (or the flag reset),
+  not global.
+  Fix: key on G.depth+':'+slug (e.g. a Set), or reset nearMissFlag on room
+  exit; keep the same-room re-entry guard only.
+
+[MEDIUM] M2 — npcItemSweep can still permanently remove a required item
+  Location: index.html:1254-1267 (sweep), 1320-1323 (recovery)
+  The prior fix only guarantees a room keeps its LAST item and protects
+  exit-key. A 2-item candle-nook (wax-cake + matches) can still have one
+  required item taken; recovery happens only inside openBorrowedDoor(), i.e.
+  only if that NPC reaches the ground-floor door. If the NPC never escapes,
+  the stolen wax-cake/matches are gone from the floor, undermining the
+  per-floor required-things guarantee (GDD §2.2/§5). The finding's own
+  recommendation ("skip protected/required items") was not implemented.
+  Fix: make npcItemSweep refuse items in TEMPLATE.required_things, or drop
+  carried items whenever the NPC is relocated/removed, not only on escape.
+
+[MEDIUM] M3 — No screenshake and no hit-stop; particles minimal
+  Location: index.html:1755-1763 (10 dust motes only); no shake/hit-stop
+  Carried over from the prior run (explicitly deferred to juice_agent). In
+  this reviewed build there is still no camera shake and no hit-stop/freeze
+  on snuff/endure/near-miss. Reviewed brief lists these as game-feel items
+  to verify. Remains a gap until Phase 5.5.
+
+========================================================================
+[LOW] FINDINGS
+========================================================================
+
+[LOW] L1 — turn-cost effect implemented as a flat 2-wax burn
+  Location: index.html:1380, 1382 (spiders). GDD roster effect is
+  "turn-cost" (GDD §2.9 / world_template spiders). The code charges 2 wax on
+  BOTH Run and Endure (plus the resolution takeTurn), rather than costing a
+  turn. Semantic mismatch; not a double-charge (prior bug fixed).
+
+[LOW] L2 — Encounter room charges two turns; entry move paid while modal open
+  Location: index.html:1185-1187 (openEncounter), 1209-1210 (tryMove calls
+  takeTurn('move') AFTER the modal opens), 1401/1416 (resolve turn). The
+  prior HIGH sub-point ("the move turn is paid before the encounter is even
+  answered") was not addressed; the fix added a second turn on resolution.
+  Net: entering one encounter room costs 2 wax turns and advances NPC/Dread
+  sim twice. Confirm intent vs. GDD §2.1 turn definition.
+
+[LOW] L3 — Lore text hard-coded, not template-authored `read_text`
+  Location: index.html:1145-1151 (LORE_TEXT literal), 1159-1165, 1550-1552.
+  The prior fix made lore readable, but the text lives in JS rather than as
+  authored `read_text` in the world template, which the original finding
+  (GDD §5.1 / M12) called for. Functional but not world-model-driven.
+
+[LOW] L4 — loreSet key can collide, silently dropping a fragment
+  Location: index.html:1160 — key = G.depth+':'+(room.name). Room names are
+  drawn from a shared pool and can repeat across rooms on a floor; two
+  scribe-alcoves sharing a name would count as one fragment.
+
+[LOW] L5 — G.nearMissFlag not initialised in makeState
+  Location: index.html:725 (nearMiss:0, no nearMissFlag) relies on undefined;
+  works but is implicit state. Initialise alongside nearMiss.
+
+[LOW] L6 — Audio.dreadShift never called (carried over)
+  Location: index.html:891 (defined); no call site. Dread-tier changes still
+  produce no dedicated audio sting.
+
+[LOW] L7 — Dead CSS selector #talkBtn (carried over)
+  Location: index.html:65 vs actual id `btn-talk` (182). Rule never matches.
+
+[LOW] L8 — Duplicate renderHUD/refreshToggles (carried over)
+  Location: index.html:1835-1836 (newRun) and 1847-1848 (boot).
+
+[LOW] L9 — endGame() called with an ignored argument (carried over)
+  Location: index.html:1123 endGame(false) vs 1524 function endGame().
+
+[LOW] L10 — attemptExit silently no-ops below MAX_DEPTH (carried over)
+  Location: index.html:1235.
+
+[LOW] L11 — REQ_THINGS parsed but never used (carried over)
+  Location: index.html:498.
+
+[LOW] L12 — Candle-radius upgrade path unreachable (carried over)
+  Location: index.html:763, 720 — baseRadius is never increased; RADR.max 7
+  unreachable despite GDD §4.2 radius upgrades.
+
+========================================================================
+REGRESSION / STABILITY
+========================================================================
+- No CRITICAL regression: boot is clean, generation terminates, no new
+  infinite loops, all DOM ids exist.
+- Determinism preserved on the pinned seed (harness: identical pristine
+  world state across two boots).
+- No new JS syntax/parse errors introduced by the +62 lines.
+- One prior HIGH was reported RESOLVED but does not hold at the player-
+  facing level (H1). No other regressions found in the edited code paths.
+========================================================================
+END OF BUGLIST
+========================================================================
+
+========================================================================
+FIXED BUGS — bugfix_agent 2026-10-10 (target: index.html, now 1961 lines)
+========================================================================
+Fixed counts:  CRITICAL 0 / HIGH 1 / MEDIUM 2   (M3 explicitly DEFERRED)
+Verification: DOM-stub vm harness executed the REAL game JS on the pinned
+seed (20261010); 25/25 checks PASS, including boot-clean, all hooks,
+both endings, choice modal, per-room near-miss, required-item protection.
+
+- [HIGH] H1 — Borrowed-door (lesser ending) unreachable in play.
+  RESOLVED via a real choice at the door (index.html:1235-1252).
+  attemptExit() now computes canBorrow = borrowedOpen && borrowedTurns>0:
+    * canBorrow && G.key  -> openExitChoice() modal with two buttons:
+        "Use your key" (full ending, unchanged 1000-pt path) and
+        "Slip out in their wake" (borrowed lesser ending, 400 pts).
+    * canBorrow (no key)   -> win('borrowed')  (unchanged).
+    * G.key only           -> win('full')      (unchanged).
+    * neither              -> locked toast    (unchanged).
+  This preserves "entering the exit with the key still gives the full win"
+  (the player actively chooses it) while making the borrowed ending genuinely
+  reachable in normal play. The ajar window is unchanged: still
+  clamp(dispoTurns(npc.numeric) - floor(Dread/2), 1, 6) with the fixed-count
+  fallback in openBorrowedDoor() (index.html:1324-1325), and the decay branch
+  is untouched. The choice modal reuses #modal-encounter + existing mkBtn()
+  so touch+mouse+keyboard (Space/1/2 selects) all work with no new DOM.
+
+- [MEDIUM] M1 — Near-Miss bonus once-per-run instead of "+50 each".
+  RESOLVED via per-room keying (index.html:725 + 1180-1183).
+  Replaced the single global G.nearMissFlag with G.nearMissSet (initialised
+  in makeState as nearMissSet:{}). Award guard is now
+  !G.nearMissSet['nm:'+G.depth+':'+slug], so each distinct creature room can
+  award +50 once (multiple events per run), while re-entering the same room
+  does not double-award. Harness: two rooms -> nearMiss 1 then 2; same-room
+  re-entry stayed 2. computeScore() near-miss row (×50) now scales with
+  events. (This also resolves LOW L5 implicitly: the state is now explicit.)
+
+- [MEDIUM] M2 — npcItemSweep could permanently remove a required item.
+  RESOLVED by refusing required/exit-key items (index.html:1271-1278).
+  The candidate loop now skips any item that is 'exit-key' or is listed in
+  REQ_THINGS (wax-cake, matches, lore-fragment), in addition to the existing
+  last-item guard. Required-things guarantee per floor now holds independent
+  of whether an NPC reaches the ground-floor door. Harness: a room seeded
+  with the three required things + exit-key lost nothing across 30 sweeps; a
+  non-required item in that set is the only thing still takeable.
+
+Unfixed bugs:
+- [UNFIXED] [MEDIUM] M3 — No screenshake / hit-stop (particles minimal) |
+  Reason: explicitly DEFERRED to juice_agent per brief; game-feel additive,
+  not a correctness fix, and out of scope for surgical bugfix changes.
+
+Preserved (regression-checked by harness):
+  TEMPLATE / SEED / worldState / systemState / move / social /
+  pristineWorldState / pristineState / pristineSystemState all present and
+  functional; flags do not gate social(id), required encounters, or
+  NPC+Dread state (social('share-light') still resolves); touch+mouse+
+  keyboard input and all screens untouched. Boot is clean; determinism on
+  the pinned seed is unchanged (no boot-time state mutation added).
+========================================================================

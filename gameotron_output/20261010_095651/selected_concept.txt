@@ -1,0 +1,107 @@
+TORRE NOSFERATU — EVALUATION (Phase 2, final gate)
+Theme (override): "Torre Nosferatu — escape a pitch-black candle-lit tower before Count Orlok takes your light"
+Inputs: concepts.txt (20 concepts) + concepts_with_review.txt (browsergame_expert, HOOK/TOUCH/THEME 1–5)
+Scoring model (per AGENTS.md): HOOK 30% | TOUCH 25% | THEME 45%  (raw axes 1–5; Total = weighted /5.0)
+
+=====================================================================
+SCORING TABLE
+=====================================================================
+| Concept | Hook | Touch | Theme | Total | Rank |
+|---------|------|-------|-------|-------|------|
+| #14 Dread Weather           | 5 | 4 | 5 | 4.75 | 1 (tie) |
+| #7  The Cruel Candle        | 5 | 4 | 5 | 4.75 | 1 (tie) |
+| #16 Orlok's Patience        | 5 | 4 | 5 | 4.75 | 1 (tie) |
+| #1  One Candle, One Descent | 4 | 5 | 5 | 4.70 | 4 |
+| #4  The Borrower's Lantern  | 4 | 4 | 5 | 4.45 | 5 (tie) |
+| #5  The Long Snuff          | 4 | 4 | 5 | 4.45 | 5 (tie) |
+| #6  A Tower of Small Mercies| 4 | 4 | 5 | 4.45 | 5 (tie) |
+| #15 The Door Ajar           | 4 | 4 | 5 | 4.45 | 5 (tie) |
+| #19 A Warm Hand in the Dark | 4 | 4 | 5 | 4.45 | 5 (tie) |
+| #20 Nosferatu's Shadow      | 4 | 4 | 5 | 4.45 | 5 (tie) |
+| #3  Wax Constellations      | 4 | 4 | 4 | 4.00 | 11 (tie) |
+| #9  Rats in the Wainscot    | 4 | 4 | 4 | 4.00 | 11 (tie) |
+| #10 The Stair That Skips    | 4 | 4 | 4 | 4.00 | 11 (tie) |
+| #12 A Debt of Light         | 4 | 4 | 4 | 4.00 | 11 (tie) |
+| #13 The Six-Minute Tower    | 4 | 4 | 4 | 4.00 | 11 (tie) |
+| #8  Portrait of a Burning Man| 4 | 3 | 4 | 3.75 | 16 |
+| #2  The Guttering Metronome | 3 | 4 | 4 | 3.70 | 17 (tie) |
+| #17 Candle Math             | 3 | 4 | 4 | 3.70 | 17 (tie) |
+| #18 The Sconce Census       | 3 | 4 | 4 | 3.70 | 17 (tie) |
+| #11 Blind Leap              | 3 | 3 | 3 | 3.00 | 20 |
+
+WEIGHTED LEADERBOARD (highest → lowest):
+  1. #14 Dread Weather ............ 4.75
+  2. #7  The Cruel Candle ......... 4.75
+  3. #16 Orlok's Patience ......... 4.75
+  4. #1  One Candle, One Descent .. 4.70
+  5. #4  The Borrower's Lantern ... 4.45
+  6. #5  The Long Snuff ........... 4.45
+  7. #6  A Tower of Small Mercies . 4.45
+  8. #15 The Door Ajar ............ 4.45
+  9. #19 A Warm Hand in the Dark .. 4.45
+ 10. #20 Nosferatu's Shadow ....... 4.45
+ 11. #3  Wax Constellations ....... 4.00
+ 12. #9  Rats in the Wainscot ..... 4.00
+ 13. #10 The Stair That Skips ..... 4.00
+ 14. #12 A Debt of Light .......... 4.00
+ 15. #13 The Six-Minute Tower ..... 4.00
+ 16. #8  Portrait of a Burning Man . 3.75
+ 17. #2  The Guttering Metronome .. 3.70
+ 18. #17 Candle Math .............. 3.70
+ 19. #18 The Sconce Census ........ 3.70
+ 20. #11 Blind Leap .............. 3.00
+
+WEIGHTED WINNER: THREE-WAY TIE at 4.75 — #14 Dread Weather, #7 The Cruel Candle, #16 Orlok's Patience.
+Tie is broken by the HUMAN APPROVAL GATE, not by the model (see below); #14 is also the expert's
+explicit recommended spine. #7 and #16 are each single-pole concepts (#7 = cold pole, #16 = terminal
+guttering-dark layer), so #14 — the full social+Dread spine — is the correct tie-break.
+
+=====================================================================
+HUMAN-GATE SELECTION
+=====================================================================
+The mandatory human approval gate fired BEFORE evaluation. The brief constrained the concept space
+(no battle system, candle-as-clock, Dread dial, five NPCs) but did NOT pre-select a concept; from
+that constrained space the USER selected concept #14 "Dread Weather". This is recorded as the
+HUMAN-GATE PICK, not a model-derived choice.
+
+SELECTED CONCEPT: #14 — Dread Weather
+
+Runner-up(s):
+  - #7  The Cruel Candle (4.75) — co-leader; the cold pole, best grafted in as #14's counterweight.
+  - #16 Orlok's Patience (4.75) — co-leader; strongest terminal layering for the guttering dark.
+  - #1  One Candle, One Descent (4.70) — safest wave-1 implementation anchor beneath #14.
+  - Expert's recommended support pool: #4 / #6 (warm pole) + #7 (cold pole) + #19 (wave-3 sim).
+
+=====================================================================
+#14 DESIGN SEED (restated)
+=====================================================================
+- CANDLE/WAX/LOSS LOOP: wax is clock, health and map at once; every turn burns it and shrinks the
+  reveal radius; wax rooms refill; zero wax gutters into Orlok's closing dark, where a match or the
+  exit can still save you.
+- DREAD AS PRIMARY PRESSURE: the tower-wide 0–8 Dread dial is authored as *weather* — it colours the
+  whole frame, starts strangers wary, and literally sets how fast Orlok closes during the guttering
+  dark. Dread, not HP, is the escalating threat.
+- SOCIAL WARM/COLD POLES: cold acts (theft/threats) buy light now and RAISE Dread; warm acts (aid,
+  mercy) LOWER Dread and cost light now. At wax-out the Dread tier decides your remaining grace, so
+  every social choice is a survival choice. Fully covers the wave-2 social+Dread requirement.
+- WAVE STAGING (three waves, no bolt-on scope):
+    Wave 1 — descent core: turn-based grid-adjacent tile moves, candle-as-clock, radius reveal,
+             refill rooms, Run/Endure encounters (no battle system).
+    Wave 2 — social + Dread: five survivors, warm/cold actions, the 0–8 Dread weather dial wired to
+             NPC wariness and Orlok's closing speed.
+    Wave 3 — shared-resource survivor sim: allied survivors carry/split light, can be harmed, and
+             collapsing alliances collapse your radius (deepest expression: #19 Warm Hand).
+
+FINAL DECISION: Confirm human-gate pick #14 "Dread Weather" — the weighted co-leader (4.75, tied
+with #7/#16) and the expert's recommended spine — as the concept to build, with Full Controls
+(WASD/arrows/Space) layered on top of mandatory touch + mouse.
+
+Caveats:
+  1. Tie caveat: the weighted model yields a three-way tie at 4.75. #14 wins by the human gate, not
+     by a strict score margin; #7 and #16 are equal-scoring runners-up.
+  2. #14 alone is social+Dread-heavy and under-defines wave-1 descent; it wants #1 (or equivalent)
+     as the wave-1 core beneath it.
+  3. Cold pole must stay live (#7) or warm acts can flatten tension (expert's warning on the
+     related #6).
+  4. All support concepts must remain strictly Run/Endure; watch #11/#20-style framing drift toward
+     a battle/jump system, which the brief forbids.

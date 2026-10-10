@@ -1,0 +1,97 @@
+PHASE 2 — WORLD-MODEL CHECK REPORT
+Target: /home/fluke/Holotron/gameotron_output/20261010_095651/index.html
+World model: /home/fluke/Holotron/gameotron_output/20261010_095651/world_template.json
+Checker: /home/fluke/Holotron/scripts/check_template.mjs (dependency-free, node v24.18.0)
+Generated: 2026-10-10 10:23:39 (timestamp 102339)
+
+======================================================================
+DETERMINISM
+======================================================================
+  window.TEMPLATE.test_seed = 20261010 (non-null).
+  window.SEED pinned to 20261010 via page.addInitScript BEFORE the app script ran
+  (page reloaded with NO ?seed= query; verified window.SEED === window.TEMPLATE.test_seed === 20261010).
+  Determinism: VERIFIED.
+
+======================================================================
+EXTRACTION (pristine boot, before any move)
+======================================================================
+  Exported in-page at title screen, pre-mutation:
+    state_20261010.json = { "world": worldState(), "systems": systemState() }
+  worldState(): active floor depth=1, start="d1-spire-entry-1", 12 rooms, every room carries `archetype`.
+  Archetypes present on floor 1:
+    spire-entry x1, stair-corridor x3, candle-nook x2, scribe-alcove x2, shadow-hall x2, descending-stair x2
+  Defensive clock normalization applied: clocks[...].value ?? .current ?? 0.
+
+  Behavioral socialLog SYNTHESIZED per spec (>=1 warm + >=1 cold), reading dread before/after:
+    order: ['steal','share-light']
+    {"id":"steal",      "dreadBefore":0, "dreadAfter":1}   (cold, +1)
+    {"id":"share-light","dreadBefore":1, "dreadAfter":0}   (warm, -1)
+  systems.socialLog written into state_20261010.json.
+
+======================================================================
+CHECKER RUN (exact command + result)
+======================================================================
+COMMAND:
+  node scripts/check_template.mjs \
+    --template gameotron_output/20261010_095651/world_template.json \
+    --state    gameotron_output/20261010_095651/state_20261010.json \
+    --fail-on spatial
+
+OUTPUT:
+  0 mismatch(es) — spatial 0, systemic 0 (mode=all, fail-on=spatial)
+  PASS — no spatial mismatch
+
+EXIT CODE: 0
+  spatial mismatches  : 0  (HARD — pass)
+  systemic mismatches : 0  (advisory — pass)
+VERDICT: PASS (spatial hard, systemic advisory).
+
+======================================================================
+CONTROL / TRUST TESTS (run before trusting the green result)
+======================================================================
+  1) golden_template.json + golden_state.json  -> 0 mismatches, exit 0      PASS (expected)
+  2) golden_template.json + malformed.json     -> spatial 4, exit 1         PASS (>=2 spatial, exit 1)
+  3) golden_template.json + malformed_archetypes.json -> spatial 3, exit 1  PASS (>=2 spatial, exit 1)
+  4) golden_template.json + malformed_systems.json    -> systemic 7, exit 0 PASS (>=2 systemic, advisory, exit 0)
+  All four controls behave as specified -> checker is trustworthy and not vacuously green.
+
+======================================================================
+B7 GATE
+======================================================================
+  B7.1 dread clock non-null at pristine boot:
+       systemState().clocks.dread = {value:0, min:0, max:8}  -> NON-NULL  PASS
+  B7.2 >=1 NPC at pristine boot:
+       systemState().npcs length = 5 (vlask, sister-marta, ilona, petr, nadja) with floor/room
+       assigned on test_seed  -> PASS
+  B7.3 window.social(id) exists and calls the UI handler:
+       window.social drives applySocial -> steal raised dread 0->1, share-light lowered 1->0;
+       the same G.socialLog the UI handler writes is what was exported  -> PASS
+  B7.4 a required_encounters entry reachable on test_seed:
+       required_encounters = [bats(floor1), vlask(floor2), rats(floor2)]
+       "bats" is PLACED on active floor 1 in d1-shadow-hall-1 and d1-shadow-hall-2,
+       both graph-reachable from start via exits  -> PASS
+  B7.5 wave-3 flags toggle WITHOUT gating hooks:
+       Toggled each of npcItemUse, creatureAttacksNpc, npcTrapTrip, allianceRadius,
+       juiceEnabled via real #flag-* button clicks. Each flipped value (true<->false) and
+       worldState()/systemState()/social() remained callable each time -> PASS
+  B7 VERDICT: PASS
+
+======================================================================
+FAIL-CLOSED CHECK
+======================================================================
+  window.worldState  present (function)
+  window.systemState present (function)
+  window.TEMPLATE    present (object, test_seed 20261010)
+  window.SEED        present (20261010)
+  socialLog          produced (non-empty, warm+cold)
+  => Not unverified. Result is a genuine, exercised PASS.
+
+======================================================================
+FINAL PHASE 2 VERDICT
+======================================================================
+  spatial mismatches : 0   (hard)       -> PASS
+  systemic mismatches: 0   (advisory)   -> PASS
+  checker exit code  : 0
+  B7 gate            : PASS
+  UNVERIFIED flags   : none
+  PHASE 2: PASS

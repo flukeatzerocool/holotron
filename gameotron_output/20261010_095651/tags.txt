@@ -1,0 +1,12 @@
+# Recommended itch.io tags — Torre Nosferatu
+# (itch.io allows up to 10 tags; ordered by priority)
+gothic-horror
+roguelike
+turn-based
+grid-based
+horror
+survival
+candlelight
+atmospheric
+browser
+html5

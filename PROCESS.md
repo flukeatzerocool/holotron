@@ -6,7 +6,7 @@
 >
 > **Note:** the run documented here (#7 "Rule Breaker Dungeon") is the **Holonovel
 > integration proof/baseline**. The jam **submission game is Torre Nosferatu**
-> (`TORRE_NOSFERATU.md`); this document is extended with the Torre run once it completes.
+> (`TORRE_NOSFERATU.md`); the Torre run is documented in **§7** (added 2026-10-10).
 
 ## 1. Summary
 
@@ -161,3 +161,65 @@ From a clean checkout:
 4. Pipeline produces `gameotron_output/<ts>/` incl. `world_map.json`, `gdd.md`, `index.html`.
 5. Phase 2: `puppeteer_agent` runs the world↔game check + `test_worlds/malformed.json` control.
 6. Deploy: `butler login`; `butler push build/ <user>/<project>:html5 --userversion <ver>`.
+
+## 7. Torre Nosferatu run (submission game) — 2026-10-10
+
+> Evidence: `gameotron_output/20261010_095651/` (all artifacts) and its run log
+> `20261010_095651.log`.
+
+### 7.1 How it was used
+- **Entry point:** `use gameotron with theme: Torre Nosferatu — escape a pitch-black candle-lit
+  tower before Count Orlok takes your light`, plus **full controls** (WASD/arrows/Space).
+- **Creative-direction brief:** `TORRE_NOSFERATU.md` was written to `direction.txt` and passed to
+  `gdd_agent` as a **constraint source** (not a spec). The mandatory **approval gate fired**; the
+  user selected concept **#14 "Dread Weather"** from the reviewed 20 (the brief constrained the
+  space but did not pre-select — recorded in the run log).
+- **Phases/outputs** (all in the run folder):
+  | Phase | Agent(s) | Output |
+  |---|---|---|
+  | 2 Ideation/Eval | `ideation_agent` → `browsergame_expert` → gate → `evaluation_agent` | `concepts.txt` (20), `concepts_with_review.txt`, `selected_concept.txt` |
+  | 3 Design | **`world_agent`** → `gdd_agent` | `world_template.json`/`.txt`, `world_map.json`/`.txt`, `gdd.md` |
+  | 4 Concept art | `audio_agent` + `visual_agent` (parallel) | `audio_direction.txt`, `visual_direction.txt` |
+  | 5 Implementation | `code_agent` | `index.html` |
+  | 5 Review loop | `review_agent` + `puppeteer_agent` → `bugfix_agent` ×3 | `buglist_*.txt`, `runtime_errors_*.txt`, `test_report_*.txt` |
+  | 2 (Holotron) | `puppeteer_agent` | `phase2_report_*.txt`, `state_20261010.json` |
+  | 5.5 Polish | `juice_agent` | `juice_report.txt` → `index.html` (2109 lines) |
+- **Final build:** `index.html` = 2109 lines, single file, vanilla JS + procedural WebAudio, no
+  external assets. Verified at 1920×1080, 800×600, 375×667: **51/51 checks, 0 console errors**.
+
+### 7.2 Holotron-specific results (world-model ↔ game)
+- `world_agent` authored + `manage_world(convert)`-validated the tower: **11 rooms, 17 directed
+  exits**, 5 NPCs (Vlask/Sister Marta/Ilona/Petr/Nadja), 6 creatures (Orlok excluded from the
+  roster), Dread authored as **lore `key: dread-dial`** (the pinned `manage_countdown` cannot count
+  up), template `clocks[]` = `wax` decrement + `dread` `tug_of_war` 0–8 with 5 tiers.
+- **P1.2 Design-phase acceptance check** (added this run): non-null `test_seed=20261010`, 3/3
+  `required_encounters` reachable and in roster, ≥1 NPC, Dread clock with tiers — checked *before*
+  `code_agent`, so a fail-closed "unverified" cannot surprise the Phase 2 gate.
+- **B7 gate: PASS** — `window.systemState()` tower-wide at the **pristine boot state** returns a
+  non-null `dread` clock + all 5 NPCs; `window.social(id)` drives the UI handler; a
+  `required_encounters` entry (`bats`) is reachable on `test_seed`; all 5 wave-3 flags toggle
+  **without gating the frozen hooks** (`social`, required encounters, NPC/Dread state).
+- **C5 end-to-end: PASS** — `node scripts/check_template.mjs --fail-on spatial` on the real Torre
+  artifacts → **spatial 0, systemic 0, exit 0**. Control fixtures fire as designed (golden 0/exit0;
+  malformed 4 spatial/exit1; malformed_archetypes 3 spatial/exit1; malformed_systems 7 systemic/exit0).
+- **Review loop:** cycle 1 found 6 HIGH + 9 MEDIUM (Q-key descent sequence-break; unreachable
+  borrowed-door ending; creature effects double-charged; Dread starting-disposition dead code;
+  encounters not advancing the turn); cycle 2 found **1 HIGH remaining** — the borrowed-door *win*
+  was shadowed because the exit-key is auto-collected on the stair you must stand on to descend;
+  cycle 3 **clean** (0 CRITICAL/HIGH/MEDIUM). The fix makes the door a real two-button choice
+  (use your key → full 1000; slip out → borrowed 400), verified in a natural playthrough.
+
+### 7.3 Before/after metric (this run)
+| Metric | Baseline (no integration) | This run (with integration) |
+|---|---|---|
+| World structures validated before `code_agent` | none | **11 rooms / 17 directed exits**, 0 dangling (`convert` + `world://map`) |
+| Design-time fail-closed risk caught before code | none | **0** (P1.2 check passed pre-code) |
+| Game↔world mismatches (Phase 2, `test_seed`) | unmeasured | **0 spatial, 0 systemic** (exit 0) |
+| B7 (social + Dread shipped, hooks frozen) | unmeasured | **PASS** |
+| Runtime console errors (3 viewports) | — | **0** (51/51 checks) |
+
+### 7.4 Deployment
+- **Two itch.io pages:** the **game** (Torre Nosferatu — new project) and the **process/pipeline**
+  page (`holotron`, the baseline). The judged "documented process" half is this file.
+- Deploy via `deployment_agent` / butler to the Torre project, **after user confirmation**, then
+  set Public and confirm the page resolves + the jam entry is in (before 2026-10-11 12:00).

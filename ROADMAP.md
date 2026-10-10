@@ -3,38 +3,28 @@
 Forward plan for Holotron. Completed work lands in `CHANGELOG.md`; this file tracks what is
 *next* and what is deliberately deferred. Cross-referenced from `PROCESS.md`.
 
-## Now — finish the Torre Nosferatu run
+## Done — Torre Nosferatu run (2026-10-10, `gameotron_output/20261010_095651/`)
 
-- **B — Run the Torre pipeline.** `use gameotron with theme: Torre Nosferatu — …`.
-  User-driven; the orchestrator's approval gates apply.
-- **Brief amended (2026-10-10).** Five recurring, roaming survivors and a descending, winding,
-  generated tower are locked into `TORRE_NOSFERATU.md`; staged delivery = descent core (wave 1) /
-  social + Dread (wave 2) / shared-resource survivor sim (wave 3). The brief now reaches the GDD as
-  `direction.txt` (with an acceptance checklist). See `CHANGELOG.md`.
-- **B7 gate.** After implementation, confirm the social + Dread systems actually shipped:
-  `window.systemState()` returns a non-null `dread` clock and ≥1 NPC, `window.social(id)`
-  exists and calls the UI handler, and a `required_encounters` entry is reachable on
-  `test_seed`. Phase 2 also reads the **pristine boot state** (pre-mutation). **Pass ⇒ unblocks C4/C5.**
+- **B — Torre pipeline: DONE.** `gameotron` run executed with the theme override; mandatory
+  approval gate fired (**user selected #14 "Dread Weather"**); `direction.txt` reached `gdd_agent`.
+  Artifacts: `world_template.json`/`.txt`, `world_map.json`/`.txt`, `gdd.md`, `audio_direction.txt`,
+  `visual_direction.txt`, `index.html` (2109 lines), review/runtime/Phase-2/juice reports, run log.
+- **B7 gate: PASS.** `window.systemState()` at the pristine boot state returns a non-null `dread`
+  clock `{0,0..8}` **and** all 5 NPCs; `window.social(id)` drives the UI handler (steal/warm logged);
+  a `required_encounters` entry (`bats`) is reachable on `test_seed=20261010`; all 5 wave-3 flags
+  toggle without gating the frozen hooks.
+- **C5 end-to-end: DONE.** `scripts/check_template.mjs --fail-on spatial` on the real Torre artifacts
+  on `test_seed` → **spatial 0, systemic 0, exit 0**. Control fixtures unchanged (golden 0/exit0;
+  malformed 4 spatial/exit1; malformed_archetypes 3 spatial/exit1; malformed_systems 7 systemic/exit0).
 
-## Now — C6 archetype validation (not gated on B7)
+## Next — deploy & submit (P5; user-gated)
 
-- **C6 — Archetype validation.** `check_template.mjs` enforces each generated room's
-  archetype role + per-archetype `count` bounds on the active floor (hard `spatial`).
-  Shipped 2026-10-10 — see `CHANGELOG.md`.
-- **C7 — Connectivity validation.** Deferred: validate `connectivity.rules` (`"entry ->
-  corridor*"`); the `*` grammar must be defined first. Not gated on B7.
+- **D — Deploy.** Create the Torre itch.io project + join the jam (user action, P0.4), push
+  `build/index.html` via butler on user confirmation, set Public, confirm the page resolves and the
+  jam entry is in — **before 2026-10-11 12:00.**
+- **C7 — Connectivity validation.** Still deferred: validate `connectivity.rules` (`"entry ->
+  corridor*"`); the `*` grammar must be defined first.
 
-## Next — run the Phase 2 world-model checker end-to-end (gated on B7)
-
-- **C5 — End-to-end.** Run the checker against the real Torre artifacts on `test_seed`;
-  record spatial = 0 and the advisory systemic count. **Gated on B7** (the Torre artifacts
-  must exist first).
-
-**C4 done (2026-10-10).** The checker is wired into `puppeteer_agent` Phase 2 — see
-`CHANGELOG.md`. `scripts/check_template.mjs` now carries `--fail-on spatial|systemic|any`;
-the extraction is agent-driven (no repo deps). Fixtures:
-`test_worlds/golden_template.json` + `golden_state.json` (0), `malformed.json` (spatial),
-`malformed_systems.json` (systemic).
 
 ## Deferred — Holonovel systems not needed for Torre
 

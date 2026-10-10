@@ -1,0 +1,341 @@
+TORRE NOSFERATU — IDEATION + EXPERT REVIEW (Phase 2)
+Theme (override): "Torre Nosferatu — escape a pitch-black candle-lit tower before Count Orlok takes your light"
+Reviewer: browsergame_expert (GAMEOTRON pipeline)
+Scoring axes (1–5, 5 best): HOOK | TOUCH (touch-first feasibility/interaction fit) | THEME (meaningful use of candle-as-clock / descent / Dread)
+Hard boundaries checked: (a) NO traditional battle system; (b) single-file vanilla-JS feasible; (c) staged delivery must carry wave 1 descent core + wave 2 social+Dread + wave 3 shared-resource survivor sim; (d) candle-as-clock, five NPCs, single 0–8 Dread dial; (e) ≥6 screens; (f) beginner first success <30s.
+
+=====================================================================
+TOP-LINE VERDICT
+=====================================================================
+Highest-scoring concepts (total /15):
+  14. Dread Weather ........ 14  (HOOK 5 / TOUCH 4 / THEME 5)
+   7. The Cruel Candle ..... 14  (HOOK 5 / TOUCH 4 / THEME 5)
+  16. Orlok's Patience ..... 14  (HOOK 5 / TOUCH 4 / THEME 5)
+   1. One Candle, One Descent 14  (HOOK 4 / TOUCH 5 / THEME 5)
+
+STRONGEST FOR A SOCIAL+DREAD-FORWARD, SINGLE-FILE BUILD:
+  #14 Dread Weather is the single best concept for this brief. It makes the mandated
+  0–8 Dread dial the primary escalating pressure and couples it directly to Orlok's
+  closing speed and NPC wariness — exactly the wave-2 social+Dread system the brief
+  requires — while still resting on the candle clock. Pick #14 as the spine.
+  Pair #14 with #4 (Borrower's Lantern) or #6 (Tower of Small Mercies) for the warm pole
+  and #7 (Cruel Candle) for the cold pole: together they cover both disposition
+  directions and the three NPC/social waves without bolt-on scope.
+  #1 (One Candle, One Descent) is the safest *implementation* anchor — the cleanest
+  candle/wax/turn loop — but its social/Dread layer is thin, so it is best used as the
+  wave-1 core underneath a social pick rather than as the whole concept.
+  #19 (Warm Hand) is the strongest single wave-3 (shared-resource sim) expression.
+
+BOUNDARY VIOLATIONS: none literal. No concept proposes an HP/attack battle system;
+all encounters are framed as Run/Endure. Flagged risks (not violations):
+  - #11 Blind Leap: the word "platforming" risks drifting to a reflex/jump system,
+    which the brief forbids (grid-adjacent recon hops only, never twitch). Would need
+    explicit re-framing to stay compliant.
+  - #2 The Guttering Metronome: defining hook is audio-only ("the metronome is the
+    clock"). Feasible in WebAudio, but the hook is invisible and undemonstrable in a
+    store thumbnail — high jam-scroll risk.
+  - #3, #5, #8, #9, #10, #11, #13, #17, #18, #20: solo/descent-forward. They do not
+    violate a boundary, but none foregrounds the *mandatory* five-NPC + Dread wave-2
+    system. Each would require the pipeline to bolt on social play — coverage risk,
+    not a rule break.
+  - #20 Nosferatu's Shadow: "mastering a widening bestiary" is one framing choice away
+    from reading as combat. Keep strictly to Run/Endure.
+OVERALL READ: A strong concept set that honors the candle-as-clock spine. The set is
+top-heavy with pure-descent concepts (#1, #3, #5, #13, #17, #18) that are elegant but
+under-serve the required social+Dread waves; the social concepts (#4, #6, #7, #12, #14,
+#15, #19) are where the brief's mandatory scope actually lives. Recommend #14 as spine,
+supported by #4/#7/#19.
+
+=====================================================================
+CONCEPT-BY-CONCEPT REVIEW
+=====================================================================
+
+1. One Candle, One Descent
+A faithful, beginner-first turn-based grid roguelike: wake at the Spire with one candle and work
+floor by floor down toward the front door, tapping adjacent tiles to move through total black.
+Built for first-time and horror-curious players who want dread you can think your way out of.
+DEFINING HOOK: the purest expression of the brief — one turn, one burn, one shrinking radius,
+and the map only exists where you have already spent light. CANDLE/WAX/LOSS LOOP: every move
+burns wax and shrinks the reveal radius; wax rooms refill it; zero wax gutters into Orlok's
+terminal grace, where one last match or the exit can still save you.
+--- REVIEW ---
+HOOK: 4  TOUCH: 5  THEME: 5
+RATIONALE: Best-in-set touch fit (tap-adjacent-tile is natively finger-sized) and a near-perfect
+theme execution of candle-as-clock-as-map. HOOK is 4 not 5 because "purest expression of the
+brief" is faithful rather than surprising — it lacks an ownable twist for a thumbnail. Social/
+Dread layer is thin, so as a *whole* it under-serves wave 2; treat it as the wave-1 core.
+
+2. The Guttering Metronome
+A turn-based game whose turns are punctuated by an audible slow tick that quickens imperceptibly
+as wax drops, so the player feels the cost before reading the meter. Aimed at rhythm-sensitive
+players who like tension delivered through sound. DEFINING HOOK: the wax clock is literally the
+music — the metronome is the clock, and killing the tick is the zero-wax cue. CANDLE/WAX/LOSS
+LOOP: each tick-bounded turn spends wax and reshapes the tempo; matches silence a snuff but the
+metronome never stops; at zero the tick collapses into a single heartbeat.
+--- REVIEW ---
+HOOK: 3  TOUCH: 4  THEME: 4
+RATIONALE: The audio-clock is a beautiful match to audio direction §12 (the burning tick), and
+touch is unaffected. But the *defining* hook is invisible — it cannot be shown in a screenshot
+or a jam scroll, so its HOOK score suffers. Single-file WebAudio is feasible; this is best used
+as a sound-flourish layer on another concept, not as the concept itself. No social/Dread.
+
+3. Wax Constellations
+A turn-based explorer where every tile you have lit stays faintly remembered as a dim afterimage,
+so your own consumption draws a private map across the dark. For players who love fog-of-war and
+self-authored cartography. DEFINING HOOK: the map is a scar of everything you burned — you
+navigate by the ghost of your own past light. CANDLE/WAX/LOSS LOOP: revealing new tiles costs
+wax; the remembered map is free to re-cross but never refills light; wax-out dims the entire
+constellation at once.
+--- REVIEW ---
+HOOK: 4  TOUCH: 4  THEME: 4
+RATIONALE: "Map as a scar of spent light" is an elegant, ownable identity with genuine theme
+resonance. Touch is straightforward (tap-move). Weaker than #1 on theme because the afterimage
+mechanic slightly loosens the pure wax→radius coupling, and there is no social/Dread presence.
+
+4. The Borrower's Lantern
+A social-first descent where the central verb is sharing and borrowing light from the five
+survivors rather than hoarding it. For players who prefer relationships and negotiation to
+looting. DEFINING HOOK: warmth compounds — an ally's lantern widens your radius and can split
+the drain, so trust is a resource with real geometry. CANDLE/WAX/LOSS LOOP: sharing wax now
+shrinks your own light but buys a sustained shared radius; a broken alliance collapses the
+lantern; wax-out with an ally present is a lesser, borrowed ending.
+--- REVIEW ---
+HOOK: 4  TOUCH: 4  THEME: 5
+RATIONALE: The strongest social-first expression — "trust as geometry" directly instantiates the
+warm/allied shared radius the brief describes. Social verbs map cleanly to tap-based UI panels.
+The only gap is wave 1: it assumes the descent core rather than defining it, so it wants a
+descent anchor beneath it. Excellent partner for #14.
+
+5. The Long Snuff
+A snuff-and-relight survival game that makes darkness recoverable and matches precious, turning
+each extinguishing into a mini-crisis rather than a death. For players who want loss without
+instant failure. DEFINING HOOK: snuff is not death — crossing blind between one struck match
+and the next is the whole game. CANDLE/WAX/LOSS LOOP: a snuff blackouts you until a match
+relights the candle; matches do not restore wax, so relights only buy time; wax-out, not the
+snuff, is the only true end.
+--- REVIEW ---
+HOOK: 4  TOUCH: 4  THEME: 5
+RATIONALE: Crisp, high-clarity hook that makes the brief's snuff-vs-wax-out distinction the
+entire game — strong theme. Beginner-friendly and low-risk to build. Touch-neutral. No social/
+Dread, so it is a wave-1 core or a mechanic to graft, not a full submission concept.
+
+6. A Tower of Small Mercies
+A warm-run social concept built entirely around mercy — aid, atonement, and the Dread dial
+falling as you help strangers down the stairs. For players who like playing the good guy in a
+cruel world. DEFINING HOOK: Dread reads as weather that visibly clears as you act warmly, and a
+low-Dread tower is a demonstrably safer tower. CANDLE/WAX/LOSS LOOP: warm acts cost wax now and
+return shared light later; a cold emergency can always be clawed back with gestures; wax-out
+with a clean heart means a stranger may hold the door for you.
+--- REVIEW ---
+HOOK: 4  TOUCH: 4  THEME: 5
+RATIONALE: One of the best Dread-executions: Dread as clearing weather is exactly the brief's
+"weather" framing. Fully covers wave 2 and the borrowed-door ending. Risk: if warm acts are
+always claw-back-able it can flatten tension — the cold pole must remain live. Strong partner
+for #7.
+
+7. The Cruel Candle
+A cold-run counterpoint built on theft, threats, and extracted light, where cruelty buys tempo
+and Dread buys Orlok's speed. For players who enjoy villain-protagonist economics. DEFINING
+HOOK: cruelty is a real, efficient strategy — right up until the accelerated Orlok collects.
+CANDLE/WAX/LOSS LOOP: steals and threats return instant wax and matches and raise Dread; higher
+Dread tightens Orlok's search, so the wax you steal is spent running; a cold run reaches wax-out
+sooner and the guttering dark is shorter.
+--- REVIEW ---
+HOOK: 5  TOUCH: 4  THEME: 5
+RATIONALE: The tightest danger-loop in the set: cold acts buy light *now* and buy Dread *later*,
+so every theft self-finances its own pursuit. That is a genuinely gripping, ownable hook.
+Touch is panel-driven, fine. It is one pole (cold) — best as the cold spine paired with a warm
+concept, per the brief's warm↔cold balance.
+
+8. Portrait of a Burning Man
+A visual-signature descent where ancestral portraits line the walls and their painted eyes track
+your flame across the room. For art-forward players who want Expressionist horror as the main
+attraction. DEFINING HOOK: the tower is watching — portraits orient toward the light, so
+silhouette and composition carry the fear, not combat. CANDLE/WAX/LOSS LOOP: each tile of
+movement slides the gaze and burns wax; a room fully "seen" by portraits may darken early;
+wax-out makes every painted eye turn to Orlok's approach.
+--- REVIEW ---
+HOOK: 4  TOUCH: 3  THEME: 4
+RATIONALE: Gorgeous signature and a real fit for the visual direction's tracking-eye motif. But
+TOUCH is docked: painting/animating many tracking portraits while keeping every threat
+identifiable from silhouette at 375 px is a heavy single-file render load and a readability risk
+at the radius edge. No social/Dread. Best as a visual layer, not a whole concept.
+
+9. Rats in the Wainscot
+A vermin-aware descent where rats are attracted to light and food and gnaw away your matches
+before you have spent them. For players who like attrition and inventory dread. DEFINING HOOK:
+the threat to your light is not the flame going out but your means of relighting it being eaten.
+CANDLE/WAX/LOSS LOOP: rats destroy matches on contact, converting a healthy candle into a
+one-snuff-away candle; wax burns per turn as normal; losing your last match while wax is low is
+the real, silent countdown.
+--- REVIEW ---
+HOOK: 4  TOUCH: 4  THEME: 4
+RATIONALE: A smart inversion — attacking the relight economy rather than the flame. But it
+elevates one creature (rats, already in the brief's roster) into the whole game, so it narrows
+rather than widens the design. No social/Dread. Good creature mechanic; weak as a concept spine.
+
+10. The Stair That Skips
+A routing-and-rhythm descent built on winding, non-stacked floor graphs where some stairs jump a
+tier and the fast way down is rarely the safe way. For players who love spatial puzzles and
+optimal-route planning. DEFINING HOOK: "anything goes" geometry — the tower is a lawless graph,
+and choosing your stair is your single biggest wax decision. CANDLE/WAX/LOSS LOOP: the short
+stair saves turns and wax but risks a camped survivor or a creature room; the wax-rich stair is
+longer; every reroute re-burns light, and dead ends are pure lost wax.
+--- REVIEW ---
+HOOK: 4  TOUCH: 4  THEME: 4
+RATIONALE: Directly channels the brief's "lawless / anything goes" geometry and makes routing
+the core wax decision — a clean, ownable identity. Notably it already reserves room for social
+stakes ("a camped survivor"), so it invites the wave-2 layer. Touch is fine. Conceptually strong
+but abstract for a jam thumbnail; best folded into a social spine.
+
+11. Blind Leap
+A recon-first platforming concept where the next foothold is only visible inside the radius, so
+every jump is scouted before it is taken. For players who like deliberate, turn-based spatial
+puzzles. DEFINING HOOK: platforming with the lights on your own schedule — the jump is never a
+reflex test, it is a reconnaissance problem. CANDLE/WAX/LOSS LOOP: scouting the landing costs a
+turn and wax; committing blind is a gamble that can spill wax or snuff the candle; a missed
+landing is never death, only a costly re-route.
+--- REVIEW ---
+HOOK: 3  TOUCH: 3  THEME: 3
+RATIONALE: Lowest-scoring concept. The brief permits only "simple platforming … grid-adjacent,
+one-tile moves," but a concept whose entire identity is platforming invites scope drift toward a
+reflex/jump system the brief forbids (BOUNDARY RISK — needs explicit re-framing to stay
+compliant). Touch control of a jump verb is also the least finger-friendly of the set. Not
+recommended as a spine.
+
+12. A Debt of Light
+A social-economy descent where lore fragments are the only real currency and knowledge, not wax,
+is what you trade. For players who like dialogue, secrets, and non-violent progression.
+DEFINING HOOK: a fragment is non-rival knowledge — you can offer the same torn page to every
+survivor without ever losing it — so standing, not stock, is the wealth. CANDLE/WAX/LOSS LOOP:
+lore buys disposition, hints (saved exploration = saved wax), and safe passage, NEVER wax or
+matches; so clever trading stretches light indirectly; a player who trades nothing descends on
+wax alone.
+--- REVIEW ---
+HOOK: 4  TOUCH: 4  THEME: 4
+RATIONALE: Faithfully implements the brief's non-rival lore economy and the "knowledge, never
+light" rule — a rigorous, on-spec social concept. Slightly abstract (a "wealth of standing" is
+harder to feel moment-to-moment than a lantern), and it leans on wave 2 heavily, so it needs a
+descent core. Solid social leg for a #14 spine.
+
+13. The Six-Minute Tower
+A pacing-forward descent tuned around an explicit ~5–8 minute, ~75–100 turn run, with a visible
+turn/wax budget and a speedrun-friendly score. For players who like tight, replayable time
+trials. DEFINING HOOK: the candle is a stopwatch you can watch expire — the run is a single
+well-budgeted arc, not a sprawling crawl. CANDLE/WAX/LOSS LOOP: ~1 burn per turn against ~30
+wax with one guaranteed refill room per floor; efficiency is everything; wax-out arrives exactly
+when a sloppy route meets an unspent refill.
+--- REVIEW ---
+HOOK: 4  TOUCH: 4  THEME: 4
+RATIONALE: Turns the brief's stated run budget into the headline hook — strong pacing discipline
+and directly supports the <30s first-success rule. But it is a *pacing* concept, not a fantasy:
+it foregrounds neither the social wave nor Dread, so as a full submission it under-covers the
+mandatory scope. Useful as a tuning lens on the eventual spine.
+
+14. Dread Weather
+A Dread-dial-forward concept where the tower-wide 0–8 heat dial is the primary escalating
+pressure and NPC wariness is the first thing you feel. For players who like systemic,
+emergent-difficulty design. DEFINING HOOK: Dread is authored as weather — it colours the whole
+frame, starts strangers wary, and sets how fast Orlok closes during the guttering dark. CANDLE/
+WAX/LOSS LOOP: cold acts buy light and raise Dread; warm acts lower Dread and cost light; at
+wax-out, the Dread tier literally decides your remaining grace, so social choices are survival
+choices.
+--- REVIEW ---
+HOOK: 5  TOUCH: 4  THEME: 5
+RATIONALE: The single most on-brief concept. It makes the mandated 0–8 Dread dial the primary
+pressure, ties it to Orlok's closing speed and to NPC wariness, and makes social choices
+*identical to* survival choices — the exact wave-2 social+Dread system the brief requires, with
+a frame-colouring "weather" presentation that is visually ownable and screenshot-able. Touch is
+panel/tile driven. RECOMMENDED SPINE for a social+Dread-forward build.
+
+15. The Door Ajar
+A race-to-the-exit concept built around the borrowed-door ending, where a survivor might reach
+the front door first and leave it open only briefly, depending on disposition and Dread. For
+players who like chasing a moving window and dynamic endings. DEFINING HOOK: you can win by
+someone else's grace — a warm ally at low Dread holds the ajar door longer, but while it stands
+open Dread rises and creatures gather at the exit. CANDLE/WAX/LOSS LOOP: a borrowed exit costs a
+reduced score and is a gamble against rising Dread; the key on your own light is the reliable
+path; wax-out during the dash to a borrowed door is the cruelest loss.
+--- REVIEW ---
+HOOK: 4  TOUCH: 4  THEME: 5
+RATIONALE: Implements the brief's borrowed-door ending with real mechanical teeth (a moving
+window bounded by disposition and Dread, with an escalating cost while it stands open). A
+beautifully thematic climax, but it is an *ending* concept — it needs a full descent + social
+body beneath it. Ideal as the win-condition layer on #14.
+
+16. Orlok's Patience
+A fail-forward descent that makes the guttering dark its own authored act rather than a game
+over screen, with shrinking radius and closing footsteps as a final micro-game. For players who
+want dramatic last stands. DEFINING HOOK: zero wax does not end the run — it begins the
+guttering dark, a slow-motion scramble where a match or the exit can still be reached. CANDLE/
+WAX/LOSS LOOP: the guttering dark gives a few turns of shrinking light and closing Orlok; Dread
+sets how fast he closes; spending the last grace heedlessly kills, and only then does Orlok take
+you.
+--- REVIEW ---
+HOOK: 5  TOUCH: 4  THEME: 5
+RATIONALE: The richest treatment of the brief's fail-forward terminal state — it makes the
+guttering dark the emotional climax the direction explicitly asks for, and wires Dread into it.
+Touch-neutral. Social content is light (Dread is present, the five NPCs are not), so it is a
+magnificent terminal layer rather than a full spine.
+
+17. Candle Math
+A puzzle-forward descent where locks, levers, collapsing floors, and light-sensitive glyphs make
+each floor a turn-and-light optimisation problem. For players who want calm, decision-driven
+horror without dexterity. DEFINING HOOK: every obstacle is a routing puzzle priced in wax — a
+wrong answer costs light, never a life. CANDLE/WAX/LOSS LOOP: solving by the long-safe path
+trades turns for safety and spends wax; the snuff-cross-a-glyph trick spends a match instead;
+wax-out during a half-solved floor is the fail state.
+--- REVIEW ---
+HOOK: 3  TOUCH: 4  THEME: 4
+RATIONALE: Faithful to the brief's puzzle guidance (§6.4) and keeps everything turn-based and
+touch-safe. But puzzle-forward is calm by design, so its scroll-stopping HOOK is low, and a
+puzzle-rich concept is the heaviest single-file content lift in the set. No social/Dread.
+Best as floor-flavor within a larger spine.
+
+18. The Sconce Census
+A memory-and-documentation concept where the player is implicitly mapping the tower's iron
+sconces and known rooms, reading the dark more than the geometry. For players who like quiet,
+observational horror. DEFINING HOOK: the game rewards remembering where light lives — sconces,
+refills, and safe rooms you have already found become a mental asset you exploit turn after
+turn. CANDLE/WAX/LOSS LOOP: every re-exploration of forgotten ground is wasted wax; census-savvy
+routing stretches each candle; incomplete recollection means backtracking burns the clock.
+--- REVIEW ---
+HOOK: 3  TOUCH: 4  THEME: 4
+RATIONALE: A cerebral, theme-true memory concept (rewarding recall of where light lives), but
+quiet and low-spectacle — the weakest hook for a scrolling jam viewer. No social/Dread. Valuable
+as a skill layer, not a spine.
+
+19. A Warm Hand in the Dark
+A companion-centric descent where Petr — the innocent worth protecting — is a live escort whose
+presence both widens your light and slows your pace. For players who like escort tension and
+emotional stakes. DEFINING HOOK: protecting someone costs tempo and wax now but pays in shared
+light and a warmer tower, making the "protect" choice a genuine economic trade. CANDLE/WAX/LOSS
+LOOP: the companion splits the drain and widens the radius while alive; creatures and traps can
+harm the companion, collapsing your light; abandoning them for speed is the cold path, and
+wax-out with them beside you is the warmest, worst ending.
+--- REVIEW ---
+HOOK: 4  TOUCH: 4  THEME: 5
+RATIONALE: The best expression of the brief's *wave-3* shared-resource sim: an NPC that carries
+light, can be harmed by creatures/traps, and whose loss collapses your radius is precisely the
+survivor-sim the must-haves demand. Emotional stakes are high and the "protect vs. abandon"
+trade is genuine. Singular-NPC focus means it covers one survivor deeply; pair with a
+five-NPC/Dread spine.
+
+20. Nosferatu's Shadow
+A creature-awareness descent where the escalating roster (bats, rats, spiders, wolves, shades,
+the light-eater) is the descending player's real curriculum, introduced one per floor. For
+players who like learning and mastering a widening bestiary through avoidance. DEFINING HOOK:
+each floor teaches exactly one new creature and then combines types, so the dark itself becomes
+a readable, masterable language. CANDLE/WAX/LOSS LOOP: every creature costs light — Run spills
+wax, Endure spills wax and snuffs the candle (needing a match); deeper density means the same
+wax must survive more spills; wax-out triggers Orlok, who is never part of the roster.
+--- REVIEW ---
+HOOK: 4  TOUCH: 4  THEME: 5
+RATIONALE: Excellent one-variable-per-floor laddering, exactly matching the brief's escalation
+rule, and it correctly keeps Orlok out of the normal roster. Theme is strong. Caution: "mastering
+a bestiary" must stay strictly Run/Endure to avoid reading as a combat system (near-boundary —
+watch the framing). No social/Dread.
+
+=====================================================================
+END OF EXPERT REVIEW
+=====================================================================

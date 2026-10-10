@@ -1,0 +1,61 @@
+# Torre Nosferatu — Dread Weather
+
+*Escape a pitch-black, candle-lit tower before Count Orlok takes your light.*
+
+A turn-based, grid-based gothic-horror roguelike **descent** for the Gameotron Game Jam.
+Jam theme: **Anything Goes** — turned inward: the tower is a lawless jumble of rooms,
+floors, and encounters that obey no single logic. Anything goes *in the dark*.
+
+## The hook
+
+**Your candle is your clock, your health, and your map.**
+
+Every step burns wax. As the wax falls, the circle of light around you shrinks — and
+everything outside it is absolute black. At zero wax the flame gutters, and Count Orlok
+starts to close. Find wax, matches, and the key to the ground-floor door. Get out on your
+own light — or slip through a survivor's borrowed door.
+
+## The descent
+
+- Wake at the **Spire** (top floor) with one candle and work **down** toward the only exit.
+- Each floor is **generated at runtime** from a world template, seeded per run — a winding
+  graph of stairwells, loops, and dead ends, with some stairs skipping a tier.
+- Every floor adds **exactly one new pressure**: social encounters, creature density,
+  traps, darkness, then ambient wax drain on the ground floor. A run lasts ~5–8 minutes
+  (~75–100 turns).
+- **Dread Weather** — a single tower-wide 0–8 tug-of-war dial. Cold acts buy light now and
+  raise Dread; warm acts lower it and spend light. Dread sets how wary the survivors are
+  and how fast Orlok closes.
+- **Avoidance, not attrition** — no HP, no attack rolls. Creatures are decisions: *Run*
+  spills wax, *Endure* spills wax and snuffs your candle (you'll need a match).
+- **Five recurring survivors** — Vlask, Sister Marta, Ilona, Petr, Nadja — each with a
+  disposition, goals, and a voice. Trade, warm, or rob; the tower remembers.
+- **Scoring** rewards nerve: Near-Miss Bonuses, per-floor Zone Bonuses, lore, and a full
+  keyed escape (1000) vs. the reduced borrowed-door escape (400).
+
+The only death is Orlok by wax-out — and only after the guttering-dark grace is spent.
+
+## Controls
+
+Touch and mouse are both fully supported; keyboard is enabled for this run.
+
+- **Touch:** tap an adjacent tile to move (1 wax); tap UI buttons to act; long-press a tile
+  to inspect (free); swipe a side panel to open/close the action tray.
+- **Mouse:** click to move/act exactly like tap; hover highlights the reachable tile and
+  previews its cost.
+- **Keyboard:** WASD / arrow keys move one tile; **Space** waits/confirms; **Esc** opens
+  Pause; **1–6** select a social action when the social panel is open.
+
+Seven screens: Title, How to Play, Gameplay, Pause (music/SFX toggles, How to Play,
+resume, back), Settings (music/SFX, reset run, credits), Game Over, and Victory.
+
+## Notes
+
+- Single HTML file, vanilla JavaScript, all HTML/CSS/JS embedded — no external assets.
+- Procedural Web Audio (oscillators + noise) for music and SFX; togglable in Pause and
+  Settings, with reduced-motion support.
+- Runs in the browser at desktop, laptop, and phone sizes (verified at 1920x1080, 800x600,
+  and 375x667).
+
+*Generated through the GAMEOTRON pipeline — theme, concept, world, art direction, code,
+review, and polish all produced by agents.*

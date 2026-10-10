@@ -10,26 +10,26 @@ A valid entry demonstrates **both**:
 
 ## Baseline requirements (generated game)
 
-- [ ] Vanilla JavaScript only — no frameworks or external libraries
-- [ ] HTML, CSS, JS in a single `index.html`
-- [ ] Mouse and touch support
-- [ ] Responsive canvas, mobile-friendly layout
-- [ ] Finger-sized touch targets, viewport-aware
-- [ ] Optional keyboard (WASD, arrow keys, Space)
-- [ ] ≥6 screens: Title, Pause, How to Play, Gameplay, Settings, Game Over/Victory
-- [ ] Pause + settings music and sound-effect options
+- [x] Vanilla JavaScript only — no frameworks or external libraries
+- [x] HTML, CSS, JS in a single `index.html` (2109 lines, `gameotron_output/20261010_095651/index.html`)
+- [x] Mouse and touch support (verified at 1920×1080, 800×600, 375×667)
+- [x] Responsive canvas, mobile-friendly layout
+- [x] Finger-sized touch targets, viewport-aware (≥48 px)
+- [x] Optional keyboard (WASD, arrow keys, Space) — enabled this run ("full controls")
+- [x] ≥6 screens: Title, Pause, How to Play, Gameplay, Settings, Game Over/Victory (7 shipped)
+- [x] Pause + settings music and sound-effect options
 
 ## Process / sharing
 
-- [ ] `PROCESS.md` documents use/configuration/improvement + one before/after metric
-- [ ] Public documented fork ("share improvements on GitHub")
-- [ ] Pipeline artifacts published: GDD, visual/audio direction, review/runtime/test/juice reports, process logs, game source
-- [ ] License preserved: PolyForm Noncommercial 1.0.0 + `Required Notice:` lines
+- [x] `PROCESS.md` documents use/configuration/improvement + one before/after metric (§ Torre run)
+- [x] Public documented fork ("share improvements on GitHub")
+- [x] Pipeline artifacts published: GDD, visual/audio direction, review/runtime/test/juice reports, process logs, game source (`gameotron_output/20261010_095651/`)
+- [x] License preserved: PolyForm Noncommercial 1.0.0 + `Required Notice:` lines
 
 ## Workflow integrity
 
-- [ ] Mandatory ideation approval gate preserved
-- [ ] GAMEOTRON phase order preserved (orchestrator edited additively only)
+- [x] Mandatory ideation approval gate preserved (fired; user selected #14 "Dread Weather")
+- [x] GAMEOTRON phase order preserved (orchestrator edited additively only)
 
 ## Submission
 

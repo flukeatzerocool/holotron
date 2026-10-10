@@ -1,0 +1,125 @@
+========================================================================
+JUICE REPORT — Torre Nosferatu: Dread Weather
+Run folder: 20261010_095651
+Source: index.html (1882 lines at code_agent exit; 2109 lines after this juice pass)
+Agent: juice_agent (Phase 5.5). Additives only — no behaviour removed.
+========================================================================
+
+MASTER TOGGLE
+-------------
+All new juice is gated by the EXISTING Settings flag `juiceEnabled`
+("Juice & particles"), id `#flag-juiceEnabled`, default `true`.
+- Flag lives at index.html:736 in G.flags; refresh wired at :957 and
+  :2041 (unchanged; preserved verbatim).
+- Screen shake, hit-stop, zoom-punch, impact flash, particles and screen
+  transitions call `Juice.on()` -> requires `G.flags.juiceEnabled`.
+- Floating score/event popups + screen transitions call `Juice.mild()`
+  which requires `G.flags.juiceEnabled` but ALSO survives
+  prefers-reduced-motion (they are informational, per visual_direction §9).
+- Shake / punch / particles are additionally suppressed under
+  `prefers-reduced-motion: reduce`; red-mask meaning is never hidden.
+
+CATEGORIES ADDED (5 of <=5)
+---------------------------
+
+1. [SCREEN SHAKE]  trigger: creature contact, trap snuff, guttering,
+   near-miss, floor change, relight, death.
+   - Module: `Juice.shake(px)` at index.html:1624 (section 18b).
+   - Applied at :1892-1903 — the scene composite (`spill` + `masked`) is
+     drawn once inside a `ctx.translate(shake)` + centre-scale
+     (zoom-punch) block, so the mask AND scene AND particles offset
+     together and every layer stays aligned.
+   - Amplitude caps at 6 px, decays x0.82/frame (spec: 2-6 px).
+   - Triggers: resolveCreature :1429 (4 px / 6 px endure); resolvePuzzle
+     :1458 (3 px); enterGuttering :1120 (5 px); near-miss :1196 (4 px);
+     descend :1237 / ascend :1248 (3 px); tryRelight :1475 (2 px);
+     endGame :1581 (6 px).
+
+2. [HIT-STOP]  trigger: wax-out/impact freeze momentarily.
+   - Module: `Juice.stop(frames)` / `Juice.freeze()` at :1624.
+   - Max 5 frames (spec). Render loop skips `flick += dt/1000` while
+     frozen (:1847-1849), so the flame flicker/animation halts for the
+     punch, without touching turn-driven game logic.
+   - Triggers: resolveCreature :1429 (3/4 frames); resolvePuzzle :1458
+     (2 frames); enterGuttering :1120 (3 frames).
+
+3. [PARTICLES]  trigger: pickups, impacts, snuff, floor change, steps.
+   - `Juice.burst(x,y,n,color,speed,size,life,gravity)`; pooled, hard cap
+     48 simultaneous (spec: <50), drawn at :1906 on the shaken layer.
+   - Emitters: wax +12 (gold, :1165), match (amber, :1167), lore (parchment
+     #C8BEA8, :1174), key (gold burst, :1179), zone bonus (:1188),
+     near-miss (red #C01A1A, :1196), creature impact (ember/red, :1431),
+     snuff ash (#4C5A6B, :1434/:1459), relight gold (:1476), descend/ascend
+     cold-stone dust (:1238/:1249), death embers (:1581), win gold
+     (:1569), and a subtle footstep dust puff per move (:1223).
+   - Colour palette restricted to the visual direction (gold #FFD27A,
+     flame #E8912B, ember #8A3D12, cold stone #4C5A6B, danger #C01A1A).
+
+4. [SCORE / EVENT POPUPS]  trigger: same events as particles.
+   - `Juice.pop(text,x,y,color,size)`; floats up, ~1.1 s fade, cap 8
+     on screen (spec: <=8). Drawn at :1907 on the player-centred layer.
+   - Examples: "+12 WAX", "+1 MATCH", "LORE +75", "THE KEY", "ZONE +100",
+     "NEAR MISS +50", "ENDURED", "WAX SPILLS", "SNUFFED", "TURN LOST",
+     "THE FLAME GUTTERS", "LIGHT RETURNS", "FLOOR n" / "GROUND FLOOR".
+   - (Existing toasts are unchanged; popups are an additive canvas layer.)
+
+5. [SCREEN TRANSITIONS]  trigger: new run, floor descent/ascent, win, death.
+   - Element `#juice-transition` (:267) + CSS radial black/ember veil
+     (:92-93). Pointer-transparent, `pointer-events:none`, z-index 6.
+   - `Juice.transition()` flashes the veil to opaque then fades to 0 over
+     500 ms (non-blocking): descend :1237, ascend :1248, startGame :1985,
+     win :1570, endGame :1582. It never delays or gates showScreen(), so
+     screen-state checks remain synchronous.
+
+ADDITIVE FLASH (sub-effect of categories 1/3)
+---------------------------------------------
+- `Juice.flashRed()` / `Juice.flashWarm()` draw a short full-screen tint
+  (:1914-1921): red on damage/snuff/near-miss/death, warm gold on
+  pickups/relight/win. Caps at alpha 0.16, decays over ~220 ms.
+
+NOTES
+-----
+- Scene+mask alignment: the pre-existing mask/spill composite is now
+  drawn exactly once, inside the transform block, so shake/zoom never
+  produce a static ghost or layer drift. (Duplicate draw removed.)
+- Turn-driven determinism is untouched: all juice reads state, never
+  mutates it; no RNG is drawn from any game stream.
+
+SKIPPED
+-------
+- [CAMERA MOTION] Smooth lerp-follow / look-ahead / deadzone — SKIPPED.
+  Camera is intentionally a fixed player-at-centre rendering
+  (worldState-driven), the visual direction reserves motion to the
+  1-tile glide; adding a follow camera would change the mask geometry
+  contract. Out of scope / risk > reward for this pass.
+- [ANIMATION EASING] Squash/stretch and bouncy UI easing — SKIPPED.
+  Would require touching sprite draw paths; the move glide + zoom-punch
+  already cover the motion budget. Kept additive-only footprint small.
+- [SOUND VISUAL COMPLEMENT] Equalizer/ring indicators — SKIPPED.
+  Procedural Web Audio already pairs each event with a toast/popup; extra
+  indicators would add noise against the horror contrast.
+
+VERIFICATION (headless, Playwright + Firefox, served over http)
+---------------------------------------------------------------
+- node --check on extracted app script: SYNTAX OK.
+- Hooks preserved: window.TEMPLATE (object), SEED=20261010,
+  worldState/systemState/move/social, pristineWorldState/State/SystemState
+  all present and callable.
+- Flags do NOT gate gameplay: with juiceEnabled OFF then ON, 33 moves +
+  3 encounters resolved, window.social('steal') still raised Dread
+  0 -> 1. Flags/required encounters/NPC+Dread semantics intact.
+- runtime: 0 pageerror, 0 console errors across:
+  * 32-160 moves, 3 encounter resolutions, wax -> 0 (guttering);
+  * juice OFF and ON during play, under prefers-reduced-motion;
+  * 375x667 (mobile) viewport resize + 32 moves;
+  * 3 floor descents (descend() transition path).
+- Rendering screenshot confirms player flame + candle mask + HUD render
+  correctly with no doubled/ghosted layer.
+- Screens intact: scr-title, scr-howto, scr-settings, scr-pause, scr-over,
+  scr-victory all present; touch + mouse + keyboard handlers untouched.
+
+FILES
+-----
+- Modified: index.html (2109 lines, in place)
+- Added:    juice_report.txt (this file)
+========================================================================

@@ -1,0 +1,348 @@
+========================================================================
+BUGLIST — Torre Nosferatu (Dread Weather)
+review_agent static analysis · run 20261010_095651
+Target: index.html (1882 lines)
+Sources checked: index.html, gdd.md, direction.txt
+Generated: 2026-10-10 10:20:01
+========================================================================
+
+SUMMARY OF COUNTS
+  CRITICAL: 0
+  HIGH:     6
+  MEDIUM:   9
+  LOW:      13
+  TOTAL:    28
+
+COMPLIANCE SNAPSHOT (pass items NOT listed below)
+  [OK] 7 screens present (title/howto/settings/pause/over/victory + gameplay HUD)
+  [OK] Pause: resume + back-to-title + music + SFX + how-to + settings
+  [OK] Settings: music + SFX + reset + credits (+ hints)
+  [OK] candle/wax/matches/key present
+  [OK] 5 NPCs, 6 social actions, Dread 0-8, avoidance Run/Endure, no HP/battle
+  [OK] Hooks: window.TEMPLATE, window.SEED, worldState, systemState (tower-wide),
+       move, social, pristine boot hook (pristineWorldState/State/SystemState)
+  [OK] Wave-3 sub-features flag-gated; flags do NOT gate social(id)/required
+       encounters/NPC+Dread state
+  [OK] Touch + mouse bound; WASD/arrows/Space; viewport meta
+  [OK] All JS getElementById targets exist (no boot crash)
+
+========================================================================
+[HIGH] FINDINGS
+========================================================================
+
+[HIGH] Q key descends from ANY room — sequence-break exploit
+  Location: index.html:1870 (also 1192-1198)
+  The keydown handler maps 'q'/'Q' directly to descend(), and descend()
+  (1192) has no guard requiring the player be standing in a
+  `descending-stair` room. Contrast tryMove('down') at 1176-1182, which
+  correctly checks `room.archetype==='descending-stair'`. Pressing Q on
+  the Spire (or any floor) immediately drops a floor, bypassing the
+  entire routing/exploration loop and the exit-room affordance.
+  Fix: only descend when `G.floors[G.depth].rooms[G.pos].archetype===
+  'descending-stair'` (guard inside descend() so every caller is safe).
+
+[HIGH] Borrowed-door / lesser ending is unreachable (dead required feature)
+  Location: index.html:738-746 (spawn), 1259-1265 (escape loop), 1277-1283
+  NPC floors are fixed at spawn from the roster map: vlask 2, marta 2,
+  petr 2, ilona 3, nadja 3 — clamped to [2,6] (741). No NPC is ever on
+  MAX_DEPTH (6), n.floor is never reassigned anywhere (only assignment is
+  line 745), and simNpcs only moves NPCs within the active floor. The
+  escape loop `if(n.floor!==MAX_DEPTH||!n.room) return;` therefore never
+  fires, so openBorrowedDoor() is never called and the borrowed-door win
+  path (attemptExit 1210) plus its `G.borrowedOpen` decay branch (1267-1271)
+  are all unreachable. GDD §2.9 makes this a first-class ending.
+  Fix: let NPCs descend (advance n.floor when they leave a descending-stair),
+  or spawn/route at least one NPC to MAX_DEPTH during sim.
+
+[HIGH] Creature effect double-charge (wax-drain and turn-cost)
+  Location: index.html:1332, 1334, 1342
+  `spill` already encodes wax-drain=3 and defaults turn-cost to 1 (1332),
+  then the code separately does `if(eff==='turn-cost'){ burnWax(2); }`
+  (1334) and `if(eff==='wax-drain'){ burnWax(2); }` (1342). Shades cost
+  3+2=5 wax; spiders cost 1+2=3 wax on Run. Effects are applied twice,
+  so the GDD/roster effect numbers are silently inflated.
+  Fix: apply each effect once — either through spill or the explicit
+  branch, not both.
+
+[HIGH] Dread never sets survivors' starting disposition (mechanic missing)
+  Location: index.html:787-794 (seedDispoForFloor — never called)
+  GDD §2.6/§2.7 require new NPCs on floor 2+ to start one step warier at
+  Watched+ and all-Hostile at Hunted-full. seedDispoForFloor() implements
+  exactly this but is dead code — grep shows no call site. NPCs enter with
+  template base numeric regardless of Dread. The Dread→wariness pillar is
+  unimplemented.
+  Fix: call seedDispoForFloor(n.numeric) when an NPC first becomes
+  co-located/active on the player's floor.
+
+[HIGH] Encounter resolution does not advance the turn/simulation
+  Location: index.html:1330-1368 (resolveCreature/resolvePuzzle)
+  GDD §2.1 defines a turn as "move one tile, wait, take/use an item,
+  resolve an encounter action, or perform a social action." Social actions
+  call takeTurn('social') (1404), but creature/puzzle resolution only
+  burnWax() and close the modal. Consequences: (a) NPCs do not simulate,
+  (b) during the guttering dark, grace is NOT decremented while the player
+  resolves uncleaned encounters, freezing Orlok's approach, and (c) the
+  turn counter/score cadence desyncs. Also, enterRoom() opens the encounter
+  modal and then tryMove still runs takeTurn('move') on the same step, so
+  the move turn is paid before the encounter is even answered.
+  Fix: have resolveCreature/resolvePuzzle call takeTurn (or an equivalent
+  turn-advance that decrements grace and simNpcs) after applying costs.
+
+[HIGH] Encounter modal has no keyboard confirmation (Space) 
+  Location: index.html:1857-1870 (keydown)
+  GDD §3.3: "In an encounter, Space confirms the highlighted option."
+  The keydown handler returns early whenever isModalOpen() and only treats
+  digits 1-6 for the social modal (1859-1862). Space/WASD/arrows do
+  nothing while the encounter modal is open, so keyboard-only users cannot
+  resolve Run/Endure or puzzle choices and cannot dismiss with Space.
+  Fix: handle Space/arrow+Enter for modal-encounter (and Esc to close modals).
+
+========================================================================
+[MEDIUM] FINDINGS
+========================================================================
+
+[MEDIUM] TEMPLATE.test_seed is ignored as a default seed
+  Location: index.html:270 (test_seed), 533-535 (SEED selection)
+  GDD §10.2: "pinning TEMPLATE.test_seed (20261010) yields a known layout.
+  test_seed is honored when present." The code only reads window.SEED,
+  ?seed= and Math.random(); it never consults TEMPLATE.test_seed. A known
+  layout therefore only occurs if the Phase 2 checker injects window.SEED
+  before boot. Add: default SEED from TEMPLATE.test_seed when no override.
+
+[MEDIUM] NPCs never roam floor-to-floor; floors 4-6 have no social layer
+  Location: index.html:1239-1272 (simNpcs), 738-746
+  Direction §6.5 and GDD §2.2 require survivors to "roam and change floors
+  like you." simNpcs only relocates an NPC within the active floor; n.floor
+  is immutable. Because floor assignment is fixed (max 3), the player never
+  meets a survivor on floors 4-6, contradicting the tower-wide roaming
+  premise (and indirectly causing the borrowed-door dead-end above).
+  Fix: move NPCs through `up`/`down` exits during simulation.
+
+[MEDIUM] Escape with a modal open opens Pause underneath it
+  Location: index.html:1856 (Escape branch)
+  Escape is processed before isModalOpen() is consulted. With the
+  encounter/social/journal modal open, Esc switches to the Pause screen
+  while leaving `.modal.active` set, producing stacked overlays; Resume
+  (1831) then returns to gameplay with the modal still open.
+  Fix: if isModalOpen(), Esc closes the modal and returns.
+
+[MEDIUM] Lore fragments are not readable (M12 / GDD §5.1)
+  Location: index.html:1494-1512 (openJournal), 1145 (pickup)
+  The journal shows only "Lore N / collected count". GDD §5.1 and brief
+  M12 require wave-1 lore to be a readable scrap (read_text rendered as
+  text). There is no per-fragment text authoring/rendering anywhere
+  (neither index.html nor the template carries `read_text`).
+  Fix: author read_text per lore fragment and render it in the journal.
+
+[MEDIUM] Lore duplicates counted instead of presence-recorded
+  Location: index.html:1145
+  G.lore++ on every pickup. GDD §5.1 states a fragment is unique per
+  archetype/floor and the journal records presence, not counts. A
+  multi-floor run inflates the lore score item (+75 × duplicates).
+  Fix: track a set of collected fragment keys.
+
+[MEDIUM] Live `things` never reflects pickups (worldState desync)
+  Location: index.html:635 (items==things.slice at gen), 1139-1148
+  (pickup splices room.items), 704 (snapshotRooms reads r.things)
+  Pickups mutate `room.items` but `room.things` is left intact, and
+  worldState()/snapshotRooms read `things`. So worldState reports items
+  that no longer exist, and the on-canvas item dots (1546) use `items`
+  while the snapshot uses `things`.
+  Fix: mutate both, or derive snapshot items from `items`.
+
+[MEDIUM] Multiple descending-stairs are not linked symmetrically
+  Location: index.html:625-627 (nE 1..2), 680-682 (only first gets `down`),
+  1202 (ascend uses prev.exitSlug)
+  Only exitRooms[0] receives the `down` exit. A player descending from a
+  second `descending-stair` room via descend()/Q/HUD drops a floor, but
+  ascending later returns them to the *first* stair (prev.exitSlug), i.e.
+  a different room than they left from.
+  Fix: tag each descending-stair with its own down target, or restrict
+  descent to the linked exit.
+
+[MEDIUM] Tapping empty space on a descending-stair forces descent/escape
+  Location: index.html:1073-1074 (tapAt fallback)
+  Any tap that does not land on a room while standing in a
+  descending-stair triggers descend()/attemptExit(). A stray tap on the
+  dark (e.g. trying to hover/inspect) changes floor or exits.
+  Fix: require an explicit Descend affordance, not a blanket tap fallback.
+
+[MEDIUM] No screenshake and no hit-stop; particles are minimal
+  Location: index.html:1703-1710 (only 10 dust motes); no shake/hit-stop
+  The review brief lists particles, screenshake, and hit-stop as game-feel
+  items to verify. Only a faint dust-mote loop exists; there is no camera
+  shake and no hit-stop/freeze anywhere. (Phase 5.5 juice_agent may add
+  these, but they are absent in the reviewed build.)
+  Fix: defer to juice_agent, or add shake/hit-stop on snuff/endure/danger.
+
+[MEDIUM] npcItemSweep removes items with no protection and hoarding is a no-op
+  Location: index.html:1227-1238
+  Flag-gated NPC item theft pops from room.items with no reservation; if
+  an NPC ever shares a required-thing room the item can be removed before
+  the player reaches it (required-things guarantee is undermined). Also the
+  `/* hoards */` branch (1236) does nothing, so carried items have no effect
+  and never return to the floor.
+  Fix: skip protected/required items, or make hoarding deterministic and
+  recoverable (drop on NPC loss).
+
+========================================================================
+[LOW] FINDINGS
+========================================================================
+
+[LOW] `nearMissFlag` guard is always true (never assigned)
+  index.html:1160 — `!G.nearMissFlag` is always true; near-miss can award
+  each time a low-wax creature room is first entered. Set the flag or use
+  per-room keying.
+
+[LOW] REQ_THINGS parsed but never used
+  index.html:498 — declared, no consumer; required-things are satisfied
+  implicitly by archetype assignment only.
+
+[LOW] Audio.dreadShift never called
+  index.html:889 — Dread-tier changes produce no audio despite the GDD
+  audio intent ("drone rises with Dread tier").
+
+[LOW] Dead CSS selector #talkBtn
+  index.html:65 — the actual button id is `btn-talk` (182); rule never
+  matches. Functionality still works via inline style.
+
+[LOW] Duplicate seedline assignment
+  index.html:1780-1781 — identical line twice in newRun().
+
+[LOW] Duplicate UI refresh
+  index.html:1783-1784 and 1796-1797 — renderHUD()/refreshToggles()
+  duplicated across newRun/boot.
+
+[LOW] Audio.tick computes unused variable
+  index.html:878 — `var f` is computed but not used.
+
+[LOW] match-destroy clamps to 99 instead of MATR.max
+  index.html:1333 — `clamp(G.matches-1,0,99)`; use MATR.max||6.
+
+[LOW] applySocial uses Math.random() (non-deterministic per seed)
+  index.html:1432 — disposition roll bypasses the seeded RNG; a pinned
+  seed does not yield a reproducible social run.
+
+[LOW] window.social(id) ignores floor/co-location
+  index.html:1738-1742 — falls back to Object.keys(G.npcs)[0] and applies
+  to any target. Acceptable for the frozen hook (which must always
+  resolve), but note it can mutate an NPC the player has never met.
+
+[LOW] attemptExit silently no-ops below MAX_DEPTH
+  index.html:1208 — returns without feedback if depth<6.
+
+[LOW] Candle-radius upgrade path unused (max 7 unreachable)
+  index.html:760-768 — baseRadius starts at RADR.start(3) and only ever
+  reads G.baseRadius, which is never increased; RADR.max 7 is unreachable.
+  GDD §4.2 mentions radius upgrades.
+
+[LOW] endGame() called with an ignored argument
+  index.html:1117 `endGame(false)` vs 1475 `function endGame()`.
+
+========================================================================
+NOTES / NON-ISSUES
+========================================================================
+- pickup() grants items automatically on room entry (no turn); this matches
+  "enter a room whose archetype carries one" in direction §5.1.
+- G.pendingSocial (1167, 1290-1291) is written but never read; the Talk
+  button derives co-location live from coLocatedNpc(), so this is harmless
+  dead state (not separately scored).
+- No CRITICAL (crash/unplayable) defect found: all getElementById targets
+  exist, no infinite loops, generation terminates, and the key path is winnable.
+========================================================================
+END OF BUGLIST
+========================================================================
+
+========================================================================
+FIXED BUGS — bugfix_agent (surgical edits to index.html)
+Run: 20261010_095651 · timestamp appended after review 102001
+========================================================================
+
+FIXED — HIGH (6/6):
+- [HIGH] Q key descends from ANY room (sequence-break) — RESOLVED.
+  descend() now guards on
+  G.floors[G.depth].rooms[G.pos].archetype==='descending-stair' before
+  dropping a floor (or calling attemptExit at ground), so Q/HUD/tap callers
+  are all safe and match tryMove('down').
+- [HIGH] Borrowed-door / lesser ending unreachable — RESOLVED.
+  simNpcs() now runs a tower-wide migration: survivors with floor<=player
+  depth advance one floor (0.12/turn) and are placed in the destination
+  floor's descending-stair, so an NPC reaches MAX_DEPTH and the escape loop
+  (openBorrowedDoor) fires. Added borrowedJustOpened so the door is not
+  decayed on its opening turn (win can be 1; it was previously opening and
+  closing in the same simNpcs call). Verified in-harness: an NPC reaches
+  floor 6, escapes, and attemptExit() wins with wonType==='borrowed'.
+- [HIGH] Creature effect double-charge — RESOLVED.
+  spill now yields 0 for 'turn-cost'/'snuff' (their own branch applies the
+  cost) and the duplicate `if(eff==='wax-drain') burnWax(2)` was removed.
+  Shades now drain 3 (not 5); spiders cost 2 (not 3); each effect once.
+- [HIGH] Dread never sets survivors' starting disposition — RESOLVED.
+  checkCoLocation() now calls seedDispoForFloor(n.numeric) once per NPC
+  (n.seeded guard) when first co-located on floor 2+, wiring the previously
+  dead function into the Dread→wariness pillar.
+- [HIGH] Encounter resolution does not advance turn/simulation — RESOLVED.
+  resolveCreature() and resolvePuzzle() now call takeTurn('encounter') after
+  applying costs and closing the modal, so NPCs simulate, guttering grace
+  decrements, and the turn counter stays consistent.
+- [HIGH] Encounter modal has no keyboard confirmation — RESOLVED.
+  keydown now handles Space/Enter (confirm first option) and 1–2 (select
+  option) while #modal-encounter is active.
+
+FIXED — MEDIUM (8/9):
+- [MEDIUM] TEMPLATE.test_seed ignored as default seed — RESOLVED.
+  SEED now falls back to TEMPLATE.test_seed (20261010) before Math.random();
+  window.SEED still overrides and ?seed= still wins. Boot determinism
+  re-verified (two boots => identical worldState()).
+- [MEDIUM] NPCs never roam floor-to-floor — RESOLVED (same migration as the
+  borrowed-door fix); floors 4–6 now receive the social layer.
+- [MEDIUM] Escape with a modal open opens Pause underneath — RESOLVED.
+  Escape now checks isModalOpen() first and calls closeOpenModal(); pause
+  toggling only happens with no modal open.
+- [MEDIUM] Lore fragments not readable — RESOLVED. Authored LORE_TEXT scraps;
+  pickup stores readable text and openJournal renders recovered scraps.
+- [MEDIUM] Lore duplicates counted — RESOLVED. pickup() records a per-
+  depth/room key in G.loreSet and only counts/increments a fragment once.
+- [MEDIUM] Live `things` never reflects pickups — RESOLVED. snapshotRooms()
+  now derives `things` from the live `items` array.
+- [MEDIUM] Multiple descending-stairs not linked symmetrically — RESOLVED.
+  descend() records G.descendedFrom[depth]; ascend() returns to that exact
+  stair (falling back to exitSlug/start).
+- [MEDIUM] npcItemSweep removes items with no protection / hoarding no-op —
+  RESOLVED. Sweep refuses to strip a room's last item and never takes
+  'exit-key'; openBorrowedDoor() drops carried items back into the NPC's
+  current room (recoverable).
+
+UNFIXED — MEDIUM (1):
+- [UNFIXED] [MEDIUM] No screenshake / no hit-stop; particles minimal |
+  Reason: the finding's own recommendation is "defer to juice_agent", and
+  Phase 5.5 (juice_agent) runs after this bugfix loop. Adding a camera shake
+  would require offsetting the scene/mask/spill render passes together to
+  avoid layer misalignment — out of scope for a minimal surgical fix here.
+
+FIXED — LOW (4, opportunistic):
+- [LOW] nearMissFlag guard always true — RESOLVED (set G.nearMissFlag after
+  awarding).
+- [LOW] match-destroy clamps to 99 — RESOLVED (MATR.max||6).
+- [LOW] Duplicate seedline assignment — RESOLVED (removed duplicate).
+- [LOW] applySocial uses Math.random() — RESOLVED (uses seeded G.rng).
+
+UNFIXED — LOW (remaining, intentionally out of scope):
+- REQ_THINGS unused; Audio.dreadShift never called; dead #talkBtn CSS;
+  duplicate renderHUD/refreshToggles; Audio.tick unused var; window.social
+  ignores co-location (frozen hook); attemptExit silent below MAX_DEPTH;
+  candle-radius upgrade unreachable; endGame() ignored argument.
+  Reason: style/optional items, no gameplay impact; minimal-change mandate.
+
+========================================================================
+POST-FIX VERIFICATION (dependency-free node harness)
+  - JS syntax: parse OK.
+  - Boot: no exceptions; worldState()/systemState()/move()/social() and
+    pristine hooks all present.
+  - Determinism: two boots of the default seed produce identical
+    worldState() JSON; window.SEED === TEMPLATE.test_seed === 20261010.
+  - Descent: repeated descend works; descend() from a non-stair room is a
+    no-op (depth unchanged).
+  - Borrowed ending: an NPC reaches floor 6, escapes (openBorrowedDoor),
+    and attemptExit() wins with wonType==='borrowed'.
+  - NPC migration: survivors observed advancing floors 2->3->4->5->6.
+========================================================================

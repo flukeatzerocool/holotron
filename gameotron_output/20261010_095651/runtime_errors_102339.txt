@@ -1,0 +1,31 @@
+RUNTIME ERRORS — puppeteer_agent (Holotron fork)
+Target: /home/fluke/Holotron/gameotron_output/20261010_095651/index.html
+Generated: 2026-10-10 10:23:39 (timestamp 102339)
+Engine: playwright-cli 1.x + headless Firefox (Chromium unavailable in env) via local python3 http.server @127.0.0.1:8765
+Seed pinned: window.SEED = TEMPLATE.test_seed = 20261010 (page.addInitScript, no URL seed)
+
+SUMMARY
+  Uncaught page exceptions ............ 0
+  Console errors ...................... 0
+  Failed interaction mechanics ........ 0
+  Viewport-specific issues ............ 0
+
+TIMESTAMPED EVENT LOG
+  [load @1920x1080]  no pageerror, no console error
+  [load @800x600]    no pageerror, no console error
+  [load @375x667]    no pageerror, no console error
+  [load @375x667 real-touch iPhone 8 emulation] no pageerror, no console error
+  [stress: 36 turns, 35 moves, 1 descend, 4 encounter modals resolved, reached Game Over] no pageerror, no console error
+
+NON-GAME WARNING (not a game defect, engine-internal)
+  [WARNING] "Layout was forced before the page was fully loaded..." @ chrome://juggler/content/content/main.js:94
+  Origin: Firefox Juggler harness, not the game. Ignored.
+
+NOTE ON TOOLING
+  Chromium/puppeteer are unavailable in this environment and the repo forbids adding npm/node deps.
+  Playwright-cli (Firefox headless) was used as the documented fallback.
+  Mobile touch on the 375x667 loop was first driven via a synthetic TouchEvent (context lacked hasTouch);
+  it was then re-verified with REAL page.touchscreen.tap on an "iPhone 8" device-emulated session
+  (hasTouch=true) — real touch moved the player and consumed a turn with zero errors.
+
+VERDICT: CLEAN — no runtime errors, no failed mechanics at any tested viewport.

@@ -1,0 +1,72 @@
+{
+  "seed": 20261010,
+  "start": "spire-landing",
+  "rooms": {
+    "spire-landing": {
+      "name": "Spire Landing",
+      "archetype": "spire-entry",
+      "exits": { "north": "long-gallery", "east": "candle-nook" },
+      "things": ["candle"]
+    },
+    "long-gallery": {
+      "name": "Long Gallery",
+      "archetype": "stair-corridor",
+      "exits": { "south": "spire-landing", "north": "broken-stair", "east": "cold-hearth-hall" },
+      "things": []
+    },
+    "broken-stair": {
+      "name": "Broken Stair",
+      "archetype": "stair-corridor",
+      "exits": { "south": "long-gallery", "east": "wainscot-warren", "west": "scribes-alcove" },
+      "things": []
+    },
+    "cold-hearth-hall": {
+      "name": "Cold Hearth Hall",
+      "archetype": "stair-corridor",
+      "exits": { "west": "long-gallery", "north": "shadow-hall", "east": "survivor-camp" },
+      "things": []
+    },
+    "candle-nook": {
+      "name": "Candle Nook",
+      "archetype": "candle-nook",
+      "exits": { "west": "spire-landing", "north": "wax-coffer-room" },
+      "things": ["wax-cake", "matches"]
+    },
+    "wax-coffer-room": {
+      "name": "Wax Coffer Room",
+      "archetype": "candle-nook",
+      "exits": { "south": "candle-nook" },
+      "things": []
+    },
+    "wainscot-warren": {
+      "name": "Wainscot Warren",
+      "archetype": "shadow-hall",
+      "exits": { "west": "broken-stair" },
+      "things": ["lore-bleeding-wall"]
+    },
+    "shadow-hall": {
+      "name": "Shadow Hall",
+      "archetype": "shadow-hall",
+      "exits": { "south": "cold-hearth-hall", "down": "down-stair" },
+      "things": []
+    },
+    "scribes-alcove": {
+      "name": "Scribe's Alcove",
+      "archetype": "scribe-alcove",
+      "exits": { "east": "broken-stair", "south": "down-stair" },
+      "things": ["lore-fragment"]
+    },
+    "survivor-camp": {
+      "name": "Survivor Camp",
+      "archetype": "survivor-camp",
+      "exits": { "west": "cold-hearth-hall" },
+      "things": []
+    },
+    "down-stair": {
+      "name": "Down Stair",
+      "archetype": "descending-stair",
+      "exits": { "up": "shadow-hall", "north": "scribes-alcove" },
+      "things": ["exit-key"]
+    }
+  }
+}

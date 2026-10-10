@@ -1,0 +1,50 @@
+RUNTIME ERRORS — puppeteer_agent (Holotron fork) — FINAL RE-TEST
+Target: /home/fluke/Holotron/gameotron_output/20261010_095651/index.html
+Generated: 2026-10-10 11:09:10 (timestamp 110910)
+Engine: Playwright 1.63.0-alpha (global @playwright/cli bundled module) + headless Firefox.
+  Chromium/Puppeteer unavailable on host (no chromium binary, no npm deps per AGENTS.md);
+  documented Playwright fallback used. Browser dir: ~/.cache/ms-playwright/firefox-1542.
+Server: python3 -m http.server 127.0.0.1:8765 (workdir = run folder).
+Seed: window.SEED pinned to TEMPLATE.test_seed = 20261010 via context.addInitScript, no ?seed=.
+Viewports: 1920x1080 (mouse), 800x600 (mouse), 375x667 (real touch, hasTouch+isMobile).
+
+======================================================================
+CONSOLE ERRORS (timestamped) — none
+======================================================================
+  [11:08:xx] 1920x1080 : 0 console errors, 0 page errors
+  [11:08:xx] 800x600  : 0 console errors, 0 page errors
+  [11:08:xx] 375x667  : 0 console errors, 0 page errors
+  [11:08:xx] instrumented runtime (branches): 0 console errors, 0 page errors
+  [11:08:xx] instrumented runtime (natural playthrough): 0 console errors, 0 page errors
+  [11:08:xx] Phase 2 extraction page: 0 console errors, 0 page errors
+
+======================================================================
+UNCAUGHT EXCEPTIONS — none
+======================================================================
+  No window.onerror / unhandledrejection / pageerror events were emitted on any
+  page load, interaction, screen transition, descent, encounter resolution or win.
+
+======================================================================
+FAILED INTERACTION MECHANICS — none
+======================================================================
+  Every interaction asserted on a real state change, not a screen repaint:
+   - canvas directional tap computed from tile geometry and dispatched as a real
+     mouse click / touchscreen tap: player moved, exit-key auto-collected
+     (#keyVal "no key" -> "KEY HELD"), wax 30 -> 29.
+   - own-tile tap fired the Wait turn (wax -1).
+   - all menu/toggle clicks hit the intended control (screen/toggle changed).
+   - window.move(dir) returned true and consumed exactly one turn.
+   - window.social('steal') raised Dread 0 -> 1 and appended to socialLog.
+  All 51 viewport checks PASS; 8/8 cycle-2 branch checks PASS.
+
+======================================================================
+VIEWPORT-SPECIFIC ISSUES — none
+======================================================================
+  1920x1080 : tile=90, canvas 1920x1080, no clipping, no layout overflow.
+  800x600   : tile=50, canvas 800x600, no clipping, no layout overflow.
+  375x667   : tile=48, canvas 375x667, touch events bound (ontouchstart present),
+              no clipping, no layout overflow, touch targets >= 48px.
+
+NOTE: no dependency (puppeteer/chromium) could be installed; repo rule AGENTS.md
+("No npm/node/bun") honoured. The check ran under the sanctioned playwright-cli
+fallback, which is what produced the clean result above.

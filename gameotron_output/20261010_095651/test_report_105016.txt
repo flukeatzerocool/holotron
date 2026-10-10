@@ -1,0 +1,139 @@
+TEST REPORT — puppeteer_agent (Holotron fork) — RE-TEST of FIXED build
+Target: /home/fluke/Holotron/gameotron_output/20261010_095651/index.html
+Generated: 2026-10-10 10:50:16 (timestamp 105016)
+Engine: Playwright (global @playwright/cli bundled module) + headless Firefox 155.0.
+  Chromium/puppeteer unavailable; repo forbids npm deps -> documented Playwright fallback.
+Server: python3 -m http.server 127.0.0.1:8765 (workdir = run folder).
+Seed: window.SEED = TEMPLATE.test_seed = 20261010 pinned via context.addInitScript, NO url seed.
+testcases.txt: not present in run folder.
+Real events: page.mouse.click (desktop) / page.touchscreen.tap in a hasTouch context (mobile).
+
+======================================================================
+PER-VIEWPORT RESULTS
+======================================================================
+
+--- Viewport 1: 1920x1080 (desktop, MOUSE) — tile = max(48, floor(1080/12)) = 90 ---
+  A.  page loaded, title screen active ..................... PASS
+  B.  seed pinned to 20261010 .............................. PASS
+  B2. hooks present (worldState/systemState/move/social) .... PASS
+  C.  How-to-Play button HIT -> scr-howto ................. PASS (real click)
+  D.  How-to-Play Back HIT -> scr-title ................... PASS
+  E.  Settings button HIT -> scr-settings ................. PASS
+  F.  Music toggle HIT changes label (On->Off) ............ PASS
+  G.  Settings Back HIT -> scr-title ...................... PASS
+  H.  Start button HIT -> gameplay/HUD active ............. PASS
+  I.  canvas fills viewport (1920x1080) ................... PASS
+  J.  canvas directional tap MOVED player ................. PASS (real mouse click @ center+(0,+90))
+       -> entered d1-descending-stair-2: exit-key picked ("no key"->"KEY HELD"), wax 30->29
+  K.  tap own tile fires Wait turn (wax -1) ............... PASS (29->28)
+  L.  Pause button HIT -> scr-pause ....................... PASS
+  M.  Resume button HIT -> HUD ............................ PASS
+  N.  window.move("north") hook returns true .............. PASS
+  O.  window.social drives dread (cold steal 0->1) ........ PASS
+  P.  descend() blocked from non-stair room (Q + move"down") PASS (spire-entry, depth 1->1)
+  RESULT: 17/17 checks | page errors 0 | console errors 0
+
+--- Viewport 2: 800x600 (desktop-small, MOUSE) — tile = 50 ---
+  A..O identical suite .................................... ALL PASS
+  J.  canvas directional tap MOVED player ................. PASS (real mouse; exit-key picked, wax 30->29)
+  RESULT: 16/16 checks | page errors 0 | console errors 0
+
+--- Viewport 3: 375x667 (mobile, REAL TOUCH, hasTouch=true, isMobile=true) — tile = 48 ---
+  A..O identical suite .................................... ALL PASS
+  J.  canvas directional tap MOVED player ................. PASS (real touchscreen.tap; exit-key picked, wax 30->29)
+  T.  real-touch context enabled (ontouchstart=true) ...... PASS
+  RESULT: 17/17 checks | page errors 0 | console errors 0
+
+--- Viewport 4: test_seed DEFAULT (no window.SEED pinned) ---
+  window.SEED == TEMPLATE.test_seed == 20261010 .......... PASS (default-seed fix honoured)
+  two boots produce identical worldState() JSON .......... PASS (deterministic, 2306 bytes)
+  page errors 0 | console errors 0
+
+======================================================================
+MECHANIC VERIFICATION (not just screen changes)
+======================================================================
+  * Canvas hit detection: tap coordinates COMPUTED per viewport (center + dir*tile) and dispatched as
+    REAL mouse events (desktop) / REAL touch (hasTouch context). A successful move south entered
+    d1-descending-stair-2, set keyVal "no key" -> "KEY HELD", emptied that room's things ["exit-key"],
+    and consumed exactly 1 wax (30->29) — proving canvasPoint -> tileAtPoint -> roomAtCoord ->
+    tryMove -> enterRoom -> pickup -> takeTurn fired. Repeated identically at 1920x1080, 800x600,
+    375x667 (touch).
+  * Wait-turn: tapping the player's own centre tile fired takeTurn('wait') (wax -1), distinct from a
+    no-op tap on empty space.
+  * Button hit detection: real clicks on #btn-howto / #btn-howto-back / #btn-title-settings / #set-music
+    / #btn-settings-back / #btn-start / #btn-pause / #btn-resume all toggled the expected screen/toggle.
+  * Hooks: window.move returned true on a valid exit and consumed a turn; window.social('steal') moved
+    dread 0->1 (correct cold sign).
+
+======================================================================
+CYCLE-1 FIX RE-VERIFICATION AT RUNTIME (the six requested items)
+======================================================================
+  1. "descending only from a stair room" — VERIFIED.
+     At the floor-1 spire-entry (archetype 'spire-entry', NOT a stair): window.move('down') returned
+     false and depth stayed 1; pressing the 'q' key likewise left depth at 1. Across the deep journey all
+     5 descents occurred only from 'descending-stair' rooms. Sequence-break closed.
+
+  2. "borrowed-door win reachable" — NOT REACHABLE IN NORMAL PLAY (unresolved; see FINDING below).
+     The door-OPENING half works and was observed live: 3 toasts fired on floor 6
+     ("ILONA/PETR/SISTER MARTA LEAVES THE DOOR AJAR (1)") after NPCs migrated to MAX_DEPTH. However the
+     borrowed ENDING is shadowed: the player ALWAYS holds the exit-key by floor 6 (pickup auto-collects
+     'exit-key' on entering any descending-stair, and descent requires being in one), and attemptExit()
+     checks `if(G.key){ win('full'); return; }` BEFORE the borrowed branch. Observed end: keyVal
+     "KEY HELD" at floor 6, winTitle "You escaped on your own light." (wonType full).
+     Supplementary (non-browser) execution of the REAL game JS confirms: normal play G.key===true at
+     depth 6; forced state key=false + borrowedOpen → wonType "borrowed"; forced key=true → "full".
+     => the borrowed branch CODE is intact, but its precondition (no key) is unreachable in play.
+
+  3. "creature costs charged once" — VERIFIED at runtime.
+     Deep journey resolved 16 encounters; per-encounter wax deltas each equal the declared effect cost
+     PLUS exactly one turn (takeTurn('encounter')). Key evidence (single-charge, not doubled):
+       shades (wax-drain)  : -4 wax  (= 3 drain + 1 turn)   [double-charge bug would have been -5]
+       spiders (turn-cost) : -3 wax  (= 2 cost  + 1 turn)   [spill now 0, cost applied once]
+       wolves (run-spill)  : -3 wax  (= 2 spill + 1 turn)
+       bats   (wax-spill)  : -3 wax  (= 2 spill + 1 turn)
+       rats   (match-destroy): -2 wax (= 1 spill + 1 turn, +1 match destroyed, clamped to MATR.max)
+     No effect was applied twice.
+
+  4. "encounters advance the turn" — VERIFIED at runtime.
+     Every one of the 16 resolved encounters (12 creature, 4 puzzle) consumed the effect cost + 1 wax
+     (the takeTurn) — e.g. locked-door/collapsing-floor/dark-leap (wax-cost) -3, light-trap (snuff) -1.
+     Present in the FIXED build; the pre-fix behaviour (effect-only, no takeTurn) would have shown
+     delta = cost with no extra turn.
+
+  5. "test_seed default" — VERIFIED.
+     With no window.SEED and no ?seed=, window.SEED === TEMPLATE.test_seed === 20261010, and two boots
+     produced byte-identical worldState() JSON.
+
+  6. Cycle-1 also claimed NPC tower-wide migration (borrowed-door prerequisite) — VERIFIED.
+     npcMaxFloor reached 6 in the journey; NPCs advanced from floors 2-3 down to MAX_DEPTH.
+
+======================================================================
+FINDING (design/logic — not a runtime crash)
+======================================================================
+  [HIGH] Borrowed-door ENDING is unreachable in normal play (cycle-1 fix #2 incomplete).
+    Location: index.html:1234-1238 (attemptExit) + 1168 (only-ever-true G.key) + 1195-1224 (descent).
+    attemptExit checks `G.key` before `G.borrowedOpen`. The exit-key is auto-collected on entering any
+    descending-stair (pickup at 1168), and descent/move('down')/Q all require standing in that stair, so
+    a player at MAX_DEPTH always has G.key===true and always receives the FULL ending first. The
+    borrowed ending therefore cannot be reached in play (GDD §2.9 lists it as a first-class ending).
+    Suggested fix (for bugfix_agent, not applied here): check the borrowed branch before the key branch,
+    or make the key consumption/choice explicit at the door, or allow reaching MAX_DEPTH without auto-
+    collecting the key.
+  Impact: the borrowed/lesser ending and its score row (computeScore wonType 'borrowed') are dead content
+  in the shipped build. The door-opening mechanic itself (NPC migration + openBorrowedDoor) works.
+
+======================================================================
+OVERALL
+======================================================================
+  3/3 required viewports tested (mouse x2, real touch x1) + default-seed + deep journey + Phase 2 context.
+  50/50 viewport checks passed. Runtime errors: 0. Failed interaction mechanics: 0. Viewport issues: 0.
+  Cycle-1 fixes: 5/6 fully verified at runtime; 1 (borrowed-door win) partially verified — the opening
+  is live but the ending is unreachable (HIGH finding above).
+
+======================================================================
+EXTENDED GAMEPLAY JOURNEY (runtime-error hunt, seed 20261010)
+======================================================================
+  119 iterations | 80 moves | 5 descents | 16 encounters resolved | floors reached [1..6]
+  Encounter ids observed: locked-door x2, bats x2, rats x2, collapsing-floor x2, spiders x2,
+    light-trap, wolves, dark-leap x2, shades. Outcome: full-light victory at floor 6.
+  Page errors: 0 | Console errors: 0. Movement correctly blocks while a modal is open.

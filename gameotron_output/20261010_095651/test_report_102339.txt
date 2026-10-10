@@ -1,0 +1,84 @@
+TEST REPORT — puppeteer_agent (Holotron fork)
+Target: /home/fluke/Holotron/gameotron_output/20261010_095651/index.html
+Generated: 2026-10-10 10:23:39 (timestamp 102339)
+Engine: playwright-cli + headless Firefox (Chromium unavailable; repo forbids npm deps)
+Server: python3 -m http.server 127.0.0.1:8765 (working dir = run folder)
+Seed: window.SEED = TEMPLATE.test_seed = 20261010 pinned via page.addInitScript (NO url seed) — verified window.SEED===20261010 at every load.
+testcases.txt: not present in run folder.
+
+======================================================================
+PER-VIEWPORT RESULTS
+======================================================================
+
+--- Viewport 1: 1920x1080 (desktop, mouse events) — tile=90 ---
+  A. page loaded, title screen active ................ PASS
+  B. seed pinned to 20261010 ........................ PASS
+  B2. hooks present (worldState/systemState/move/social) PASS
+  C. How-to-Play button HIT -> scr-howto ............ PASS (real page.click, element-center coords)
+  D. How-to-Play Back HIT -> scr-title .............. PASS
+  E. Settings button HIT -> scr-settings ............ PASS
+  F. Music toggle HIT changes label ................. PASS (On -> Off)
+  G. Start button HIT -> gameplay/HUD active ........ PASS
+  H. canvas fills viewport .......................... PASS (1920x1080)
+  I. canvas directional tap MOVED player ............ PASS (mousedown@center+(0,+tile) -> exit-key picked up: "KEY HELD")
+  J. entering exit room shows Descend button ........ PASS
+  K. turn consumed on move (wax 30->29) ............. PASS
+  L. tap own tile fires Wait turn (wax 29->28) ...... PASS
+  M. Pause button HIT -> scr-pause .................. PASS
+  N. Resume button HIT -> HUD active ................ PASS
+  O. window.move("north") hook returns true ......... PASS
+  P. window.social drives dread (0->1 cold->0 warm) . PASS
+  RESULT: 17/17 checks passed | page errors 0 | console errors 0
+
+--- Viewport 2: 800x600 (desktop-small, mouse events) — tile=50 ---
+  A..P (identical suite) ............................ ALL PASS
+  I. canvas directional tap MOVED player ............ PASS (exit-key picked, wax 30->29)
+  RESULT: 17/17 checks passed | page errors 0 | console errors 0
+
+--- Viewport 3: 375x667 (mobile, touch events) — tile=48 ---
+  A..P (identical suite) ............................ ALL PASS
+  I. canvas directional tap MOVED player ............ PASS (synthetic touchstart first; then REAL touchscreen.tap re-verified separately)
+  RESULT: 17/17 checks passed | page errors 0 | console errors 0
+
+--- Viewport 3b: 375x667 REAL TOUCH (device "iPhone 8", hasTouch=true) ---
+  mobile viewport size 375x667 ...................... PASS
+  touch enabled in context .......................... PASS (ontouchstart / maxTouchPoints)
+  seed pinned ....................................... PASS
+  start -> HUD ...................................... PASS
+  real touchscreen.tap MOVED player ................. PASS (key picked up)
+  wax consumed by touch turn (30->29) ............... PASS
+  RESULT: 6/6 checks passed | page errors 0 | console errors 0
+
+======================================================================
+INTERACTION-MECHANIC VERIFICATION (not just screen changes)
+======================================================================
+  * Canvas hit detection: click/touch coordinates COMPUTED for each viewport
+    (center = innerW/2, innerH/2; neighbour = center + dir*tile, tile=max(48,floor(min(w,h)/12)))
+    and dispatched as real mouse events (desktop) / real touch (iPhone 8) — a successful
+    move to the south exit room set keyVal="KEY HELD", revealed #btn-descend, and consumed
+    exactly 1 wax (30->29).  This proves canvasPoint -> tileAtPoint -> tryMove -> takeTurn fired.
+  * Wait-turn: tapping the player's own center tile fired takeTurn('wait') (wax -1), distinct
+    from a no-op tap on empty canvas.
+  * Button hit detection: real playwright clicks on #btn-howto/#btn-howto-back/#btn-title-
+    settings/#set-music/#btn-start/#btn-pause/#btn-resume/#btn-over-retry each toggled the
+    expected screen/toggle.
+
+======================================================================
+EXTENDED GAMEPLAY STRESS JOURNEY (runtime-error hunt)
+======================================================================
+  Script: exact-graph BFS traversal (position tracked from worldState exit graph), seed 20261010.
+  Turns: 36 | Moves: 35 | Descends: 1 | Encounter modals fired+resolved: 4
+  Floors reached: [1,2] | Floor 1: all 12 rooms visited | Floor 2: 3 rooms visited
+  Outcome: wax depleted -> Game Over (scr-over) reached and rendered.
+  Page errors: 0 | Console errors: 0
+  Post-GameOver: #btn-over-retry -> HUD active + wax reset to 30 (PASS);
+                 #btn-pause -> scr-pause (PASS); #btn-pause-title -> scr-title (PASS).
+  Observation: movement correctly blocks while an encounter/social modal is open (by design);
+  once the modal is resolved, movement resumes normally.
+
+======================================================================
+OVERALL
+======================================================================
+  3/3 required viewports tested + 1 real-touch device session.
+  51/51 viewport checks passed; stress journey clean; post-game-over UI clean.
+  Runtime errors: 0. Failed mechanics: 0. Viewport-specific issues: 0.
