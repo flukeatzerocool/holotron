@@ -62,12 +62,38 @@ Turn-based, grid-based, touch-first.
 | **Key** | Opens the dungeon exit — the win condition. |
 | **Candle radius** | Current reach (a function of remaining wax / candles found). Upgradeable. |
 | **Dread** | A single tower-wide heat dial, 0 (Calm) → 8 (Hunted): how much the dark and the survivors have marked your cruelty. Cold acts raise it, warm acts lower it. It reads as weather and tightens Orlok's search — it does not track individual deeds. |
+| **Lore** | Found fragments. Non-survival: it never extends the candle. Wave 1, a readable scrap and score beat; wave 2, the trade good for disposition / information / safe passage — never for light, bounded by the per-NPC disposition cap. |
 
 **Dread** is the social counterweight to wax. Cold acts — theft, threats, exploitation —
 buy light and tempo but raise dread; warm acts — sharing light, honoring a bargain,
 allying — bring it back down. Dread sits as shared weather over the whole tower: at
 higher tiers, strangers are warier and Orlok closes faster (§9). It never hard-locks the
 player. (Concrete numbers live in the GDD.)
+
+### 5.1 Lore (the tradeable fragment)
+
+A lore fragment is a discrete found object — a torn page, an inscription, a scratched warning.
+Unlike wax, matches, and the key, it is **not survival**: it never extends the candle. Its value
+is knowledge and standing, not light.
+
+- **Discovery & reading.** Fragments are collected automatically on entering a room whose
+  archetype carries one, and read in a free, out-of-turn journal. Reading never costs a turn —
+  the only cost of lore is the exploration already paid to find it.
+- **Wave 1 — flavor & score.** Each fragment is a readable scrap and a collection beat. The
+  tower's lawless jumble ("anything goes") makes fragments contradictory pieces of its history,
+  one voice per region.
+- **Wave 2 — the social key.** The natural commodity for **Bargain** and **Trade**. Knowledge is
+  non-rival: offering a fragment never consumes it and never removes its journal entry — the same
+  knowledge can be offered to any survivor.
+- **What it buys — and doesn't.** Disposition, information (a hint that saves exploration = saved
+  wax), or safe passage. **Never wax or matches.** Value is bounded by the per-NPC disposition cap
+  and the finite info/passage rewards — the cap is the sink, so no fragment can be farmed for light.
+- **Duplicates.** A fragment is unique per archetype/floor; the journal records presence, not counts.
+- **Falsifiability (pre-registered, hand-counted — no telemetry).** *Wave 1:* if no tester reopens
+  the journal unprompted, or any tester avoids a lore room, the flavor layer fails → cut or
+  mechanize it. *Wave 2:* if, in runs where the player holds ≥2 fragments and meets ≥1 NPC, no
+  tester makes a lore trade unprompted, "tradeable" is fiction → demote to flavor. *Trap check:*
+  compare the wax-out rate of collectors vs. avoiders.
 
 ## 6. Scene types
 
@@ -110,6 +136,9 @@ Core actions, warm → cold:
 | **Trade** | 0 | ± even swap | 0 |
 | **Steal** | −2 | ++ (wax / matches / lantern) | +1 |
 | **Threaten** | −2 | + (extracted) | +1 |
+
+Lore (§5.1) is the commodity most often exchanged in **Bargain** and **Trade**; it never buys
+wax or matches.
 
 The balance: **warmth buys light later; cruelty buys light now.** A cold run is richer
 in light immediately but reaches wax-out sooner, because dread makes Orlok close faster.
@@ -211,6 +240,8 @@ matches, key, creatures, NPCs). It emits `world_template.json` + `world_template
   C7). Rule Breaker's 1:1 graph check remains the sensitivity control.
 - Holonovel's `manage_world(action: generate)` is **not** used: it is ruleset-table-driven
   and content-absent ruleset-free (REQ-431).
+- A lore fragment is authored as a readable **thing** (`kind:"lore"`, `readable:true`,
+  `read_text`); `read_text` is data rendered as text, **never** HTML.
 
 ## 15. Must-haves / must-nots
 
@@ -221,6 +252,8 @@ matches, key, creatures, NPCs). It emits `world_template.json` + `world_template
 - **Staged delivery:** ship the floor-1 core first (candle, wax/matches, key, exit, seeded
   floors, one creature type) as wave 1; social + Dread land as wave 2 (floor 2–3). This keeps
   the mandatory game shippable even if wave 2 is cut at T-6h.
+- **Lore:** wave 1 ships a readable/score fragment; wave 2 makes it the social key
+  (disposition / information / safe passage — never wax or matches).
 
 **Must not:**
 - No traditional fight-the-monster battle system.

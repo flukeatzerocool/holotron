@@ -3,6 +3,19 @@
 All notable changes to Holotron are documented here.
 Format: date-stamped sections, bulleted entries.
 
+## 2026-10-10 — Torre brief: the lore item (tradeable fragment)
+
+- `TORRE_NOSFERATU.md` now defines **lore** as a collectible item: a discrete fragment that is
+  non-survival (it never extends the candle), collected automatically on entering a room, and
+  read in a free out-of-turn journal. Wave 1 it is flavor + score; wave 2 it becomes a reusable
+  social key traded for disposition, information, or safe passage — **never wax or matches** —
+  bounded by the per-NPC disposition cap (§5.1, plus §5, §6.3, §14, §15).
+- Recorded the item's mutable contract: authored as a readable **thing** (`kind:"lore"`,
+  `read_text` rendered as text, never HTML).
+- Added a pre-registered, hand-counted falsifiability metric for both the flavor and trade layers
+  (a single-file jam game has no telemetry, so thresholds are binary behavioral triggers, not rates).
+- Added the lore grill-me stress-test and open-items research reports under `docs/grill-me/`.
+
 ## 2026-10-10 — C6 archetype role + count validation
 
 - `scripts/check_template.mjs` now enforces each generated room's archetype: every room's `archetype` must name a declared archetype; the count of rooms per archetype must fall within the archetype's `count` bounds (unbounded archetypes skipped); and the `start` room's archetype must be the `role:entry` archetype. All are hard (`spatial`). Scope is **unexercised** (not failed) when no room declares an `archetype`, preserving the legacy controls' exit codes.
