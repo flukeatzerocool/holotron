@@ -57,7 +57,7 @@
         "required": ["id", "kind"],
         "properties": {
           "id": { "type": "string" },
-          "kind": { "enum": ["npc", "creature", "puzzle"] },
+          "kind": { "enum": ["npc", "creature", "puzzle", "hazard"] },
           "floor": { "type": "integer" },
           "reachable": { "type": "boolean" }
         }
@@ -147,7 +147,7 @@
         "required": ["id", "kind"],
         "properties": {
           "id": { "type": "string" },
-          "kind": { "enum": ["creature", "puzzle", "npc"] },
+          "kind": { "enum": ["creature", "puzzle", "npc", "hazard"] },
           "threat": { "type": "integer" },
           "effect": { "type": "string" },
           "floor": { "type": "integer" }

@@ -61,7 +61,7 @@ Turn-based, grid-based, touch-first.
 | Resource | Role |
 |---|---|
 | **Wax** | The candle's fuel. Burns per turn and per costly action. Hitting zero → guttering dark. |
-| **Matches** | Re-light a snuffed candle. A snuff is recoverable; running out of wax is not. |
+| **Matches** | Re-light a snuffed candle (from a creature or a hazard). Double duty: snuff-recovery and hazard crossing. A snuff is recoverable **only while you hold a match**; with none, you enter the guttering-dark grace (§8). Running out of wax is likewise terminal. |
 | **Key** | Opens the dungeon exit — the win condition. |
 | **Candle radius** | Current reach (a function of remaining wax / candles found). Upgradeable. |
 | **Dread** | A single tower-wide heat dial, 0 (Calm) → 8 (Hunted): how much the dark and the survivors have marked your cruelty. Cold acts raise it, warm acts lower it. It reads as weather and tightens Orlok's search — it does not track individual deeds. |
@@ -154,27 +154,84 @@ The balance: **warmth buys light later; cruelty buys light now.** A cold run is 
 in light immediately but reaches wax-out sooner, because Dread makes Orlok close faster.
 Exact numbers live in the GDD.
 
-### 6.4 Puzzles / traps / simple platforming
-Thematic obstacles kept deliberately simple to preserve the game's calm, decision-driven
-pace. These are **turn-and-light problems, not reflex tests** — a wrong answer costs wax,
-never a life.
+### 6.4 Hazards, puzzles & movement
+Three classes, kept deliberately simple to preserve the game's calm, decision-driven pace. All
+are **turn-and-light problems, not reflex tests**: a wrong answer costs light, never a life — no
+obstacle kills outright; at worst it enters the **guttering-dark grace**, the tower's one
+terminal path (§8).
 
-- **Locked door / lever.** A rune or lever elsewhere on the floor opens it; the puzzle is
-  routing (reach the lever before the light dies), not dexterity.
-- **Collapsing floor.** Tiles that give way after a step; the safe path is usually the
-  longer one, so it trades turns for safety.
-- **Light-sensitive trap.** A glyph that fires or seals while lit — pass by routing around
-  it, or spend a match to snuff the candle and cross blind.
-- **Simple platforming.** A short light-and-dark hop across a gap or up a broken stair: the
-  next foothold is only *visible* inside the radius, so the jump is a reconnaissance
+#### 6.4.1 Hazards (the trap system)
+
+A **hazard** is a static danger you choose how to pay for. It is not a creature (no chase) and
+not a puzzle (no lock-and-key): it is a tax with two doors, and reading which door is cheaper is
+the decision. Hazards begin **below the Spire**: the first floor carries no hazards and no
+social play — only wax, exploration, and at most the first teaching creature (bats, §7).
+
+- **Cost grammar.** **Avoid → costs wax**: the safe route exists by construction but is longer,
+  so dodging burns turns, and turns are wax. **Spring → snuffs the candle + costs a match** to
+  re-light. You take no hit-point damage; you trade tempo against fuel.
+- **States.** `armed → sprung`, and the change **persists** (§6.5) — a sprung hazard is a
+  permanent edit to the floor, never fresh on return.
+- **Telegraph.** Every hazard is **readable before you commit** — an intrinsic cue inside the
+  **spill ring** (a hairline crack, a glyph's faint pulse, settling dust), never a hidden gotcha.
+  It reads with SFX off.
+- **Blind crossing.** Where the cheap door is to **snuff and cross dark** (the light-glyph),
+  snuffing pre-scouts a **memory shadow**: the safe crossing tiles stay faintly visible for a few
+  turns, so movement stays **tap-adjacent** — no new verb, no tap-into-black.
+- **No match, no re-light.** A snuff is recoverable **only if you hold a match**; a snuff with
+  **zero matches** enters the same **guttering-dark grace** as wax-out (§8) — the tower's one
+  terminal path, never an instant death. This is the only death door a hazard opens.
+- **Placement.** A hazard is **never on a cut-edge** of the floor graph, by construction: every
+  hazard has a bypass, so none can strand you from the exit or a refill. Phase 2 re-confirms
+  reachability on the pinned seed.
+- **The survivors trip them too.** NPCs roam and can **spring hazards themselves**, and the
+  change **persists** — a survivor may open or close a route under you ("the tower changes").
+  This is **flag-gated** (§15); because hazards sit off the cut-edge (above), even a sprung hazard
+  can only lengthen a route, never sever it.
+- **Falsifiability (pre-registered, hand-counted — no telemetry).** If either door ever becomes
+  **strictly dominant** — testers always avoid, or always spring — the choice is fake, not the
+  system: cut the hazard or retune the two costs so the branch flips with wax/match state.
+
+#### 6.4.2 Puzzles
+
+Routing problems with a lock and a key of their own — **route/solve, never snuff**.
+
+- **Locked door / lever.** A rune or lever elsewhere on the floor opens it; the puzzle is routing
+  (reach the lever before the light dies), not dexterity. Reachability is guaranteed, and a
+  **lore/information** fragment (§5.1) can hint the lever's quarter — knowledge that saves wax.
+- Distinct from the exit **Key**: the lever gates a room; the key gates the tower.
+
+#### 6.4.3 Movement
+
+- **Simple platforming.** A short light-and-dark hop across a gap or up a broken stair: the next
+  foothold is only *visible* inside the radius, so the jump is a **scout/commit** reconnaissance
   problem (scout the landing before you commit), never a twitch sequence. Grid-adjacent,
   one-tile moves.
+
+#### 6.4.4 Hazard roster (data-driven)
+
+Five hazards, each an `encounter_roster` entry (`threat`/`effect`/`floor`) placed in a room whose
+archetype carries `role:"hazard"` (§14). **One new hazard is introduced per floor**, mirroring the
+creature rule (§7) and sharing that floor's single escalation budget (§9).
+
+| Hazard | Trigger | Avoid (wax) | Spring (snuff + match) | Telegraph | First appears |
+|---|---|---|---|---|---|
+| **Collapsing floor** | step on a compromised tile | the longer safe path | the tile gives way — snuff | hairline crack, settling dust | below Spire / early |
+| **Light-sensitive glyph** | enter while lit | route around the ward | snuff and cross on the memory shadow | faint glyph pulse | early–mid |
+| **Pressure plate** | weight on the plate | step over the sequence | the plate trips a snuff-ward | worn plate, scuffed stone | mid |
+| **Cursed ward** | cross its threshold lit | the warded hall's detour | snuff to pass unseen | cold glow at the doorframe | mid–late |
+| **Crumbling stair** | a broken step mid-descent | take the intact flight | the stair fails — snuff | loose grit, cracked tread | late |
+
+*(A "crumbling stair" is a hazard on a fixed tile; it is not the movement hop of §6.4.3. A "cursed
+ward" is distinguished from the light-glyph by its telegraph — a cold doorframe glow, not an
+in-room pulse.)*
 
 ### 6.5 The tower (floors and the descent)
 
 The tower **descends**: you wake at the **Spire** (the top floor) and work **down** to the
 **ground floor**, where the front door is the only exit. "Floor 1" for pacing purposes is
-the **first floor played** — the Spire — and it is wax and exploration only (§9).
+the **first floor played** — the Spire — and it is a gentle tutorial: wax, exploration, and at
+most a first teaching creature, with no social, Dread, or hazards (§9).
 
 - **Generated, not authored.** Floors are generated at runtime from a static **tower
   template** (room archetypes, the connectivity rules between them, and the thing/encounter
@@ -225,9 +282,11 @@ variable per floor, §9), then reuses earlier ones at higher density.
   door is a **lesser ending** ("you slipped out in another's wake") with a **reduced
   score**, and while it stands open the **Dread rises and creatures gather near the exit**.
   The key remains the reliable, self-reliant path.
-- **Snuff vs. guttering dark:** a **snuff** (a creature snuffs the candle) is darkness you
-  recover from — you are not dead until the wax is gone. **Guttering dark** — zero wax — is
-  the terminal state, and the two must read as visibly and audibly different.
+- **Snuff vs. guttering dark:** a **snuff** (a creature or hazard snuffs the candle) is darkness
+  you recover from **provided you hold a match** — re-light and continue. With **no match**, a
+  snuff drops you into the **guttering-dark grace** below, the same terminal path as wax-out.
+  **Guttering dark** — zero wax — is likewise the terminal state, and the two (snuff vs. guttering)
+  must read as visibly and audibly different.
 - **Fail-forward (guttering dark):** at zero wax the flame gutters for a few turns —
   radius shrinks, Orlok closes in — and you may still reach a match or the exit. Only
   when that final grace is spent does Orlok take you. **Orlok is triggered only by
@@ -241,10 +300,14 @@ variable per floor, §9), then reuses earlier ones at higher density.
   well **inside 30 seconds**.
 - **First success < 30s:** the opening beat teaches "find wax, keep the flame" and
   delivers an immediately readable win (a saved candle / first wax found).
-- **Near-Miss Bonus:** reward grazing a creature or escaping with near-zero wax.
+- **Near-Miss Bonus:** reward grazing a creature, clearing a hazard as it gives way, or escaping
+  with near-zero wax.
 - **Zone Bonus:** reward first entry to each new floor/region.
-- Escalate **one** variable per floor (creature density, wax drain, dark rooms, NPC
-  pressure, trap frequency) — never two new systems at once.
+- Escalate **one** variable per floor (creature density, **hazard density**, wax drain,
+  **dark rooms**, NPC pressure) — never two new systems at once. A floor's **creature + hazard
+  escalation shares a single budget**, and it introduces **at most one new hazard**, mirroring
+  the one-new-creature rule (§7). **Dark rooms** are an *environment modifier* (the radius itself
+  shrinks), not a hazard.
 
 **Dread tiers (the social escalation dial).** Dread is the one pressure that escalates
 with *play* rather than floor. It reads as weather over the tower:
@@ -257,8 +320,9 @@ with *play* rather than floor. It reads as weather over the tower:
 | 6–7 | Hunted | No new Ally without atonement first; Orlok's reach widens. |
 | 8 | Hunted (full) | Every NPC reads Hostile until you atone; Orlok locks on. |
 
-Social play and Dread **arrive on the second floor down, never on the Spire** — the first
-floor stays wax and exploration only, so the beginner rule and the <30s first success hold.
+Social play, Dread, and hazards **arrive on the second floor down, never on the Spire** — the
+first floor is a gentle wax-and-exploration tutorial (at most a single teaching creature, bats,
+§7), so the beginner rule and the <30s first success hold.
 Warm acts stay affordable at every Dread tier, so atonement is never wax-unaffordable and a
 cold-built run can always claw back through warm gestures: Dread never hard-locks the player.
 
@@ -283,29 +347,75 @@ Plus in-scene overlays for combat and social encounters (not counted as screens)
 
 **Signature.** The light *is* the artwork. There is no lit room behind a mask — the world
 is a **radial candle mask over absolute black**, and the reveal itself is the spectacle.
-Compose every frame around the flame, never around the room.
+Compose every frame around the flame, never around the room. Build the canvas in three
+passes, in order — **(1) void** (black field, at most a breathing grain), **(2) world**
+(stone, props, creatures, survivors drawn full-brightness inside the radius), **(3) mask**
+(a radial gradient applied `multiply` that kills everything outside the flame and softens
+the edge). Depth comes from the mask and the spill ring, never from a background fill.
 
-- **Palette (≤3 hues on screen).** Absolute black (`#000`) void; a candle amber→gold core
-  with a warm falloff; cold desaturated grey-blue stone at the radius edge; **arterial red
-  reserved for Orlok, blood, and danger only**. Never let the void drift to grey — the
-  known/unknown border must read instantly.
+- **Palette (≤3 hues on screen).** Keep the known/unknown border instant; never let the
+  void drift to grey.
+  - **Void** `#000000` → `#0a0708` — absolute black; a whisper of warm only right at the
+    flame, never a grey field.
+  - **Candle** `#fff3c4` core → `#ffb347` amber → `#c8862a` gold — the main lit pass and
+    warm falloff, plus sconce metal and wax.
+  - **Stone** `#2e3440` → `#6b7480` — desaturated grey-blue at the radius edge; cold and
+    bloodless.
+  - **Arterial red** `#8f1d1d` / `#d3382e` — **Orlok, blood, and danger only.** Never
+    decoration.
+  - **One hue per job:** amber = safety/light, grey-blue = inert cold world, red = threat.
+    If a colour is ambiguous it is wrong. Dread shifts the *stone* and *void* values, never
+    the flame (§9 tiers).
 - **Light & falloff.** Radial gradient mask with a soft edge, plus a second, dimmer
   **spill ring** just outside the main radius so near-things resolve before they pop in.
   Radius is tied to remaining wax, so the frame literally closes in as the candle burns.
-- **Flame as a character.** Irregular low-amplitude flicker at rest; **guttering** as a
-  slow wobble near zero wax; a **snuff** is a hard, instant blackout — visually distinct
-  from the slow guttering dark (§8). Flame leans toward movement and toward the room's
-  neighbour.
-- **Gothic vocabulary.** Arches, iron sconces, caged stairwells, warped Expressionist
-  angles, ancestral portraits whose eyes track the flame. Borrow the 1922 *Nosferatu*
-  look — stark geometric shadows, low-key lighting, long clawed silhouettes. In a small
-  radius, **silhouette reads better than detail**.
-- **Readability (375 px is a hard floor).** Every threat must be identifiable from its
-  silhouette at the radius edge; tiles ≥48 px; never rely on fine detail to signal danger.
-- **Weather legibility.** Wax and Dread read as *atmosphere*: the darkness's colour and
-  saturation shift with Dread tiers; near-miss and damage flash red on the mask edge.
-- **Motion (reserved).** Turn-based, so movement is punctuation: a 1-tile camera glide, a
-  slow "breathing" pulse on the void, and nothing that competes with the flame.
+  Hold a very low near-black floor (`#0a0708`) inside the outer edge — enough to hint a
+  silhouette, never enough to light a room.
+- **Flame as a character.** Draw the flame *above* the mask as an additive core + halo so
+  it stays the brightest object on screen. Irregular low-amplitude flicker at rest (two or
+  three detuned sines, a few px of lean); **guttering** is a slow, wide wobble near zero
+  wax; a **snuff** is a hard, instant blackout — a cut to pure void, visibly distinct from
+  the slow guttering dark (§8). The flame leans toward movement, toward the room's open
+  neighbour, and *away* from Orlok.
+- **Gothic vocabulary (and the thing roster).** Arches, iron sconces, caged stairwells,
+  warped Expressionist angles, ancestral portraits whose eyes track the flame. Borrow the
+  1922 *Nosferatu* look — stark geometric shadows, low-key lighting, long clawed
+  silhouettes. Draw the world model's things in-idiom: wax a stubby guttering candle,
+  matches a small bundle, the key a heavy iron bow, lore a torn page or scratched stone;
+  each creature its own contour (bat cluster, rat run, webbing, wolf, drifting shade, and a
+  light-eater that is *absence* with two faint points). In a small radius **silhouette
+  reads better than detail** — give every threat a distinct outline first, detail second.
+- **Depth inside a tiny radius.** Fake three dimensions with the mask, not a 3D pass:
+  nearer props draw larger and slightly brighter; a faint parallax offset between floor and
+  wall props; explicit occlusion order (creature in front of stone); and the spill ring
+  resolving the next tile before the main radius reaches it. Distant floors never render —
+  the void *is* the cull.
+- **Materials & texture (only inside the radius).** Procedural, no sample assets: cool
+  stone grain and mortar lines, wax drips and pools under sconces, dust motes drifting
+  through the light shaft, cobwebs at doorways, floorboards in warped perspective. Texture
+  is seasoning — keep its contrast low so it never competes with the flame or the red.
+- **Readability (375 px is a hard floor).** Every threat identifiable from its silhouette
+  at the radius edge; tiles ≥48 px; body text ≥16 px. Danger uses **shape + silhouette +
+  red**, never hue alone (colour-blind safe). Never rely on fine detail to signal danger.
+  Unknown tiles stay pure black.
+- **Weather legibility.** Wax and Dread read as *atmosphere*: darkness colour and
+  saturation shift with Dread tiers (cooler/calm → warmer/closer black), near-miss and
+  damage flash red on the mask edge, guttering warms then drops the whole frame, and
+  victory floods the exit with clean warm light.
+- **HUD in-idiom.** The HUD *is* the candle: the wax meter is a burning candle that
+  shortens, matches are drawn matchsticks, the key a drawn key, Dread a weather band in
+  the void's own colour ramp. Menus and toggles reuse the stone/iron/amber language — no
+  flat modern UI.
+- **Motion (reserved).** Turn-based, so movement is punctuation: a ~1-tile eased camera
+  glide, a slow "breathing" pulse on the void, a gentle cross-fade between floors/states,
+  and nothing that competes with the flame. Honour reduced-motion by dropping the pulse and
+  glides to cuts.
+- **Technical notes.** Single viewport-scaled canvas, `devicePixelRatio`-aware. Compose the
+  mask on an offscreen canvas and blit with `globalCompositeOperation` (e.g. `multiply` /
+  `destination-in`) rather than per-pixel JS. All art is procedural (paths, gradients,
+  noise) — no external images or fonts. Budget one full redraw per turn plus cheap per-frame
+  flame flicker; the void is a fill, not a draw call, and red is a reserved draw pass so it
+  is trivially audited.
 
 ## 12. Audio direction notes (feeds `audio_agent`)
 
@@ -322,6 +432,10 @@ the edge of hearing so that a *cut to silence* is itself an event, not an absenc
 - **Direction & distance.** Creature cues — bat squeaks, rat scurry, wolf howl, shade
   whisper — panned by direction and attenuated by distance, and **quieter outside the
   radius**. Orlok's footsteps are the one thing that grows *louder* as light fails.
+- **Hazards have a voice.** Each hazard type carries a distinct cue — stone grind (collapsing
+  floor), a mechanism click (pressure plate), a low glyph tone (light-glyph and cursed ward) —
+  panned and attenuated like creature cues, **quieter outside the radius**. A hazard **snuff**
+  is a sharp cutoff (the §8 snuff cue), never the slow swell of the guttering dark.
 - **Escalation arc (snuff vs. guttering dark, §8).** *Snuff* = a sharp cutoff plus a lone
   match-strike; *guttering dark* = the drone swells, a heartbeat enters, Orlok's theme
   resolves; *death* = the drone stops dead.
@@ -343,7 +457,8 @@ the edge of hearing so that a *cut to silence* is itself an event, not an absenc
 Procgen lives **in the game**; `world_agent` authors and `manage_world(convert)` validates a
 static **tower template** (room archetypes per the Holotron contract
 (`world_template.schema.json`); the connectivity rules between them; and the thing/encounter
-roster: wax, matches, key, creatures, NPCs). It emits `world_template.json` + `world_template.txt`.
+roster: wax, matches, key, **hazards**, creatures, NPCs). It emits `world_template.json` +
+`world_template.txt`.
 
 - `code_agent` embeds the template as `window.TEMPLATE`, generates floors from it seeded by
   `window.SEED` (default random, overridable), and exposes `window.worldState()` (the
@@ -357,8 +472,9 @@ roster: wax, matches, key, creatures, NPCs). It emits `world_template.json` + `w
 - Holonovel's `manage_world(action: generate)` is **not** used: it is ruleset-table-driven
   and content-absent ruleset-free (REQ-431).
 - **Floors.** The template is **floor-agnostic** — its archetype `count` bounds describe *one*
-  generated floor; per-floor escalation (creature density, wax drain, darkness, NPC pressure)
-  is applied by the game, by depth, from the GDD. There is **no `floors[]` section**.
+  generated floor; per-floor escalation (creature density, **hazard density**, wax drain,
+  darkness, NPC pressure) is applied by the game, by depth, from the GDD. There is **no
+  `floors[]` section**.
 - **Stairs & state.** Vertical movement is `down`/`up` exits. Each floor is generated once
   from a per-depth seed (`hash(seed, depth)`), cached, and mutated in place, so backtracking
   returns the floor you changed. `worldState()` reports the **active floor**; the Phase 2
@@ -367,9 +483,14 @@ roster: wax, matches, key, creatures, NPCs). It emits `world_template.json` + `w
 - **State vs. simulation.** The game's `window.systemState()` reports the **tower-wide** survivor
   roster and Dread at all times — so the B7 gate reads ≥1 survivor and a non-null Dread clock at
   the **pristine boot state** (the Spire) — while NPC **simulation** (roaming, acting,
-  co-location encounters) is **active-floor-only**; the Spire stays encounter-free (§9).
+  co-location encounters) is **active-floor-only**; the Spire stays **social-free** (§9).
 - **Dread** is authored twice: as lore (`key: dread-dial`) for the world model, and as a
   template `clocks[]` `tug_of_war` entry (0–8, with `tiers`) that the game and checker read.
+- **Hazards.** A hazard is authored as an `encounter_roster` entry (`kind:"hazard"`,
+  `threat`/`effect`/`floor`); its room carries archetype `role:"hazard"`. `required_encounters`
+  can pin any that must be reachable on the test seed. The Phase 2 check already covers encounter
+  **presence + reachability** (systemic/advisory); hazards ride that path — connectivity rules
+  remain unvalidated (C7).
 - A lore fragment is authored as a readable **thing** (`kind:"lore"`, `readable:true`,
   `read_text`); `read_text` is data rendered as text, **never** HTML.
 
@@ -377,16 +498,19 @@ roster: wax, matches, key, creatures, NPCs). It emits `world_template.json` + `w
 
 **Must:**
 - Single `index.html`, vanilla JS, embedded HTML/CSS/JS (per `COMPLIANCE.md`).
-- Candle-as-clock; wax/matches/key; grace on wax-out; five NPCs; ~6 social actions; a single 0–8 Dread dial; avoidance combat.
+- Candle-as-clock; wax/matches/key; grace on wax-out; **hazards (avoid costs wax, spring snuffs
+  and costs a match; never on a cut-edge; intrinsically telegraphed)**; five NPCs; ~6 social
+  actions; a single 0–8 Dread dial; avoidance combat.
 - Touch + mouse; responsive; ≥6 screens; music/SFX toggles.
 - **Staged delivery:** wave 1 = the **descent core** (candle, wax/matches, key, exit, seeded
-  winding floors, one creature type); wave 2 = **social + Dread** (the five survivors,
-  disposition, the Dread dial); wave 3 = the **shared-resource survivor sim** (NPCs carrying
-  wax, attacked by creatures, tripping traps, taking/using items). **Wave 3 is required for the
-  submission**, and its sub-features (item use, creatures attacking NPCs, trap-tripping) must
-  ship **independently flag-gated** so a flaky sub-feature disables at runtime without breaking
-  the build — graceful degradation, never a blanket cut. If social is cut, the borrowed-door
-  window (§8) falls back to a fixed, short count.
+  winding floors, one creature type, **the collapsing floor**); wave 2 = **social + Dread**
+  (the five survivors, disposition, the Dread dial) **and the remaining hazards** (light-glyph,
+  pressure plate, cursed ward, crumbling stair) by density; wave 3 = the **shared-resource
+  survivor sim** (NPCs carrying wax, attacked by creatures, tripping hazards, taking/using
+  items). **Wave 3 is required for the submission**, and its sub-features (item use, creatures
+  attacking NPCs, hazard-tripping) must ship **independently flag-gated** so a flaky sub-feature
+  disables at runtime without breaking the build — graceful degradation, never a blanket cut.
+  If social is cut, the borrowed-door window (§8) falls back to a fixed, short count.
 - **Lore:** wave 1 ships a readable/score fragment; wave 2 makes it the social key
   (disposition / information / safe passage — never wax or matches).
 

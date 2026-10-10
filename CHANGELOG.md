@@ -3,6 +3,30 @@
 All notable changes to Holotron are documented here.
 Format: date-stamped sections, bulleted entries.
 
+## 2026-10-10 — Torre Nosferatu brief: visual direction + hazard system
+
+- **§11 Visual direction** — deepened the visual-direction feed for `visual_agent`: concrete
+  palette hex ramps (void / candle / stone / arterial-red), a three-pass compose model
+  (void → world → mask), and new rules for depth-in-a-tiny-radius, procedural materials,
+  HUD-in-idiom, and canvas technique. Existing constraints held (≤3 hues, 375 px floor, ≥48 px
+  tiles).
+- **§6.4 → hazard system** — promoted "Puzzles / traps / simple platforming" into a three-class
+  system (**hazards / puzzles / movement**) with a data-driven 5-hazard roster (collapsing floor,
+  light-glyph, pressure plate, cursed ward, crumbling stair). Cost grammar: **avoid = wax**,
+  **spring = snuff + match**; hazards are **never on a cut-edge** (by construction), are
+  intrinsically telegraphed in the spill ring, and cross blind via a **memory shadow** (no new
+  verb). NPCs can spring hazards (persistent, **flag-gated**, wave 3). Patched §5 (matches
+  double-duty), §8 (no-match snuff → guttering-dark grace, reconciling §5/§15), §9 (hazard
+  density, one new hazard per floor, shared creature+hazard budget, dark rooms as an environment
+  modifier), §12 (hazard cue voices), §14 (hazard authored as `encounter_roster kind:"hazard"`),
+  §15 (hazard must-haves + wave staging). Pre-registered falsifier: a dominant branch → cut/tune.
+- Added `"hazard"` to the `kind` enum of `required_encounters` and `encounter_roster` in
+  `world_template.schema.json` (additive; `scripts/check_template.mjs` unaffected — it never
+  branches on `kind`).
+- Reconciled the Spire's role (pre-existing §7↔§9 tension): the first floor excludes social,
+  Dread, and hazards but **may host the first teaching creature** (bats, §7). Reworded §6.5/§9/§14
+  from "wax and exploration only" / "encounter-free".
+
 ## 2026-10-10 — Close the audio verification gap (pipeline hardening)
 
 - Fixed a verification gap: the pipeline passed every gate (review, runtime, world-model,
