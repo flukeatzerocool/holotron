@@ -3,6 +3,19 @@
 All notable changes to Holotron are documented here.
 Format: date-stamped sections, bulleted entries.
 
+## 2026-10-10 — Close the audio verification gap (pipeline hardening)
+
+- Fixed a verification gap: the pipeline passed every gate (review, runtime, world-model,
+  B7) yet shipped a dead/inaudible audio layer, because no agent rubric named audio — a
+  subsystem is unverified unless a rubric asserts it. Now `code_agent` must expose
+  `window.audioTest(scenario, seed?, opts?)` + `window.AUDIO_SPEC`, `audio_agent` must
+  specify a small-speaker-audible bed (no sub-150 Hz-only bed), and `puppeteer_agent` runs
+  an **advisory** Phase 2b audio check (never false-fails a valid game; a miss is
+  `[AUDIO][advisory]`, never a bugfix-triggering severity).
+- Added `scripts/audio-check/` control fixtures (`dead-bed.html`, `good-bed.html`) that
+  prove the check is not vacuously green (verified: dead misses its floor, good passes).
+- Documented the principle in `PROCESS.md` §4.6, citing the Torre Nosferatu run.
+
 ## 2026-10-10 — Torre Nosferatu audio fix (audibility + Music bus)
 
 - Fixed the game being effectively silent: the ambient bed was inaudible on

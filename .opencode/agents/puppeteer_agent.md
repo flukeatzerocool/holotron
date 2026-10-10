@@ -82,3 +82,30 @@ script. Rooms are **hard** (a spatial mismatch fails the check); systemic is **a
 
 Tooling fallback: when Puppeteer/Chromium is unavailable, drive the same steps with the
 `playwright-cli` skill (Firefox headless) + a local `python3 -m http.server`.
+
+## Holotron Phase 2b — audio check (advisory, after Phase 2)
+The pipeline has **zero audio coverage** elsewhere, so a wired-but-dead subsystem can ship
+undetected (Torre Nosferatu: the ambient bed was inaudible by construction and the run still
+reported "clean"). This check closes that gap. It is **advisory** — a miss is logged
+`[AUDIO][advisory]` and MUST NOT be promoted to a bugfix-triggering severity.
+
+1. **Applicability.** No `AudioContext` and no `window.audioTest` ⇒ **N/A** (silent or
+   `HTMLAudioElement`-only game) — skip, do not flag. `AudioContext` present but no
+   `window.audioTest` ⇒ **UNVERIFIED** (advisory flag).
+2. **Scenarios.** Read `window.AUDIO_SPEC`: enumerate `scenarios` (`{id, kind:"bed"|"cue"}`);
+   `overrides[]` may lower one scenario's floor (only with a `reason`); `{applicable:false}`
+   ⇒ **N/A**.
+3. **Run.** For each scenario `await window.audioTest(id, seed)` (pin the same `seed` used for
+   determinism). Assert `rms ≥ floor` (bed also `bandRms ≥ floor`). Floor = the game's
+   declared threshold, else the **fixed default floor** (`bed rms ≥ 0.02`, `bed bandRms ≥ 0.003`,
+   `cue rms ≥ 0.01`). If a scenario returns `null` (offline unavailable), fall back to a live
+   `AnalyserNode` gain probe on `master` and record which path ran.
+4. **Control (anti-vacuity).** Before trusting green, run the check against the
+   `scripts/audio-check/` fixtures: `dead-bed.html` must miss its floor, `good-bed.html` must
+   pass. A check that passes both is broken.
+5. **Output.** Write `audio_report_HHmmss.txt`: per-scenario `rms`/`bandRms`, thresholds used,
+   path (offline/live), and the verdict. A miss is advisory — never a hard failure and never
+   a MEDIUM/HIGH bug.
+
+Tooling fallback: same as Phase 2 — `playwright-cli` (Firefox headless) + `python3 -m http.server`
+when Puppeteer/Chromium is unavailable.

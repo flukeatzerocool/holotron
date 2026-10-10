@@ -135,6 +135,19 @@ is proven sensitive by a control fixture that catches 2 injected errors.
 Open follow-ups (the Torre run, the **C5** end-to-end checker run, and the deferred Holonovel
 systems) are tracked in `ROADMAP.md`.
 
+### 4.6 Verification scope — audio (2026-10-10)
+
+A subsystem is **unverified unless a rubric names it**. The Torre Nosferatu run passed every
+gate — static review, runtime tests, the world-model checker, B7 — and still shipped a
+**dead/inaudible audio layer**: `review_agent` and `puppeteer_agent` had no audio check, so
+silence passed as success. The `audio_direction.txt` had even specified the bed at the
+"edge of hearing" with a 38 Hz-only drone, below small-speaker reproduction — a faithful
+implementation of an inaudible spec. The gap is now closed: `code_agent` must expose
+`window.audioTest()` + `window.AUDIO_SPEC`, and `puppeteer_agent` runs an **advisory** audio
+check (Phase 2b) against `scripts/audio-check/` control fixtures (dead bed must miss its
+floor, good bed must pass). Advisory means it can never false-fail a valid game; a miss is
+reported, not blocking. Lesson: a green pipeline is only green for what its rubrics assert.
+
 ## 5. Before/after metric
 
 Single-run proxy (per the approved plan) plus a sensitivity control. "Baseline" = the

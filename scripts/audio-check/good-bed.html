@@ -1,0 +1,33 @@
+<!doctype html>
+<!-- audio-check control fixture: GOOD BED — must PASS the audible floor.
+     Bed carries mid harmonics (200/300/400 Hz) so rms and bandRms(>300Hz) clear the floor. -->
+<html><head><meta charset="utf-8"><title>audio-check: good-bed</title></head>
+<body>
+<script>
+(function(){
+  var SR=44100, DUR=3.0;
+  window.AUDIO_SPEC = {
+    applicable: true,
+    scenarios: [ { id:"bed", kind:"bed" } ],
+    thresholds: { bed: { rms:0.02, bandRms:0.003 }, cue: { rms:0.01 } }
+  };
+  function measure(buf){
+    var ch=buf.getChannelData(0), n=ch.length, sum=0, hsum=0, peak=0, alpha=0.96, px=0, py=0;
+    for(var i=0;i<n;i++){ var x=ch[i]; sum+=x*x; var av=x<0?-x:x; if(av>peak)peak=av;
+      var y=alpha*(py+x-px); px=x; py=y; hsum+=y*y; }
+    return { rms:Math.sqrt(sum/n), peak:peak, bandRms:Math.sqrt(hsum/n) };
+  }
+  window.audioTest = function(scenario, seed, opts){
+    var OAC=window.OfflineAudioContext||window.webkitOfflineAudioContext;
+    if(!OAC || scenario!=="bed") return Promise.resolve(null);
+    var c=new OAC(1, Math.floor(SR*DUR), SR);
+    [200,300,400].forEach(function(f){
+      var osc=c.createOscillator(), g=c.createGain();
+      osc.type="sine"; osc.frequency.value=f; g.gain.value=0.1;
+      osc.connect(g).connect(c.destination); osc.start(0);
+    });
+    return c.startRendering().then(measure);
+  };
+})();
+</script>
+</body></html>

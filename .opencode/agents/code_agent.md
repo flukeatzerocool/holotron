@@ -56,6 +56,19 @@ Required hooks — each a thin wrapper over the **same** handler the UI uses, ne
 - `window.systemState()` → `{ seed, clocks: { wax, dread }, npcs: [{ id, name, disposition }], socialActions: ["<id>"], encounters: ["<id>"] }`
 - `window.social(id)` → applies the social action through the same handler the UI's social
   menu uses, returning `{ dread: <after>, npcs: [ … ] }` for the checker.
+- `window.audioTest(scenario, seed?, opts?)` → `Promise<{ rms, peak, bandRms } | null>` — for
+  games with a Web Audio `AudioContext`, renders one scenario **deterministically** (seeded RNG,
+  no wall-clock timers) via `OfflineAudioContext` (`window.OfflineAudioContext ||
+  window.webkitOfflineAudioContext`); returns `null` when offline rendering is unavailable (the
+  checker then falls back to a live gain-graph probe). Use the reference signature verbatim:
+  `window.audioTest = function(scenario, seed, opts){ return Audio.offline(scenario, seed, opts); };`
+  (see `gameotron_output/20261010_095651/index.html:2071`, impl. `Audio.offline`).
+- `window.AUDIO_SPEC` → `{ applicable: false }` for games with **no** `AudioContext` (silent or
+  `HTMLAudioElement`-only), else
+  `{ scenarios: [{ id, kind: "bed" | "cue" }], thresholds: { bed: { rms, bandRms }, cue: { rms } },
+     overrides?: [{ id, reason, rms }] }`.
+  `scenarios` lists every `id` `audioTest` accepts; `thresholds` are the game's own audible floors;
+  an `overrides[]` entry may lower **one** scenario's floor **only** with a `reason` string.
 
 Clock semantics (the Phase 2 checker asserts these):
 - `behavior:"decrement"` (e.g. wax) decreases only; `behavior:"tug_of_war"` (e.g. dread)

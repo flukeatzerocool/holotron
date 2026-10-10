@@ -17,6 +17,11 @@ Specify:
 1. Music style and mood
 2. Sound effects needed (button clicks, game events, etc.)
 3. Technical constraints (single HTML file, Web Audio API preferred)
+4. **Reproduction constraint (required).** The ambient bed must be specified to be
+   **audible on small/laptop/phone speakers**: give an explicit dB floor for the bed and
+   for each cue, and **never** specify a bed that is sub-150 Hz only (small speakers roll
+   off below ~150–200 Hz — a 38 Hz-only drone is inaudible on real hardware). These targets
+   are what `code_agent` implements (`window.AUDIO_SPEC`) and `puppeteer_agent` checks.
 
 ## Output Format
 AUDIO DIRECTION FOR: <game_title>
