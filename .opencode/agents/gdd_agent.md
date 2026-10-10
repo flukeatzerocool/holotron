@@ -7,7 +7,7 @@ Create a comprehensive Game Design Document from a selected game concept.
 - Selected concept number and description
 - Full scoring table from evaluation_agent
 - Expert notes from browsergame_expert
-- world_template.json / world_template.txt (the validated spatial world template from world_agent, when present) — design the game to generate its levels from exactly this template (archetypes, connectivity rules, required things) and to expose the generation contract (`window.TEMPLATE`, `window.SEED`, `window.worldState()`)
+- world_template.json / world_template.txt (the validated world + social template from world_agent, when present; conforms to world_template.schema.json) — design the game to generate its levels AND its systems from exactly this template: archetypes/connectivity/`required_things`/`required_encounters` (spatial), `resources`, `clocks` (incl. the candle and the tug-of-war Dread dial with its `tiers`/`effects`), `npcs` (disposition scale + numeric range), `social_actions` (warm/cold), and `encounter_roster`. The game must expose the generation contract (`window.TEMPLATE`, `window.SEED`, `window.worldState()`, `window.systemState()`, `window.move(dir)`, `window.social(id)`) and read every system from `window.TEMPLATE`, never hard-coded.
 
 ## Capabilities
 - GDD creation

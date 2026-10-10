@@ -5,3 +5,8 @@ This product is a fork of GAMEOTRON. Upstream copyright notices are preserved.
 Licensed under the PolyForm Noncommercial License 1.0.0 — see LICENSE.md.
 
 Required Notice: Copyright flukeairwalker (https://github.com/flukeatzerocool/holotron)
+
+This product depends on, and is validated against, Holonovel
+(https://github.com/flukeatzerocool/holonovel) — an MIT-licensed world-model MCP server.
+Holonovel source is not redistributed here; the pinned version is commit b6a182a
+(spec 2026.10.09). Copyright (c) 2026 Holonovel, MIT License.

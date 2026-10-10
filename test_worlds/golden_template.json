@@ -1,0 +1,40 @@
+{
+  "seed_default": null,
+  "test_seed": 12345,
+  "archetypes": [
+    { "id": "entry", "name": "Entry Hall", "role": "entry", "count": [1, 1], "things": [] },
+    { "id": "corridor", "name": "Corridor", "role": "corridor", "count": [2, 4], "things": [] },
+    { "id": "social", "name": "Common Room", "role": "social", "count": [1, 2], "things": ["lamp"] }
+  ],
+  "connectivity": { "rules": ["entry -> corridor*", "corridor -> social"] },
+  "required_things": ["lamp", "key"],
+  "required_encounters": [
+    { "id": "innkeeper", "kind": "npc", "floor": 1, "reachable": true }
+  ],
+  "resources": { "wax": { "start": 30, "drain_per_turn": 1 } },
+  "clocks": [
+    { "id": "wax", "name": "Candle", "behavior": "decrement", "direction": "decrement", "min": 0, "max": 30, "effects": [{ "at": 0, "type": "enter-grace" }] },
+    { "id": "dread", "name": "Dread", "behavior": "tug_of_war", "direction": "increment", "min": 0, "max": 8, "badge_scope": "shared",
+      "tiers": [
+        { "range": [0, 1], "state": "calm" },
+        { "range": [2, 3], "state": "watched" },
+        { "range": [4, 5], "state": "marked" },
+        { "range": [6, 7], "state": "hunted" },
+        { "range": [8, 8], "state": "hunted-full" }
+      ],
+      "effects": [{ "at": 8, "type": "orlok-lock" }] }
+  ],
+  "npcs": [
+    { "id": "innkeeper", "name": "The Innkeeper", "disposition": "neutral",
+      "disposition_scale": ["hostile", "suspicious", "neutral", "friendly", "allied"],
+      "numeric_range": [-2, 2], "goals": ["survive the night"], "voice": "clipped" }
+  ],
+  "social_actions": [
+    { "id": "share-light", "polarity": "warm", "dread_delta": -1, "disposition_delta": [0, 2], "wax_delta": -2 },
+    { "id": "threaten", "polarity": "cold", "dread_delta": 1, "disposition_delta": [-2, 0], "wax_delta": 0 }
+  ],
+  "encounter_roster": [
+    { "id": "bats", "kind": "creature", "threat": 1, "effect": "wax-spill", "floor": 1 },
+    { "id": "innkeeper", "kind": "npc", "threat": 0, "floor": 1 }
+  ]
+}

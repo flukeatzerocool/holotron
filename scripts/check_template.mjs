@@ -1,0 +1,179 @@
+#!/usr/bin/env node
+// Holotron Phase 2 world-model checker (deterministic, zero dependencies).
+//
+// Validates a game's extracted STATE against a world TEMPLATE.
+//   spatial  — the checked world graph (dangling exits, reachability, required things)
+//   systemic — the game systems (clocks, NPCs, social actions, encounter roster)
+//
+// Every systemic assertion is BEHAVIORAL where possible: observed social-log deltas
+// must match the declared direction and clamp to the declared bounds. A game that
+// merely echoes window.TEMPLATE into window.systemState() will fail these.
+//
+// Usage:
+//   node scripts/check_template.mjs --template <t.json> --state <s.json> [--mode all|spatial|systemic] [--max-bytes N]
+// Exit: 0 = no mismatches (or scope not exercised); 1 = mismatches.
+
+import { readFileSync } from 'node:fs';
+
+const DEFAULTS = { mode: 'all', maxBytes: 200_000 };
+
+function parseArgs(argv) {
+  const o = { ...DEFAULTS };
+  for (let i = 0; i < argv.length; i++) {
+    const a = argv[i];
+    if (a === '--template') o.template = argv[++i];
+    else if (a === '--state') o.state = argv[++i];
+    else if (a === '--mode') o.mode = argv[++i];
+    else if (a === '--max-bytes') o.maxBytes = Number(argv[++i]);
+    else if (a === '--help' || a === '-h') { console.log('usage: node scripts/check_template.mjs --template <t.json> --state <s.json> [--mode all|spatial|systemic] [--max-bytes N]'); process.exit(0); }
+    else { console.error(`unknown argument: ${a}`); process.exit(2); }
+  }
+  if (!o.template || !o.state) { console.error('error: --template and --state are required'); process.exit(2); }
+  if (!['all', 'spatial', 'systemic'].includes(o.mode)) { console.error(`error: bad --mode ${o.mode}`); process.exit(2); }
+  return o;
+}
+
+function loadJSON(path, label, mismatches) {
+  let raw;
+  try { raw = readFileSync(path); }
+  catch (e) { mismatches.push({ kind: label, detail: `cannot read ${path}: ${e.message}` }); return null; }
+  try { return { data: JSON.parse(raw.toString('utf8')), bytes: raw.length }; }
+  catch (e) { mismatches.push({ kind: label, detail: `invalid JSON in ${path}: ${e.message}` }); return null; }
+}
+
+function sign(n) { return n > 0 ? 1 : n < 0 ? -1 : 0; }
+
+function checkSpatial(tpl, state, mismatches) {
+  const world = state.world && state.world.rooms ? state.world : state;
+  const rooms = world.rooms;
+  if (!rooms || typeof rooms !== 'object') { mismatches.push({ kind: 'spatial', detail: 'state has no `rooms`' }); return; }
+  const start = world.start;
+  if (!start || !rooms[start]) mismatches.push({ kind: 'spatial', detail: `start room '${start}' is not present` });
+
+  for (const [slug, room] of Object.entries(rooms)) {
+    for (const [dir, to] of Object.entries(room.exits || {})) {
+      if (!rooms[to]) mismatches.push({ kind: 'spatial', detail: `dangling exit: ${slug} ${dir} -> '${to}' (no such room)` });
+    }
+  }
+
+  if (start && rooms[start]) {
+    const seen = new Set([start]);
+    const queue = [start];
+    while (queue.length) {
+      const cur = queue.shift();
+      for (const to of Object.values(rooms[cur].exits || {})) {
+        if (rooms[to] && !seen.has(to)) { seen.add(to); queue.push(to); }
+      }
+    }
+    for (const slug of Object.keys(rooms)) {
+      if (!seen.has(slug)) mismatches.push({ kind: 'spatial', detail: `unreachable room: '${slug}'` });
+    }
+    const required = Array.isArray(tpl.required_things) ? tpl.required_things : [];
+    for (const thing of required) {
+      let placed = null;
+      for (const slug of seen) if ((rooms[slug].things || []).includes(thing)) { placed = slug; break; }
+      if (!placed) mismatches.push({ kind: 'spatial', detail: `required thing '${thing}' is not placed on any reachable room` });
+    }
+  }
+}
+
+function checkTiering(clk, mismatches) {
+  if (!Array.isArray(clk.tiers) || clk.tiers.length === 0) return;
+  const ranges = clk.tiers.map(t => t.range).filter(r => Array.isArray(r) && r.length === 2).sort((a, b) => a[0] - b[0]);
+  if (ranges.length !== clk.tiers.length) { mismatches.push({ kind: 'systemic', detail: `clock '${clk.id}': a tier has a malformed range` }); return; }
+  if (ranges[0][0] !== clk.min) mismatches.push({ kind: 'systemic', detail: `clock '${clk.id}': tiers start at ${ranges[0][0]}, expected min ${clk.min}` });
+  if (ranges[ranges.length - 1][1] !== clk.max) mismatches.push({ kind: 'systemic', detail: `clock '${clk.id}': tiers end at ${ranges[ranges.length - 1][1]}, expected max ${clk.max}` });
+  for (let i = 1; i < ranges.length; i++) {
+    if (ranges[i][0] !== ranges[i - 1][1] + 1) {
+      mismatches.push({ kind: 'systemic', detail: `clock '${clk.id}': tier gap/overlap between [${ranges[i - 1]}] and [${ranges[i]}]` });
+    }
+  }
+}
+
+function checkSystemic(tpl, state, mismatches) {
+  const hasSystemic = ['clocks', 'npcs', 'social_actions', 'encounter_roster', 'required_encounters'].some(k => Array.isArray(tpl[k]) && tpl[k].length);
+  if (!hasSystemic) return; // nothing declared: scope not exercised
+  const sys = state.systems || state.system || {};
+
+  // clocks
+  for (const clk of tpl.clocks || []) {
+    if (typeof clk.min !== 'number' || typeof clk.max !== 'number' || clk.min > clk.max) {
+      mismatches.push({ kind: 'systemic', detail: `clock '${clk.id}': invalid bounds [${clk.min},${clk.max}]` });
+    }
+    checkTiering(clk, mismatches);
+    const got = (sys.clocks || {})[clk.id];
+    if (!got) { mismatches.push({ kind: 'systemic', detail: `clock '${clk.id}': missing from systemState` }); continue; }
+    if (typeof got.value === 'number' && (got.value < clk.min || got.value > clk.max)) {
+      mismatches.push({ kind: 'systemic', detail: `clock '${clk.id}': value ${got.value} out of [${clk.min},${clk.max}]` });
+    }
+  }
+
+  // npcs
+  const sysNpcs = Array.isArray(sys.npcs) ? sys.npcs : [];
+  for (const npc of tpl.npcs || []) {
+    const got = sysNpcs.find(n => n.id === npc.id);
+    if (!got) { mismatches.push({ kind: 'systemic', detail: `npc '${npc.id}' missing from systemState` }); continue; }
+    if (Array.isArray(npc.disposition_scale) && npc.disposition_scale.length && !npc.disposition_scale.includes(got.disposition)) {
+      mismatches.push({ kind: 'systemic', detail: `npc '${npc.id}': disposition '${got.disposition}' not in ${JSON.stringify(npc.disposition_scale)}` });
+    }
+    if (Array.isArray(npc.numeric_range) && npc.numeric_range.length === 2 && typeof got.numeric === 'number') {
+      if (got.numeric < npc.numeric_range[0] || got.numeric > npc.numeric_range[1]) {
+        mismatches.push({ kind: 'systemic', detail: `npc '${npc.id}': numeric ${got.numeric} out of ${JSON.stringify(npc.numeric_range)}` });
+      }
+    }
+  }
+
+  // social actions declared by the template must exist in the game
+  const sysActions = Array.isArray(sys.socialActions) ? sys.socialActions : [];
+  for (const act of tpl.social_actions || []) {
+    if (!sysActions.includes(act.id)) mismatches.push({ kind: 'systemic', detail: `social action '${act.id}' missing from systemState` });
+  }
+
+  // observed social-log invariants: direction sign + clamp (cannot be satisfied by echoing the template)
+  const dread = (tpl.clocks || []).find(c => c.behavior === 'tug_of_war') || (tpl.clocks || []).find(c => c.id === 'dread');
+  for (const obs of Array.isArray(sys.socialLog) ? sys.socialLog : []) {
+    const act = (tpl.social_actions || []).find(a => a.id === obs.id);
+    if (!act) { mismatches.push({ kind: 'systemic', detail: `socialLog references unknown action '${obs.id}'` }); continue; }
+    if (typeof obs.dreadBefore === 'number' && typeof obs.dreadAfter === 'number') {
+      const expected = sign(act.dread_delta ?? 0);
+      const observed = sign(obs.dreadAfter - obs.dreadBefore);
+      if (expected !== 0 && observed !== expected) {
+        mismatches.push({ kind: 'systemic', detail: `action '${obs.id}': Dread moved ${obs.dreadBefore}->${obs.dreadAfter} (sign ${observed}), declared ${act.dread_delta} (sign ${expected})` });
+      }
+      if (dread && (obs.dreadAfter < dread.min || obs.dreadAfter > dread.max)) {
+        mismatches.push({ kind: 'systemic', detail: `action '${obs.id}': Dread ${obs.dreadAfter} out of [${dread.min},${dread.max}] (not clamped)` });
+      }
+    }
+  }
+
+  // encounter roster + required encounters present
+  const sysEncounters = Array.isArray(sys.encounters) ? sys.encounters : [];
+  for (const e of tpl.encounter_roster || []) {
+    if (!sysEncounters.includes(e.id)) mismatches.push({ kind: 'systemic', detail: `encounter '${e.id}' missing from systemState` });
+  }
+  for (const e of tpl.required_encounters || []) {
+    if (!sysEncounters.includes(e.id)) mismatches.push({ kind: 'systemic', detail: `required encounter '${e.id}' not present/reachable in systemState` });
+  }
+}
+
+function main() {
+  const opts = parseArgs(process.argv.slice(2));
+  const mismatches = [];
+  const tplLoad = loadJSON(opts.template, 'template', mismatches);
+  const stateLoad = loadJSON(opts.state, 'state', mismatches);
+  if (tplLoad && tplLoad.bytes > opts.maxBytes) {
+    mismatches.push({ kind: 'guard', detail: `template is ${tplLoad.bytes} bytes > --max-bytes ${opts.maxBytes}` });
+  }
+  if (tplLoad && stateLoad) {
+    const tpl = tplLoad.data, state = stateLoad.data;
+    if (opts.mode === 'all' || opts.mode === 'spatial') checkSpatial(tpl, state, mismatches);
+    if (opts.mode === 'all' || opts.mode === 'systemic') checkSystemic(tpl, state, mismatches);
+  }
+  for (const m of mismatches) console.log(`MISMATCH [${m.kind}] ${m.detail}`);
+  const systemic = mismatches.filter(m => m.kind === 'systemic' || m.kind === 'guard').length;
+  const spatial = mismatches.filter(m => m.kind === 'spatial').length;
+  console.log(`\n${mismatches.length} mismatch(es) — spatial ${spatial}, systemic ${systemic} (mode=${opts.mode})`);
+  process.exit(mismatches.length === 0 ? 0 : 1);
+}
+
+main();

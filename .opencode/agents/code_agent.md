@@ -11,15 +11,42 @@ Implement a complete browser game as a single HTML file using Vanilla JS based o
 
 ## World Contract (Holotron)
 When `world_template.json` is provided, embed it **verbatim** as `window.TEMPLATE` and use
-it as the single source of truth for level generation. Generate the floor layout at runtime
-from `window.TEMPLATE`; never diverge from its archetypes, connectivity rules, or required
-things. Seed generation deterministically from `window.SEED` (an integer — default to a
-random seed at boot, but allow override via a URL parameter and a Settings control so tests
-can pin it). Expose `window.worldState()` returning the generated world as
-`{ seed, start, rooms: { "<slug>": { "name": "<display>", "exits": { "<dir>": "<slug>" }, "things": ["<slug>"] } } }`,
-and expose `window.move(dir)` that invokes the **same** transition handler the UI uses (a
-thin hook, not a parallel path) so automated tests can traverse the generated world
-deterministically.
+it as the single source of truth. Embed it as a **JSON data block** — never string-concatenate
+it into executable script (authored lore/names can contain `</script>`, U+2028, or `<!--`):
+
+```html
+<script id="world-template" type="application/json">{ …verbatim world_template.json… }</script>
+```
+```js
+let TEMPLATE;
+try { TEMPLATE = JSON.parse(document.getElementById('world-template').textContent); }
+catch (e) { console.warn('world template failed to parse', e); TEMPLATE = MINIMAL_FALLBACK; }
+window.TEMPLATE = TEMPLATE;
+```
+If the block fails to parse, warn loudly and fall back to a minimal built-in template —
+never boot silently with a partial model.
+
+Generation:
+- Generate the floor layout at runtime from `window.TEMPLATE`; never diverge from its
+  archetypes, connectivity rules, `required_things`, or `required_encounters`.
+- Seed deterministically from `window.SEED` (integer — default random at boot; overridable
+  via a URL parameter and a Settings control so tests can pin it). When no override is
+  given, **honor `template.test_seed`** so the Phase 2 checker reproduces the same layout.
+- Read **all** game systems from `window.TEMPLATE` — `resources`, `clocks`, `npcs`,
+  `social_actions`, `encounter_roster`, `required_encounters`. Do not hard-code them.
+- Guarantee every `required_encounters` entry exists and is reachable on `test_seed`.
+
+Required hooks — each a thin wrapper over the **same** handler the UI uses, never a parallel path:
+- `window.worldState()` → `{ seed, start, rooms: { "<slug>": { "name": "<display>", "exits": { "<dir>": "<slug>" }, "things": ["<slug>"] } } }`
+- `window.move(dir)` → invokes the same transition handler the UI uses.
+- `window.systemState()` → `{ seed, clocks: { wax, dread }, npcs: [{ id, name, disposition }], socialActions: ["<id>"], encounters: ["<id>"] }`
+- `window.social(id)` → applies the social action through the same handler the UI's social
+  menu uses, returning `{ dread: <after>, npcs: [ … ] }` for the checker.
+
+Clock semantics (the Phase 2 checker asserts these):
+- `behavior:"decrement"` (e.g. wax) decreases only; `behavior:"tug_of_war"` (e.g. dread)
+  moves both ways. Always **clamp** to `[min, max]` — a cold act at max stays at max, a warm
+  act at min stays at min. Fire tier transitions at the declared `tiers` ranges and `effects`.
 
 ## Capabilities
 - Game implementation

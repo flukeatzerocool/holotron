@@ -1,0 +1,155 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/flukeatzerocool/holotron/world_template.schema.json",
+  "title": "Holotron world template",
+  "description": "The single documented contract for world_template.json. Emitted by world_agent, consumed verbatim by code_agent as window.TEMPLATE, and hand-enforced by scripts/check_template.mjs against the game's extracted state. NOTE: this file is documentation, not a library-validated schema (no JSON-Schema validator is available without adding a dependency); scripts/check_template.mjs is the executable enforcement. Keys marked optional may be absent; consumers must tolerate their absence.",
+  "type": "object",
+  "required": ["archetypes", "connectivity", "required_things"],
+  "additionalProperties": true,
+  "properties": {
+    "seed_default": {
+      "type": ["integer", "null"],
+      "description": "Default generation seed, or null for random at boot."
+    },
+    "test_seed": {
+      "type": ["integer", "null"],
+      "description": "Pinned seed used by the Phase 2 checker. The game must honor this seed so the verified layout is reproducible."
+    },
+    "archetypes": {
+      "type": "array",
+      "description": "Room archetypes the generator may place; count bounds how many of each a floor may contain.",
+      "items": {
+        "type": "object",
+        "required": ["id", "role"],
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "role": { "enum": ["entry", "corridor", "hazard", "treasure", "social", "exit", "puzzle"] },
+          "count": { "type": "array", "items": { "type": "integer" }, "minItems": 2, "maxItems": 2 },
+          "things": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    },
+    "connectivity": {
+      "type": "object",
+      "required": ["rules"],
+      "properties": {
+        "rules": {
+          "type": "array",
+          "description": "Legal directed transitions between roles, e.g. \"entry -> corridor*\".",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "required_things": {
+      "type": "array",
+      "description": "Things every generated floor MUST place and make reachable from start.",
+      "items": { "type": "string" }
+    },
+    "required_encounters": {
+      "type": "array",
+      "description": "Encounters that MUST exist and be reachable on the pinned test_seed (guarantees the systemic check has something to drive even if wave 2 ships truncated).",
+      "items": {
+        "type": "object",
+        "required": ["id", "kind"],
+        "properties": {
+          "id": { "type": "string" },
+          "kind": { "enum": ["npc", "creature", "puzzle"] },
+          "floor": { "type": "integer" },
+          "reachable": { "type": "boolean" }
+        }
+      }
+    },
+    "resources": {
+      "type": "object",
+      "description": "Named player resources and their starting/burn parameters.",
+      "additionalProperties": { "type": "object" }
+    },
+    "clocks": {
+      "type": "array",
+      "description": "Player-facing clocks. `behavior` is OUR contract describing the game mechanic; it is NOT a Holonovel feature (the deployed manage_countdown has no clock_type and cannot count up).",
+      "items": {
+        "type": "object",
+        "required": ["id", "behavior"],
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "behavior": { "enum": ["decrement", "tug_of_war"] },
+          "direction": { "enum": ["increment", "decrement"] },
+          "min": { "type": "integer" },
+          "max": { "type": "integer" },
+          "badge_scope": { "enum": ["game_master", "shared"] },
+          "tiers": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["range", "state"],
+              "properties": {
+                "range": { "type": "array", "items": { "type": "integer" }, "minItems": 2, "maxItems": 2 },
+                "state": { "type": "string" }
+              }
+            }
+          },
+          "effects": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["at", "type"],
+              "properties": {
+                "at": { "type": "integer" },
+                "type": { "type": "string" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "npcs": {
+      "type": "array",
+      "description": "The survivor roster. `disposition` uses the categorical scale; `numeric_range` maps it to the game's -2..+2 dial.",
+      "items": {
+        "type": "object",
+        "required": ["id", "name"],
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "disposition": { "type": "string" },
+          "disposition_scale": { "type": "array", "items": { "type": "string" } },
+          "numeric_range": { "type": "array", "items": { "type": "integer" }, "minItems": 2, "maxItems": 2 },
+          "goals": { "type": "array", "items": { "type": "string" } },
+          "voice": { "type": "string" }
+        }
+      }
+    },
+    "social_actions": {
+      "type": "array",
+      "description": "Warm/cold action table. dread_delta is signed (negative = warm, lowers Dread).",
+      "items": {
+        "type": "object",
+        "required": ["id", "polarity"],
+        "properties": {
+          "id": { "type": "string" },
+          "polarity": { "enum": ["warm", "cold"] },
+          "dread_delta": { "type": "integer" },
+          "disposition_delta": { "type": "array", "items": { "type": "integer" }, "minItems": 2, "maxItems": 2 },
+          "wax_delta": { "type": "integer" }
+        }
+      }
+    },
+    "encounter_roster": {
+      "type": "array",
+      "description": "Creatures and obstacles the generator may place.",
+      "items": {
+        "type": "object",
+        "required": ["id", "kind"],
+        "properties": {
+          "id": { "type": "string" },
+          "kind": { "enum": ["creature", "puzzle", "npc"] },
+          "threat": { "type": "integer" },
+          "effect": { "type": "string" },
+          "floor": { "type": "integer" }
+        }
+      }
+    }
+  }
+}

@@ -53,7 +53,8 @@ is proven sensitive by a control fixture that catches 2 injected errors.
   Holonovel checkout is never written), prefers the built `dist/index.js` via `node`.
   Hermeticity matters because opencode **deep-merges** the global `mcp.holonovel` block,
   whose `TTRPG_DATA_DIR` points at a different install; the wrapper ignores inherited
-  `TTRPG_*` values.
+  `TTRPG_*` values. It also **pins the Holonovel commit** (`b6a182a`) and exits loudly on
+  drift (override with `HOLOTRON_HOLONOVEL_PIN`), so a judge can reproduce the model.
 - **`theme_override`** — `theme: Anything Goes` bypasses the network theme fetch.
 - **Hard constraint honored:** nothing is written under `/home/fluke/Holonovel*`; the
   world state lives in `Holotron/.holonovel-state/`.
@@ -90,12 +91,31 @@ is proven sensitive by a control fixture that catches 2 injected errors.
 ### 4.3 Reliability check (Phase 2)
 - A dedicated post-generation check ties the game back to the model. The game embeds the
   validated world as `window.WORLD` (single source of truth) and exposes
-  `window.move(dir)` that calls the **same** transition handler the UI uses.
+  `window.move(dir)` that calls the **same** transition handler the UI uses. (The contract
+  later moved to `window.TEMPLATE` — see AGENTS.md; the baseline run predates that.)
 - `puppeteer_agent` **drives the game** (real moves) and compares the *observed* room graph
   to `world_map.json` — not a copy of the embedded JSON.
 - **Control fixture** `test_worlds/malformed.json` (a dangling exit + an unreachable room)
   is run through the same checker and **must** report ≥2 mismatches, proving the check
   detects errors rather than parroting the file.
+
+### 4.4 Systemic deepening (2026-10-10)
+
+- Extended the world template from **spatial-only** to the **full game loop**: `resources`,
+  `clocks` (the candle + the tug-of-war Dread dial with `tiers`/`effects`), `npcs`,
+  `social_actions` (warm/cold), `encounter_roster`, `required_encounters`, and a pinned
+  `test_seed`. The contract now lives in `world_template.schema.json` (documented, hand-enforced).
+- `world_agent` now authors the **social model** (`manage_npc`/`manage_relationship`/`manage_lore`)
+  and emits the v2 template; `code_agent` reads every system from `window.TEMPLATE` and exposes
+  `window.systemState()` + `window.social(id)` as **same-handler** hooks, so the Phase 2 check is
+  **behavioral** — a copy-the-template echo cannot pass it.
+- **Spike correction (build `b6a182a`):** the deployed `manage_countdown` has **no `clock_type`**
+  and cannot count up, so the Dread dial is authored as **lore** (`key: dread-dial`), not a
+  `tug_of_war` clock. `clocks[].behavior` is our own contract field, not a Holonovel feature.
+- The Holonovel dependency is **pinned to commit `b6a182a`**; the launcher fails loudly on drift.
+
+Open follow-ups (the Torre run, the Phase 2 checker wiring, and the deferred Holonovel
+systems) are tracked in `ROADMAP.md`.
 
 ## 5. Before/after metric
 

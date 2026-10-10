@@ -6,3 +6,7 @@ Upstream GAMEOTRON authors:
 
 Fork (Holotron) author:
 - flukeairwalker <https://github.com/flukeatzerocool>
+
+Dependency:
+- Holonovel (MIT) — world-model MCP server — pinned commit b6a182a
+  https://github.com/flukeatzerocool/holonovel
