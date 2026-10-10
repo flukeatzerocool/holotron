@@ -24,7 +24,9 @@ The GDD MUST satisfy every item, or state explicitly why not:
   disposition + Dread (lesser ending + score penalty; raises Dread / draws creatures) — with a fixed-count
   fallback if the social layer is cut.
 - **Staged delivery** is preserved: wave 1 = descent core; wave 2 = social + Dread; wave 3 = shared-resource
-  survivor sim.
+  survivor sim. **Wave 3 is required**, and each of its sub-features (NPC item use, creatures attacking NPCs,
+  trap-tripping) is **independently flag-gated** (the `juiceEnabled` pattern) so a flaky sub-feature can be
+  disabled at runtime without breaking the build.
 
 ## Capabilities
 - GDD creation

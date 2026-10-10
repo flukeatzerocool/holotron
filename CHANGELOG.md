@@ -3,6 +3,19 @@
 All notable changes to Holotron are documented here.
 Format: date-stamped sections, bulleted entries.
 
+## 2026-10-10 — Torre brief: proofread, expansions, required flag-gated wave-3, submission plan
+
+- `TORRE_NOSFERATU.md` **proofread** (consistent **Dread** casing; parallel verbs) and **expanded**:
+  §6.4 puzzles/traps/platforming now concrete; §7 creatures gained a depth/behaviour/cost table
+  (Orlok excluded from the normal roster); §10 screens now a table with **Pause resume + back**
+  restored; §11 visual (≤3-hue palette, radial falloff + spill ring, flame states, 1922 *Nosferatu*
+  reference, 375 px silhouette rule); §12 audio (silence-as-tool, wax tick, Dread-rising drone,
+  snuff-vs-guttering contrast). §2 theme framing corrected — the jam theme is open-ended.
+- **Wave 3 is now required for the submission** and each sub-feature (NPC item use, creatures
+  attacking NPCs, trap-tripping) ships **independently flag-gated** (graceful degradation, never a
+  blanket cut) — recorded in `TORRE_NOSFERATU.md` §15 and the `gdd_agent` acceptance checklist.
+- Added the submission-execution grill-me stress-test and plan under `docs/grill-me/` + `docs/plans/`.
+
 ## 2026-10-10 — Torre brief: five survivors & the descending tower
 
 - `TORRE_NOSFERATU.md` now specifies a **descent** (wake at the **Spire**, escape the ground-floor

@@ -32,9 +32,10 @@ finds you.**
 Percussive organ, distant howls, dripping stone. Slow-building tension from the
 knowledge that the dark is patient and your light is finite.
 
-**Theme interpretation ("Anything Goes"):** the tower is a lawless jumble — rooms,
-floors, and encounters that don't obey a single genre or logic; "anything goes"
-inside the dark.
+**Theme interpretation.** The jam theme is open-ended — *anything goes*, so the entry picks
+its own. **Torre Nosferatu** turns that permission inward: the tower is a lawless jumble —
+rooms, floors, and encounters that obey no single genre or logic; "anything goes" in the
+dark.
 
 ## 3. The hook (defining mechanic)
 
@@ -67,7 +68,7 @@ Turn-based, grid-based, touch-first.
 | **Lore** | Found fragments. Non-survival: it never extends the candle. Wave 1, a readable scrap and score beat; wave 2, the trade good for disposition / information / safe passage — never for light, bounded by the per-NPC disposition cap. |
 
 **Dread** is the social counterweight to wax. Cold acts — theft, threats, exploitation —
-buy light and tempo but raise dread; warm acts — sharing light, honoring a bargain,
+buy light and tempo but raise Dread; warm acts — sharing light, honoring a bargain,
 allying — bring it back down. Dread sits as shared weather over the whole tower: at
 higher tiers, strangers are warier and Orlok closes faster (§9). It never hard-locks the
 player. (Concrete numbers live in the GDD.)
@@ -133,7 +134,7 @@ Social play runs on **two tracks**:
   (a companion lantern that widens the radius or splits the drain). Compounds only if
   the alliance survives.
 - **Cold — buys light, spends allies.** Instant wax, matches, loot, and tempo; raises
-  dread, which accelerates Orlok.
+  Dread, which accelerates Orlok.
 
 Core actions, warm → cold:
 
@@ -150,12 +151,24 @@ Lore (§5.1) is the commodity most often exchanged in **Bargain** and **Trade**;
 wax or matches.
 
 The balance: **warmth buys light later; cruelty buys light now.** A cold run is richer
-in light immediately but reaches wax-out sooner, because dread makes Orlok close faster.
+in light immediately but reaches wax-out sooner, because Dread makes Orlok close faster.
 Exact numbers live in the GDD.
 
 ### 6.4 Puzzles / traps / simple platforming
 Thematic obstacles kept deliberately simple to preserve the game's calm, decision-driven
-pace: a locked door needing a lever, a collapsing floor, a light-sensitive trap.
+pace. These are **turn-and-light problems, not reflex tests** — a wrong answer costs wax,
+never a life.
+
+- **Locked door / lever.** A rune or lever elsewhere on the floor opens it; the puzzle is
+  routing (reach the lever before the light dies), not dexterity.
+- **Collapsing floor.** Tiles that give way after a step; the safe path is usually the
+  longer one, so it trades turns for safety.
+- **Light-sensitive trap.** A glyph that fires or seals while lit — pass by routing around
+  it, or spend a match to snuff the candle and cross blind.
+- **Simple platforming.** A short light-and-dark hop across a gap or up a broken stair: the
+  next foothold is only *visible* inside the radius, so the jump is a reconnaissance
+  problem (scout the landing before you commit), never a twitch sequence. Grid-adjacent,
+  one-tile moves.
 
 ### 6.5 The tower (floors and the descent)
 
@@ -180,13 +193,26 @@ the **first floor played** — the Spire — and it is wax and exploration only 
 
 ## 7. Creatures (classic, escalating)
 
-- **Bats** — swarm, startle, minor wax spill.
-- **Rats** — swarm near food/light, gnaw matches.
-- **Wolves** — stalk corridors; forcing a run.
-- **Spiders** — webs cost turns (and thus wax) to clear.
-- **Shades** — drain light directly.
-- **Light-eater** — a shadow that snuffs the candle on contact.
-- **Count Orlok** — the reaper. Not fought. He arrives when the light fails.
+Creatures are hazards and decisions, never HP-sponges (§6.2). "Escalating" means the
+**roster widens with depth**: each floor introduces at most **one** new creature (one
+variable per floor, §9), then reuses earlier ones at higher density.
+
+| Creature | Behaviour | Cost to the player | First appears |
+|---|---|---|---|
+| **Bats** | swarm a room, startle, scatter | minor wax spill (a turn or two) | Spire / early — teaches that creatures cost light |
+| **Rats** | swarm near food and light, gnaw | destroy matches | early–mid |
+| **Spiders** | web corridors and doorways | clearing webs costs turns (= wax); block routes | mid |
+| **Wolves** | stalk corridors, close in | force a Run; heavy wax spill | mid |
+| **Shades** | drift through walls, drain | drain wax / shrink the radius while inside it | mid–late |
+| **Light-eater** | a shadow that seeks the flame | snuffs the candle on contact (needs a match) | late |
+| **Count Orlok** | the reaper — not fought | triggered only by wax-out (§8); Dread sets how fast he closes | terminal state only |
+
+- **Avoidance, not combat.** Every encounter offers **Run** (spills wax) or **Endure /
+  be spooked** (spills wax *and* snuffs the candle — needs a match). No HP, no attack rolls.
+- **Escalation is density and mix, not stats.** Deeper floors spawn more of the roster and
+  combine types in one room; an individual creature's behaviour never changes.
+- **Orlok is not a floor encounter.** He belongs only to the guttering dark and is never
+  rolled into the normal roster.
 
 ## 8. Loss / win / fail-forward
 
@@ -238,25 +264,72 @@ cold-built run can always claw back through warm gestures: Dread never hard-lock
 
 ## 10. Screens (≥6, per `COMPLIANCE.md`)
 
-Title · How to Play · Gameplay · Pause (music/SFX toggles, How to Play, quit) ·
-Settings (music/SFX, reset, credits) · Game Over ("Count Orlok takes you") ·
-Victory (escape). Plus in-scene overlays for combat and social encounters.
+Seven screens. Items in **bold** are the AGENTS GDD contract must-haves (music/SFX
+toggles, Pause resume + back).
+
+| Screen | Contents |
+|---|---|
+| **Title** | logo, Start, How to Play |
+| **How to Play** | candle-as-clock, move, Run/Endure, warm/cold acts, Dread |
+| **Gameplay** | the tower; HUD = wax meter, matches, key, Dread weather |
+| **Pause** | **resume**, **back**, **music toggle**, **SFX toggle**, How to Play, quit |
+| **Settings** | **music toggle**, **SFX toggle**, reset run, credits |
+| **Game Over** | "Count Orlok takes you" — retry / back to title |
+| **Victory** | escape (full or borrowed), score breakdown |
+
+Plus in-scene overlays for combat and social encounters (not counted as screens).
 
 ## 11. Visual direction notes (feeds `visual_agent`)
 
-- Palette: absolute black, candle amber/gold radius, cold grey stone, arterial red accents.
-- The world exists only where the light reaches — **radial light mask over darkness** is
-  the signature look; reveal is gameplay.
-- Candle flame should feel alive: flicker, guttering, shrink as wax drops.
-- Gothic architecture: arches, iron sconces, caged stairwells, ancestral portraits
-  whose eyes follow. Readability at 375 px is a hard constraint.
+**Signature.** The light *is* the artwork. There is no lit room behind a mask — the world
+is a **radial candle mask over absolute black**, and the reveal itself is the spectacle.
+Compose every frame around the flame, never around the room.
+
+- **Palette (≤3 hues on screen).** Absolute black (`#000`) void; a candle amber→gold core
+  with a warm falloff; cold desaturated grey-blue stone at the radius edge; **arterial red
+  reserved for Orlok, blood, and danger only**. Never let the void drift to grey — the
+  known/unknown border must read instantly.
+- **Light & falloff.** Radial gradient mask with a soft edge, plus a second, dimmer
+  **spill ring** just outside the main radius so near-things resolve before they pop in.
+  Radius is tied to remaining wax, so the frame literally closes in as the candle burns.
+- **Flame as a character.** Irregular low-amplitude flicker at rest; **guttering** as a
+  slow wobble near zero wax; a **snuff** is a hard, instant blackout — visually distinct
+  from the slow guttering dark (§8). Flame leans toward movement and toward the room's
+  neighbour.
+- **Gothic vocabulary.** Arches, iron sconces, caged stairwells, warped Expressionist
+  angles, ancestral portraits whose eyes track the flame. Borrow the 1922 *Nosferatu*
+  look — stark geometric shadows, low-key lighting, long clawed silhouettes. In a small
+  radius, **silhouette reads better than detail**.
+- **Readability (375 px is a hard floor).** Every threat must be identifiable from its
+  silhouette at the radius edge; tiles ≥48 px; never rely on fine detail to signal danger.
+- **Weather legibility.** Wax and Dread read as *atmosphere*: the darkness's colour and
+  saturation shift with Dread tiers; near-miss and damage flash red on the mask edge.
+- **Motion (reserved).** Turn-based, so movement is punctuation: a 1-tile camera glide, a
+  slow "breathing" pulse on the void, and nothing that competes with the flame.
 
 ## 12. Audio direction notes (feeds `audio_agent`)
 
-- A pervasive low drone; a ticking/consuming fire sound as wax burns (the clock you hear).
-- Creature cues: bat squeaks, rat scurry, wolf howl, shade whisper — directional.
-- Wax-out: the drone swells, a heartbeat enters, Orlok's theme resolves.
-- Music/SFX toggles required in Pause and Settings.
+**Rule zero — silence is a tool.** Horror reads through contrast. Keep the ambient bed at
+the edge of hearing so that a *cut to silence* is itself an event, not an absence.
+
+- **The clock you hear.** A consuming fire/tick per wax burn, imperceptibly faster as wax
+  drops, so the player *feels* the turn cost before reading the meter. Killing the tick is
+  the zero-wax cue.
+- **The drone.** One pervasive low-frequency drone (sub-bass plus detuned sines) as the
+  floor of the mix, present from the first turn and **rising with Dread tiers** so the
+  tower's mood is audible. Music, if any, stays non-diegetic and sparse — reserve it for
+  the terminal beats.
+- **Direction & distance.** Creature cues — bat squeaks, rat scurry, wolf howl, shade
+  whisper — panned by direction and attenuated by distance, and **quieter outside the
+  radius**. Orlok's footsteps are the one thing that grows *louder* as light fails.
+- **Escalation arc (snuff vs. guttering dark, §8).** *Snuff* = a sharp cutoff plus a lone
+  match-strike; *guttering dark* = the drone swells, a heartbeat enters, Orlok's theme
+  resolves; *death* = the drone stops dead.
+- **Voices.** Five survivors need distinct, minimal voices (a hum, a wheeze, a whisper) so
+  disposition changes are audible without dialogue; keep speech low-passed and close.
+- **Mix & budget.** Web Audio; procedural where possible (oscillators + noise, no sample
+  assets) to keep the single file light; duck the ambience under Orlok's theme.
+- **Music/SFX toggles required in Pause and Settings.**
 
 ## 13. Input (both mandatory)
 
@@ -305,9 +378,11 @@ matches, key, creatures, NPCs). It emits `world_template.json` + `world_template
 - **Staged delivery:** wave 1 = the **descent core** (candle, wax/matches, key, exit, seeded
   winding floors, one creature type); wave 2 = **social + Dread** (the five survivors,
   disposition, the Dread dial); wave 3 = the **shared-resource survivor sim** (NPCs carrying
-  wax, attacked by creatures, tripping traps, taking/using items). This keeps the mandatory
-  game shippable even if wave 2 or 3 is cut. If social is cut, the borrowed-door window (§8)
-  falls back to a fixed, short count.
+  wax, attacked by creatures, tripping traps, taking/using items). **Wave 3 is required for the
+  submission**, and its sub-features (item use, creatures attacking NPCs, trap-tripping) must
+  ship **independently flag-gated** so a flaky sub-feature disables at runtime without breaking
+  the build — graceful degradation, never a blanket cut. If social is cut, the borrowed-door
+  window (§8) falls back to a fixed, short count.
 - **Lore:** wave 1 ships a readable/score fragment; wave 2 makes it the social key
   (disposition / information / safe passage — never wax or matches).
 
