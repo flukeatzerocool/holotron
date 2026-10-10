@@ -3,6 +3,19 @@
 All notable changes to Holotron are documented here.
 Format: date-stamped sections, bulleted entries.
 
+## 2026-10-10 — Torre pre-run reconciliation (§14 drift + B7 boot-state)
+
+- `TORRE_NOSFERATU.md` §14: dropped the ad-hoc archetype enum (`exploration / combat / …`) in favour
+  of a reference to the Holotron contract (`world_template.schema.json`); added a
+  **state-vs-simulation** rule — `systemState()` reports the **tower-wide** survivor roster + Dread
+  at all times (so B7 reads ≥1 NPC + Dread at the pristine Spire boot), while NPC simulation stays
+  **active-floor-only** and the Spire stays encounter-free. No Holotron contract change.
+- Reconciled `docs/plans/2026-10-10-torre-submission-execution-plan.md`: P0.1-P0.3 marked done;
+  Phase 2 B7 check now asserts tower-wide `systemState()` at the pristine boot state; plan marked
+  authoritative (npc-floors amendment incorporated).
+- Added `docs/grill-me/2026-10-10-torre-plan-reground-stress-test.md` and
+  `docs/plans/2026-10-10-torre-prerun-reconciliation-plan.md`.
+
 ## 2026-10-10 — Torre brief: proofread, expansions, required flag-gated wave-3, submission plan
 
 - `TORRE_NOSFERATU.md` **proofread** (consistent **Dread** casing; parallel verbs) and **expanded**:

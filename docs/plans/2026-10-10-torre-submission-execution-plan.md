@@ -2,6 +2,8 @@
 
 Status: **Draft (pending plan-review)** · Date: 2026-10-10 · Goal owner: human (present at the gate)
 Source grill: `docs/grill-me/2026-10-10-torre-submission-execution-stress-test.md`
+Reconciliation: `docs/plans/2026-10-10-torre-prerun-reconciliation-plan.md` — **this plan is
+authoritative for the run**; `2026-10-10-torre-npc-floors-amendment-plan.md` is incorporated.
 Deadline (hard): **2026-10-11 12:00** (`COMPLIANCE.md:3`)
 
 ## Goal
@@ -30,16 +32,16 @@ GAMEOTRON**, plus an extended `PROCESS.md` — before the jam closes, satisfying
 
 ## Phase 0 — Pin the input (pre-run)
 
-- **P0.1 [S]** Commit the uncommitted work: `TORRE_NOSFERATU.md` (proofread + §6.4/§7/§10/§11/§12
-  expansions + §2 theme framing), the new stress-test reports, and this plan — with a
-  `CHANGELOG.md` entry (`changelog-before-commit` skill). Pins the run input.
-- **P0.2 [M]** Add the **flag-gating requirement** to `TORRE_NOSFERATU.md` §15 and to
-  `gdd_agent.md`'s acceptance checklist, so `code_agent` implements wave-3 sub-features behind
-  flags (the `juiceEnabled` pattern). Without this, the grill's de-risk never reaches the build.
-- **P0.3 [S]** Confirm the run invocation string matches the brief §"Run with" line.
-- **P0.4 [S]** Create the **new itch.io project for Torre Nosferatu** (the game half) and join the
-  jam. It is separate from the live `holotron` page, which is the **pipeline/process half**
-  (`PROCESS.md`). COMPLIANCE requires "itch.io project created; jam joined".
+- **P0.1 [S] — DONE (`3c9b98f`).** The uncommitted work is committed (`TORRE_NOSFERATU.md`
+  expansions, stress-test reports, this plan); `git status` clean. Run input pinned.
+- **P0.2 [M] — DONE (`3c9b98f`).** The flag-gating requirement is present in both places:
+  `TORRE_NOSFERATU.md` §15 (`:382-389`) and `gdd_agent.md`'s acceptance checklist (`:26-29`).
+- **P0.3 [S] — DONE.** Confirmed: the invocation string equals the brief's "Run with" line
+  (`TORRE_NOSFERATU.md:16`).
+- **P0.4 [S] — USER ACTION (pending).** Create the **new itch.io project for Torre Nosferatu**
+  (the game half) and join the jam; separate from the live `holotron` page (the **pipeline/process
+  half**, `PROCESS.md`). Requires the itch.io web UI + account — not automatable from here.
+  COMPLIANCE requires "itch.io project created; jam joined".
 
 ## Phase 1 — Execute the pipeline run
 
@@ -53,9 +55,11 @@ GAMEOTRON**, plus an extended `PROCESS.md` — before the jam closes, satisfying
 
 ## Phase 2 — B7 gate (`ROADMAP.md:14-17`)
 
-- Confirm **social + Dread actually shipped**: `window.systemState()` returns a non-null `dread`
-  clock + ≥1 NPC; `window.social(id)` exists and calls the UI handler; a `required_encounters`
-  entry is reachable on `test_seed`; Phase 2 reads the **pristine boot state** (pre-mutation).
+- Confirm **social + Dread actually shipped**: `window.systemState()` is **tower-wide** — a
+  non-null `dread` clock + ≥1 NPC at the **pristine boot state** (on the Spire), per the brief's
+  state-vs-simulation rule (§14); `window.social(id)` exists and calls the UI handler; a
+  `required_encounters` entry is reachable on `test_seed`; `worldState()` stays **active-floor**
+  (pre-mutation).
 - Confirm **wave-3 flag-gated sub-features** exist and toggle (new requirement, this grill).
 - **Verify:** `puppeteer_agent` Phase 2 run against the built game.
 

@@ -341,9 +341,9 @@ the edge of hearing so that a *cut to silence* is itself an event, not an absenc
 ## 14. World-model contract (settled)
 
 Procgen lives **in the game**; `world_agent` authors and `manage_world(convert)` validates a
-static **tower template** (room archetypes — exploration / combat / social / puzzle /
-treasure / exit — the connectivity rules between them, and the thing/encounter roster: wax,
-matches, key, creatures, NPCs). It emits `world_template.json` + `world_template.txt`.
+static **tower template** (room archetypes per the Holotron contract
+(`world_template.schema.json`); the connectivity rules between them; and the thing/encounter
+roster: wax, matches, key, creatures, NPCs). It emits `world_template.json` + `world_template.txt`.
 
 - `code_agent` embeds the template as `window.TEMPLATE`, generates floors from it seeded by
   `window.SEED` (default random, overridable), and exposes `window.worldState()` (the
@@ -364,6 +364,10 @@ matches, key, creatures, NPCs). It emits `world_template.json` + `world_template
   returns the floor you changed. `worldState()` reports the **active floor**; the Phase 2
   check validates the **pristine boot state** (pre-mutation), and runtime mutations are a
   separate delta.
+- **State vs. simulation.** The game's `window.systemState()` reports the **tower-wide** survivor
+  roster and Dread at all times — so the B7 gate reads ≥1 survivor and a non-null Dread clock at
+  the **pristine boot state** (the Spire) — while NPC **simulation** (roaming, acting,
+  co-location encounters) is **active-floor-only**; the Spire stays encounter-free (§9).
 - **Dread** is authored twice: as lore (`key: dread-dial`) for the world model, and as a
   template `clocks[]` `tug_of_war` entry (0–8, with `tiers`) that the game and checker read.
 - A lore fragment is authored as a readable **thing** (`kind:"lore"`, `readable:true`,
