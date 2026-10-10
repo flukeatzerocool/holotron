@@ -12,16 +12,19 @@ Forward plan for Holotron. Completed work lands in `CHANGELOG.md`; this file tra
   exists and calls the UI handler, and a `required_encounters` entry is reachable on
   `test_seed`. **Pass ⇒ unblocks C4/C5.**
 
-## Next — wire and run the Phase 2 world-model checker (gated on B7)
+## Next — run the Phase 2 world-model checker end-to-end (gated on B7)
 
-- **C4 — Wire `puppeteer_agent.md`.** Phase 2: extract `{world, systems}` on `test_seed`;
-  run `scripts/check_template.mjs`; rooms **hard**, systemic **advisory**; golden + both
-  malformed fixtures; fail-closed rooms / report-unverified systemic.
 - **C5 — End-to-end.** Run the checker against the real Torre artifacts on `test_seed`;
   record spatial = 0 and the advisory systemic count.
+- **C6 — Archetype validation.** Extend `check_template.mjs` to enforce each generated
+  room's archetype role + `count` bounds (dropped from C4's prose to stop the doc
+  overpromising). Not gated on B7.
 
-Built and dry-run, not yet wired: `scripts/check_template.mjs`,
-`test_worlds/golden_template.json`, `golden_state.json`, `malformed_systems.json`.
+**C4 done (2026-10-10).** The checker is wired into `puppeteer_agent` Phase 2 — see
+`CHANGELOG.md`. `scripts/check_template.mjs` now carries `--fail-on spatial|systemic|any`;
+the extraction is agent-driven (no repo deps). Fixtures:
+`test_worlds/golden_template.json` + `golden_state.json` (0), `malformed.json` (spatial),
+`malformed_systems.json` (systemic).
 
 ## Deferred — Holonovel systems not needed for Torre
 

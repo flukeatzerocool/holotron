@@ -3,6 +3,12 @@
 All notable changes to Holotron are documented here.
 Format: date-stamped sections, bulleted entries.
 
+## 2026-10-10 — Phase 2 checker wiring (puppeteer_agent)
+
+- Wired the Phase 2 world-model check into `puppeteer_agent.md`: agent-driven extraction (pin `window.SEED = TEMPLATE.test_seed`, snapshot `worldState()`/`systemState()`, synthesize `socialLog` by driving warm+cold `window.social(id)`, write `state_<seed>.json`), then run the dependency-free checker. Fail-closed: missing hooks / unpopulated `socialLog` / null `test_seed` ⇒ **unverified**, never a vacuous pass.
+- Added `--fail-on spatial|systemic|any` to `scripts/check_template.mjs` (default `any`) so rooms are **hard** and systemic **advisory** machine-readably, without parsing output text; guard mismatches always fail. Verified: golden ⇒ exit 0; `malformed.json` ⇒ 4 spatial (exit 1); `malformed_systems.json` ⇒ 7 systemic, advisory under `--fail-on spatial` (exit 0).
+- Dropped the stale archetype role/`count` claim from the Phase 2 prose; filed archetype validation as **C6** in `ROADMAP.md`. Updated `AGENTS.md` (data-flow row + puppeteer gotcha) and `PROCESS.md` §4.5.
+
 ## 2026-10-10 — Phase 2 world-model checker + roadmap
 
 - Added a deterministic, dependency-free Phase 2 validator (`scripts/check_template.mjs`) that checks the generated game's state against the world template: spatial checks (dangling exits, reachability, required things) and systemic checks (clock bounds + tier continuity, NPC count/disposition/bounds, social-action presence, and **observed** social-log direction + clamping, encounter/required-encounter presence).

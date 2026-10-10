@@ -10,12 +10,14 @@
 // merely echoes window.TEMPLATE into window.systemState() will fail these.
 //
 // Usage:
-//   node scripts/check_template.mjs --template <t.json> --state <s.json> [--mode all|spatial|systemic] [--max-bytes N]
-// Exit: 0 = no mismatches (or scope not exercised); 1 = mismatches.
+//   node scripts/check_template.mjs --template <t.json> --state <s.json> [--mode all|spatial|systemic] [--fail-on any|spatial|systemic] [--max-bytes N]
+// Exit: 0 = no mismatch in the --fail-on scope (or scope not exercised); 1 = a mismatch in scope.
+//   --fail-on (default any) splits the gate: `--fail-on spatial` makes rooms hard while
+//   systemic stays advisory (reported, exit 0). Guard mismatches always fail.
 
 import { readFileSync } from 'node:fs';
 
-const DEFAULTS = { mode: 'all', maxBytes: 200_000 };
+const DEFAULTS = { mode: 'all', maxBytes: 200_000, failOn: 'any' };
 
 function parseArgs(argv) {
   const o = { ...DEFAULTS };
@@ -25,11 +27,13 @@ function parseArgs(argv) {
     else if (a === '--state') o.state = argv[++i];
     else if (a === '--mode') o.mode = argv[++i];
     else if (a === '--max-bytes') o.maxBytes = Number(argv[++i]);
-    else if (a === '--help' || a === '-h') { console.log('usage: node scripts/check_template.mjs --template <t.json> --state <s.json> [--mode all|spatial|systemic] [--max-bytes N]'); process.exit(0); }
+    else if (a === '--fail-on') o.failOn = argv[++i];
+    else if (a === '--help' || a === '-h') { console.log('usage: node scripts/check_template.mjs --template <t.json> --state <s.json> [--mode all|spatial|systemic] [--fail-on any|spatial|systemic] [--max-bytes N]'); process.exit(0); }
     else { console.error(`unknown argument: ${a}`); process.exit(2); }
   }
   if (!o.template || !o.state) { console.error('error: --template and --state are required'); process.exit(2); }
   if (!['all', 'spatial', 'systemic'].includes(o.mode)) { console.error(`error: bad --mode ${o.mode}`); process.exit(2); }
+  if (!['any', 'spatial', 'systemic'].includes(o.failOn)) { console.error(`error: bad --fail-on ${o.failOn}`); process.exit(2); }
   return o;
 }
 
@@ -172,8 +176,13 @@ function main() {
   for (const m of mismatches) console.log(`MISMATCH [${m.kind}] ${m.detail}`);
   const systemic = mismatches.filter(m => m.kind === 'systemic' || m.kind === 'guard').length;
   const spatial = mismatches.filter(m => m.kind === 'spatial').length;
-  console.log(`\n${mismatches.length} mismatch(es) — spatial ${spatial}, systemic ${systemic} (mode=${opts.mode})`);
-  process.exit(mismatches.length === 0 ? 0 : 1);
+  const isHard = (m) => opts.failOn === 'any' ? true : (m.kind === 'guard' || m.kind === opts.failOn);
+  const hard = mismatches.filter(isHard);
+  console.log(`\n${mismatches.length} mismatch(es) — spatial ${spatial}, systemic ${systemic} (mode=${opts.mode}, fail-on=${opts.failOn})`);
+  console.log(hard.length === 0
+    ? `PASS — no ${opts.failOn} mismatch${mismatches.length ? ` (${mismatches.length} advisory)` : ''}`
+    : `FAIL — ${hard.length} ${opts.failOn} mismatch(es)`);
+  process.exit(hard.length === 0 ? 0 : 1);
 }
 
 main();

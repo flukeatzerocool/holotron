@@ -114,7 +114,22 @@ is proven sensitive by a control fixture that catches 2 injected errors.
   `tug_of_war` clock. `clocks[].behavior` is our own contract field, not a Holonovel feature.
 - The Holonovel dependency is **pinned to commit `b6a182a`**; the launcher fails loudly on drift.
 
-Open follow-ups (the Torre run, the Phase 2 checker wiring, and the deferred Holonovel
+### 4.5 Phase 2 checker wiring (2026-10-10)
+
+- `puppeteer_agent` Phase 2 now runs the validator end-to-end. Because the repo forbids
+  npm/puppeteer dependencies, the **browser work is agent-driven** (Puppeteer, or the
+  `playwright-cli` fallback + `python3 -m http.server`): it pins `window.SEED =
+  TEMPLATE.test_seed`, snapshots `worldState()`/`systemState()` into `state_<seed>.json`, and
+  **synthesizes `socialLog`** by driving ≥1 warm + ≥1 cold `window.social(id)` (the documented
+  `systemState()` does not expose one).
+- The dependency-free `scripts/check_template.mjs` gained `--fail-on spatial|systemic|any`
+  (default `any`) so the harness expresses the policy — **rooms hard, systemic advisory** —
+  machine-readably instead of parsing output text. Guard mismatches always fail.
+- Fail-closed: a missing hook, an unpopulated `socialLog`, or a null `test_seed` reports
+  **unverified** — never a vacuous pass. The stale "archetype role/`count`" claim was dropped
+  from the Phase 2 prose (the script does not check it); archetype validation is filed as C6.
+
+Open follow-ups (the Torre run, the **C5** end-to-end checker run, and the deferred Holonovel
 systems) are tracked in `ROADMAP.md`.
 
 ## 5. Before/after metric

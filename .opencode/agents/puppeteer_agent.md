@@ -41,22 +41,36 @@ runtime_errors_HHmmss.txt with:
 - Viewport-specific issues
 test_report_HHmmss.txt with all tests and their results
 
-## Holotron Phase 2 — world-template consistency check (when the game exposes the world contract)
-The Holotron fork adds a post-generation check that ties the game back to the world model
-authored by `world_agent`. It runs after the standard runtime tests.
-1. Pin a fixed seed: load `index.html` with a fixed `window.SEED` (URL parameter) so the
-   generated layout is deterministic.
-2. Read the generated world: call `window.worldState()` and compare it to `world_template.json`.
-   **Constraint check** (not a 1:1 map compare):
-   - every generated room's role is one of the template's archetypes, within `count` bounds;
-   - every exit is a legal transition under the template's connectivity rules (no dangling exits);
-   - every `required_things` entry is placed and reachable from `start`.
-3. Drive real traversal: BFS the generated graph through real `window.move(dir)` calls and
-   record observed vs. declared transitions (mismatch budget 0).
-4. Report the mismatch count. **Fail-closed:** if `window.worldState` / `window.TEMPLATE` /
-   `window.SEED` is absent, report the check as **unverified** — never pass.
-5. Control: apply the same checker to a deliberately malformed world fixture
-   (`test_worlds/malformed.json`) and require ≥2 mismatches, proving the checker detects
-   errors rather than echoing the file.
-Tooling fallback: Rule Breaker's run used the `playwright-cli` skill (Firefox headless) +
-a local `python3 -m http.server`; use the same when Puppeteer/Chromium is unavailable.
+## Holotron Phase 2 — world-model checker (after the standard runtime tests)
+The Holotron fork ties the finished game back to the world model `world_agent` authored. The
+repo forbids npm/node dependencies (`AGENTS.md`: no npm/node/bun), so the **browser work is
+done here, in this agent** — only the dependency-free `scripts/check_template.mjs` runs as a
+script. Rooms are **hard** (a spatial mismatch fails the check); systemic is **advisory**
+(reported, never fails the check).
+
+1. **Determinism.** Read `window.TEMPLATE.test_seed` and pin the layout by evaluating
+   `window.SEED = <test_seed>` **before** the app script runs (e.g. `page.evaluateOnNewDocument`).
+   If `test_seed` is null/absent, the check is **UNVERIFIED** — never pass.
+2. **Extract.** In-page, snapshot `window.worldState()` and `window.systemState()`. Normalize
+   `clocks[...].value` defensively (`.value ?? .current ?? 0`). Write `state_<seed>.json`:
+   `{ "world": <worldState>, "systems": <systemState> }`.
+3. **Behavioral (synthesize `socialLog`).** The documented `systemState()` has no `socialLog`,
+   but the checker reads one — so build it here: for ≥1 warm and ≥1 cold action in
+   `template.social_actions`, read `systemState().clocks.dread.value` before, call
+   `window.social(id)`, read it after, and append `{ id, dreadBefore, dreadAfter }` to
+   `systems.socialLog`. If `social_actions` are declared but no log can be produced, the
+   behavioral portion is **UNVERIFIED** — never a vacuous pass.
+4. **Run.** `node scripts/check_template.mjs --template world_template.json --state
+   state_<seed>.json --fail-on spatial`. (Reachability is validated structurally from the
+   exported `worldState()`, whose hook wraps the same transition handler the UI uses.)
+5. **Fail-closed.** If `window.worldState` / `window.systemState` / `window.TEMPLATE` /
+   `window.SEED` is absent, report **unverified** — never pass.
+6. **Control.** Before trusting a green result, run the checker against the fixtures and
+   require: `golden_template.json` + `golden_state.json` ⇒ 0 mismatches (exit 0);
+   `malformed.json` ⇒ ≥2 **spatial** (exit 1); `malformed_systems.json` ⇒ ≥2 **systemic**
+   (advisory under `--fail-on spatial`, exit 0).
+7. **Output.** Write `phase2_report_HHmmss.txt`: the exact command, exit code, the mismatch
+   lines, and the verdict (spatial hard / systemic advisory / unverified).
+
+Tooling fallback: when Puppeteer/Chromium is unavailable, drive the same steps with the
+`playwright-cli` skill (Firefox headless) + a local `python3 -m http.server`.
