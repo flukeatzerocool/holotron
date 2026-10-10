@@ -28,7 +28,9 @@ never boot silently with a partial model.
 
 Generation:
 - Generate the floor layout at runtime from `window.TEMPLATE`; never diverge from its
-  archetypes, connectivity rules, `required_things`, or `required_encounters`.
+  archetypes (respect each archetype's `count` bounds; tag every generated room with its
+  archetype id in `worldState()`), connectivity rules, `required_things`, or
+  `required_encounters`.
 - Seed deterministically from `window.SEED` (integer — default random at boot; overridable
   via a URL parameter and a Settings control so tests can pin it). When no override is
   given, **honor `template.test_seed`** so the Phase 2 checker reproduces the same layout.
@@ -37,7 +39,7 @@ Generation:
 - Guarantee every `required_encounters` entry exists and is reachable on `test_seed`.
 
 Required hooks — each a thin wrapper over the **same** handler the UI uses, never a parallel path:
-- `window.worldState()` → `{ seed, start, rooms: { "<slug>": { "name": "<display>", "exits": { "<dir>": "<slug>" }, "things": ["<slug>"] } } }`
+- `window.worldState()` → `{ seed, start, rooms: { "<slug>": { "name": "<display>", "archetype": "<archetype id>", "exits": { "<dir>": "<slug>" }, "things": ["<slug>"] } } }`. `archetype` names the room's archetype from `TEMPLATE.archetypes`; the canonical state contract is `world_template.schema.json` (`x-runtime-state`).
 - `window.move(dir)` → invokes the same transition handler the UI uses.
 - `window.systemState()` → `{ seed, clocks: { wax, dread }, npcs: [{ id, name, disposition }], socialActions: ["<id>"], encounters: ["<id>"] }`
 - `window.social(id)` → applies the social action through the same handler the UI's social

@@ -53,7 +53,9 @@ script. Rooms are **hard** (a spatial mismatch fails the check); systemic is **a
    If `test_seed` is null/absent, the check is **UNVERIFIED** — never pass.
 2. **Extract.** In-page, snapshot `window.worldState()` and `window.systemState()`. Normalize
    `clocks[...].value` defensively (`.value ?? .current ?? 0`). Write `state_<seed>.json`:
-   `{ "world": <worldState>, "systems": <systemState> }`.
+   `{ "world": <worldState>, "systems": <systemState> }`. Each room must carry its `archetype`
+   id (the checker validates role + per-archetype `count` bounds); if **no** room declares an
+   `archetype`, the archetype check is unexercised — not failed.
 3. **Behavioral (synthesize `socialLog`).** The documented `systemState()` has no `socialLog`,
    but the checker reads one — so build it here: for ≥1 warm and ≥1 cold action in
    `template.social_actions`, read `systemState().clocks.dread.value` before, call
@@ -67,8 +69,9 @@ script. Rooms are **hard** (a spatial mismatch fails the check); systemic is **a
    `window.SEED` is absent, report **unverified** — never pass.
 6. **Control.** Before trusting a green result, run the checker against the fixtures and
    require: `golden_template.json` + `golden_state.json` ⇒ 0 mismatches (exit 0);
-   `malformed.json` ⇒ ≥2 **spatial** (exit 1); `malformed_systems.json` ⇒ ≥2 **systemic**
-   (advisory under `--fail-on spatial`, exit 0).
+   `malformed.json` ⇒ ≥2 **spatial** (exit 1); `malformed_archetypes.json` ⇒ ≥2 **spatial**
+   (exit 1); `malformed_systems.json` ⇒ ≥2 **systemic** (advisory under `--fail-on spatial`,
+   exit 0).
 7. **Output.** Write `phase2_report_HHmmss.txt`: the exact command, exit code, the mismatch
    lines, and the verdict (spatial hard / systemic advisory / unverified).
 

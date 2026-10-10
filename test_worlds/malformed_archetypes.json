@@ -1,0 +1,22 @@
+{
+  "world": {
+    "seed": 12345,
+    "start": "entry-hall",
+    "rooms": {
+      "entry-hall": { "name": "Entry Hall", "archetype": "entry", "exits": { "north": "chalk-corridor" }, "things": [] },
+      "chalk-corridor": { "name": "Corridor", "archetype": "corridor", "exits": { "south": "entry-hall", "east": "common-room" }, "things": ["lamp"] },
+      "common-room": { "name": "Common Room", "archetype": "audience", "exits": { "west": "chalk-corridor" }, "things": ["key"] }
+    }
+  },
+  "systems": {
+    "seed": 12345,
+    "clocks": { "wax": { "value": 28, "min": 0, "max": 30 }, "dread": { "value": 3, "tier": "watched" } },
+    "npcs": [ { "id": "innkeeper", "name": "The Innkeeper", "disposition": "neutral", "numeric": 0 } ],
+    "socialActions": ["share-light", "threaten"],
+    "encounters": ["innkeeper", "bats"],
+    "socialLog": [
+      { "id": "share-light", "dreadBefore": 4, "dreadAfter": 3 },
+      { "id": "threaten", "dreadBefore": 3, "dreadAfter": 4 }
+    ]
+  }
+}

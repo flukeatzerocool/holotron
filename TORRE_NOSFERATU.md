@@ -202,12 +202,13 @@ matches, key, creatures, NPCs). It emits `world_template.json` + `world_template
 
 - `code_agent` embeds the template as `window.TEMPLATE`, generates floors from it seeded by
   `window.SEED` (default random, overridable), and exposes `window.worldState()` (the
-  generated rooms/exits/things) + `window.move(dir)`.
+  generated rooms — each tagged with its archetype id — exits, and things) + `window.move(dir)`.
 - The game exposes a **deterministic seeded mode** for testing (a fixed seed ⇒ a known layout).
 - The Phase 2 behavioral check validates a **fixed seed's** generated layout against the
-  template's constraints (archetypes present within count bounds, connectivity legal,
-  required things placed and reachable) rather than a 1:1 fixed map. Rule Breaker's 1:1 graph
-  check remains the sensitivity control.
+  template's constraints: dangling exits, reachability, required things, required encounters,
+  and (since C6) each room's archetype role + per-archetype `count` bounds on the active
+  floor — rather than a 1:1 fixed map. **Connectivity rules are not yet validated** (filed as
+  C7). Rule Breaker's 1:1 graph check remains the sensitivity control.
 - Holonovel's `manage_world(action: generate)` is **not** used: it is ruleset-table-driven
   and content-absent ruleset-free (REQ-431).
 

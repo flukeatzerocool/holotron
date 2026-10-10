@@ -79,6 +79,51 @@ function checkSpatial(tpl, state, mismatches) {
       if (!placed) mismatches.push({ kind: 'spatial', detail: `required thing '${thing}' is not placed on any reachable room` });
     }
   }
+
+  checkArchetypes(tpl, state, mismatches);
+}
+
+// Archetype role + per-archetype count bounds on the checked (active-floor) state.
+// Scope is exercised only when at least one room declares an `archetype`; otherwise the
+// state predates the contract and is treated as unexercised, not failed.
+function checkArchetypes(tpl, state, mismatches) {
+  const world = state.world && state.world.rooms ? state.world : state;
+  const rooms = world.rooms;
+  if (!rooms || typeof rooms !== 'object') return;
+  const archetypes = Array.isArray(tpl.archetypes) ? tpl.archetypes : [];
+  if (archetypes.length === 0) return;
+  const byId = new Map(archetypes.map(a => [a.id, a]));
+  const declared = Object.values(rooms).some(r => r && typeof r.archetype === 'string');
+  if (!declared) return; // no room declares an archetype: scope not exercised
+
+  const tally = new Map();
+  for (const [slug, room] of Object.entries(rooms)) {
+    const arch = room && room.archetype;
+    if (typeof arch !== 'string') {
+      mismatches.push({ kind: 'spatial', detail: `room '${slug}': missing archetype` });
+      continue;
+    }
+    if (!byId.has(arch)) {
+      mismatches.push({ kind: 'spatial', detail: `room '${slug}': archetype '${arch}' is undeclared` });
+      continue;
+    }
+    tally.set(arch, (tally.get(arch) || 0) + 1);
+  }
+
+  for (const a of archetypes) {
+    const count = a.count;
+    if (!Array.isArray(count) || count.length !== 2) continue; // unbounded archetype
+    const got = tally.get(a.id) || 0;
+    if (got < count[0] || got > count[1]) {
+      mismatches.push({ kind: 'spatial', detail: `archetype '${a.id}': ${got} room(s), expected ${count[0]}..${count[1]}` });
+    }
+  }
+
+  const entry = archetypes.find(a => a.role === 'entry');
+  const start = world.start;
+  if (entry && start && rooms[start] && rooms[start].archetype !== entry.id) {
+    mismatches.push({ kind: 'spatial', detail: `start room '${start}': archetype '${rooms[start].archetype}', expected entry '${entry.id}'` });
+  }
 }
 
 function checkTiering(clk, mismatches) {

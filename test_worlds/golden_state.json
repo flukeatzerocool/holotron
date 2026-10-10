@@ -3,9 +3,10 @@
     "seed": 12345,
     "start": "entry-hall",
     "rooms": {
-      "entry-hall": { "name": "Entry Hall", "exits": { "north": "chalk-corridor" }, "things": [] },
-      "chalk-corridor": { "name": "Corridor", "exits": { "south": "entry-hall", "east": "common-room" }, "things": ["lamp"] },
-      "common-room": { "name": "Common Room", "exits": { "west": "chalk-corridor" }, "things": ["key"] }
+      "entry-hall": { "name": "Entry Hall", "archetype": "entry", "exits": { "north": "chalk-corridor" }, "things": [] },
+      "chalk-corridor": { "name": "Corridor", "archetype": "corridor", "exits": { "south": "entry-hall", "east": "common-room", "north": "dust-corridor" }, "things": ["lamp"] },
+      "dust-corridor": { "name": "Dust Corridor", "archetype": "corridor", "exits": { "south": "chalk-corridor" }, "things": [] },
+      "common-room": { "name": "Common Room", "archetype": "social", "exits": { "west": "chalk-corridor" }, "things": ["key"] }
     }
   },
   "systems": {

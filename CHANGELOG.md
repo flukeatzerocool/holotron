@@ -3,6 +3,13 @@
 All notable changes to Holotron are documented here.
 Format: date-stamped sections, bulleted entries.
 
+## 2026-10-10 — C6 archetype role + count validation
+
+- `scripts/check_template.mjs` now enforces each generated room's archetype: every room's `archetype` must name a declared archetype; the count of rooms per archetype must fall within the archetype's `count` bounds (unbounded archetypes skipped); and the `start` room's archetype must be the `role:entry` archetype. All are hard (`spatial`). Scope is **unexercised** (not failed) when no room declares an `archetype`, preserving the legacy controls' exit codes.
+- Extended the state contract: `world_template.schema.json` gains `x-runtime-state` (canonical `worldState()` shape incl. `archetype`); `code_agent.md`, `gdd_agent.md`, and `AGENTS.md` updated. Active-floor scope documented.
+- Fixtures: `golden_state.json` updated (two corridors + archetype tags); new `test_worlds/malformed_archetypes.json` (undeclared archetype + count violations) rejects with **3 spatial**. `malformed.json` (4 spatial) and `malformed_systems.json` (7 systemic, advisory) unchanged. `puppeteer_agent.md` control updated.
+- Corrected the connectivity over-claim in `TORRE_NOSFERATU.md` §14 and `PROCESS.md` §4.5; filed connectivity validation as **C7** (needs the `*` grammar) and moved C6 ahead of C5 in `ROADMAP.md`.
+
 ## 2026-10-10 — Phase 2 checker wiring (puppeteer_agent)
 
 - Wired the Phase 2 world-model check into `puppeteer_agent.md`: agent-driven extraction (pin `window.SEED = TEMPLATE.test_seed`, snapshot `worldState()`/`systemState()`, synthesize `socialLog` by driving warm+cold `window.social(id)`, write `state_<seed>.json`), then run the dependency-free checker. Fail-closed: missing hooks / unpopulated `socialLog` / null `test_seed` ⇒ **unverified**, never a vacuous pass.

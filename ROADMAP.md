@@ -12,13 +12,19 @@ Forward plan for Holotron. Completed work lands in `CHANGELOG.md`; this file tra
   exists and calls the UI handler, and a `required_encounters` entry is reachable on
   `test_seed`. **Pass ⇒ unblocks C4/C5.**
 
+## Now — C6 archetype validation (not gated on B7)
+
+- **C6 — Archetype validation.** `check_template.mjs` enforces each generated room's
+  archetype role + per-archetype `count` bounds on the active floor (hard `spatial`).
+  Shipped 2026-10-10 — see `CHANGELOG.md`.
+- **C7 — Connectivity validation.** Deferred: validate `connectivity.rules` (`"entry ->
+  corridor*"`); the `*` grammar must be defined first. Not gated on B7.
+
 ## Next — run the Phase 2 world-model checker end-to-end (gated on B7)
 
 - **C5 — End-to-end.** Run the checker against the real Torre artifacts on `test_seed`;
-  record spatial = 0 and the advisory systemic count.
-- **C6 — Archetype validation.** Extend `check_template.mjs` to enforce each generated
-  room's archetype role + `count` bounds (dropped from C4's prose to stop the doc
-  overpromising). Not gated on B7.
+  record spatial = 0 and the advisory systemic count. **Gated on B7** (the Torre artifacts
+  must exist first).
 
 **C4 done (2026-10-10).** The checker is wired into `puppeteer_agent` Phase 2 — see
 `CHANGELOG.md`. `scripts/check_template.mjs` now carries `--fail-on spatial|systemic|any`;
