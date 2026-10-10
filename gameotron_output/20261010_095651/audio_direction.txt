@@ -14,6 +14,30 @@
 
 ---
 
+## 0. REVISION (2026-10-10) — audibility fix
+
+The original mix targeted the ambient bed at **−34…−38 dB ("edge of hearing")**
+and used a **38 Hz-only** drone. Implemented faithfully, that made the bed
+inaudible on laptop/phone speakers (38 Hz is below their reproduction floor) —
+the only audible element was the broadband UI click, perceived as *static*.
+Superseded targets, now implemented (`index.html` `MIX` table):
+
+- **Bed on the MUSIC bus** (drone + fire + wind), so the Music toggle is live.
+  Cues (tick, wax, match, creature, voices, UI) stay on the SFX bus.
+- **Drone re-voiced**: 38 Hz sub + detune (38·1.01) **plus harmonics 76/114/152/228/304 Hz**
+  through a lowpass opened to ~450 Hz; level raised to ~**−18 dB** channel gain.
+- **Fire ~−24 dB**, **wind ~−26 dB** (from −36/−38 dB).
+- **Dread-tier melodic layer** (220/233 Hz) on the Music bus, rising with tier.
+- **Orlok's theme** (organ sine + detuned saw + heartbeat) on the Music bus at guttering dark.
+- UI click softened from a 3 kHz noise burst to a short quiet tonal tick.
+
+Any dB figure below predating this block is **historical**; the `MIX` table is
+authoritative. Verification: `window.audioTest(scenario,seed,opts)` renders
+offline and asserts per-scenario RMS (bed rms≥0.02 & bandRms>300Hz≥0.003; cues
+peak≥0.01; muted rms≤0.001).
+
+---
+
 ## 1. THREE AUDIO DIRECTION CONCEPTS
 
 ### Concept A — "The Room Breathes" (diegetic-first, minimal score)
@@ -68,10 +92,10 @@ All nodes created once at unlock into a persistent graph; per-event sounds are s
 
 | Name | Trigger | Web Audio synthesis | Mix notes |
 |---|---|---|---|
-| **drone-bed** | Scheduler start (first turn); runs the whole run | Two `OscillatorNode`s (sine) at e.g. 38 Hz and 38·1.01 Hz (detune ~8¢) → `GainNode` → `BiquadFilterNode` lowpass (~120 Hz) → master. Plus a `noise buffer` → lowpass (~90 Hz) for sub-body. | Floor of the mix, **edge-of-hearing at Dread 0** (~−34 dB). Never louder than −20 dB. |
+| **drone-bed** | Scheduler start (first turn); runs the whole run | Two `OscillatorNode`s (sine) at e.g. 38 Hz and 38·1.01 Hz (detune ~8¢) → `GainNode` → `BiquadFilterNode` lowpass (~120 Hz) → master. Plus a `noise buffer` → lowpass (~90 Hz) for sub-body. | Floor of the mix, **audible at Dread 0** (~−18 dB; re-voiced per §0 — sub + harmonics to ~304 Hz). |
 | **drone-dread-lift** | Dread tier changes (Calm→…→Hunted-full) | Modulate a dedicated `GainNode` on the drone ladder: per tier, +2–3 dB, plus a slight lowpass opening (~120→260 Hz) to add "weight". Optional: slowly ramp the detune from 8¢→20¢ as tiers rise (beating = unease). | The *only* continuous element allowed to rise with Dread. Capped below Orlok's theme and never above −20 dB. |
-| **ambient-fire** | Always during GAMEPLAY | Looping noise buffer through a bandpass (~1500 Hz, Q~0.7) with a slow random LFO on gain (flame flicker). A second, quieter noise layer lowpassed (~400 Hz) for wax-melt body. | At the edge of hearing (~−36 dB). Guttering dark re-shapes it (§3.3); snuff cuts it dead (§3.2). |
-| **ambient-tower** | Always during GAMEPLAY | Noise → bandpass swept slowly (600–900 Hz) + highpass "wind through stairs"; very slow random gain modulation. | −38 dB. Provides the "not silence" floor so a real cut reads. |
+| **ambient-fire** | Always during GAMEPLAY | Looping noise buffer through a bandpass (~1500 Hz, Q~0.7) with a slow random LFO on gain (flame flicker). A second, quieter noise layer lowpassed (~400 Hz) for wax-melt body. | Audible ambient floor (~−24 dB; re-voiced per §0). Guttering dark re-shapes it (§3.3); snuff cuts it dead (§3.2). |
+| **ambient-tower** | Always during GAMEPLAY | Noise → bandpass swept slowly (600–900 Hz) + highpass "wind through stairs"; very slow random gain modulation. | ~−26 dB (re-voiced per §0). Provides the "not silence" floor so a real cut reads. |
 
 ### 3.2 Event sounds (short-lived)
 

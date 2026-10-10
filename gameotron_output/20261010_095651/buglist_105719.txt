@@ -146,3 +146,42 @@ REGRESSION / STABILITY
 ========================================================================
 END OF BUGLIST
 ========================================================================
+
+========================================================================
+FIXED BUGS — audio (2026-10-10, post-pipeline follow-up)
+========================================================================
+User report: "heard nothing at first, then static on menu clicks, never
+any other audio." Diagnosed as the ambient bed being inaudible by
+construction, not the death-mute bug (which is real but latent).
+
+  [CRITICAL] Ambient bed inaudible — 38 Hz-only drone below small-speaker
+      reproduction floor; fire/wind at −36/−38 dB; only the 3 kHz UI noise
+      click was audible (perceived as static).
+      FIX: drone re-voiced (38 Hz sub + harmonics 76/114/152/228/304 Hz,
+      lowpass 120→450 Hz, gain 0.022→0.10); fire 0.012→0.05; wind 0.010→0.045;
+      UI click softened to a quiet tonal tick. Mix centralized in a MIX table.
+  [HIGH] Music toggle dead — nothing connected to musicGain; all ambience
+      routed to sfxGain.
+      FIX: drone/fire/wind + dread layer + Orlok theme now on the MUSIC bus;
+      discrete cues stay on SFX.
+  [HIGH] (latent) Master gain permanently muted after death — Audio.death()
+      ramped master to 0.0001 with no reset; retry/new game stayed silent.
+      FIX: Audio.resetMix() (cancelScheduledValues + restore) called at the
+      top of startGame().
+  [MEDIUM] No Orlok theme; dreadShift defined but never called.
+      FIX: Orlok theme cell on guttering dark; dread-tier melodic layer wired
+      at tier change (G._dreadTier tracked in renderHUD).
+  [MEDIUM] Creature pan computed but never applied (no StereoPanner).
+      FIX: tone/noiseAt apply a StereoPannerNode when available.
+
+  Verification (deterministic, headless, no audio hardware):
+    - OfflineAudioContext per-scenario RMS via window.audioTest():
+      bed rms 0.0956 / bandRms(>300 Hz) 0.0246 (≥0.02 / ≥0.003 PASS);
+      cues peak ≥0.022 (≥0.01 PASS); theme peak 0.145; victory peak 0.129.
+    - Mute independence: music-off → bed rms 0; sfx-off → cue rms 0.
+    - Determinism: bed rendered twice → identical (seeded RNG).
+    - Live gain graph: master 0.9; after game-over 0.0001; after Retry 0.9
+      (resetMix restored), music/sfx 0.9, drone 0.10.
+    - 0 console errors; 3 viewports (1920×1080, 800×600, 375×667) boot→HUD OK.
+    - scripts/check_template.mjs --fail-on spatial → exit 0 (world unchanged).
+========================================================================

@@ -35,3 +35,8 @@
 [112013] Phase6/P4: process documentation START
 [112105] P4 DONE: COMPLIANCE ticked, ROADMAP B7/C5 marked done, CHANGELOG entry added, PROCESS.md §7 extended
 [112105] P5: deployment_agent START (prepare build + butler status; NO upload until user confirms)
+[112322] P5 prep: build/index.html staged (2109 lines); butler auth OK; new Torre project 400 (P0.4 pending); NOTHING pushed
+[112322] COMMIT e1ce51d: run artifacts + docs; build/ gitignored
+[112322] DEPLOY ON HOLD per user (P0.4 not done). Pipeline complete except P5 upload/submit.
+[POST] Audio follow-up (grill-me -> plan-review -> build): user reported inaudible bed + menu static. Diagnosed as bed-by-construction inaudible (not the latent death-mute). Rewrote Audio module: MIX table, Music-bus bed (drone re-voiced to 304 Hz harmonics, fire/wind lifted), Audio.resetMix() on startGame, dread layer + Orlok theme, StereoPanner, softened UI tick; added window.audioTest offline render. index.html 2109->2206 lines.
+[POST] Verify: offline RMS per-scenario PASS; mute independence PASS; determinism PASS; live master reset PASS; 0 console errors; 3 viewports OK; check_template spatial exit 0. audio_direction.txt §0 revision + buglist FIXED BUGS appended; build/ re-staged. No commit (awaiting user).

@@ -3,6 +3,25 @@
 All notable changes to Holotron are documented here.
 Format: date-stamped sections, bulleted entries.
 
+## 2026-10-10 — Torre Nosferatu audio fix (audibility + Music bus)
+
+- Fixed the game being effectively silent: the ambient bed was inaudible on
+  laptop/phone speakers (a 38 Hz-only drone sat below their reproduction floor,
+  and fire/wind were ~30 dB down), leaving only the menu-click noise as audible
+  "static". The drone is re-voiced with audible harmonics up to ~304 Hz and the
+  bed levels are lifted; the mix is centralized in one table (`MIX`).
+- The Music toggle now works: the drone, fire, wind, a new dread-tier melodic
+  layer, and Orlok's theme play on the Music bus, while discrete cues stay on
+  the SFX bus — each toggle silences only its own bus. Menu clicks are softened
+  from a noisy burst to a quiet tick.
+- Fixed a latent bug where all audio stayed muted after a death and retry: the
+  master gain was cut on death and never restored. It is now reset on every
+  new run.
+- Creature cues are panned by direction, and Orlok's theme plays when the flame
+  gutters. Added a deterministic offline audio check (`window.audioTest`) that
+  asserts per-scenario levels, and documented the new mix targets in
+  `audio_direction.txt`.
+
 ## 2026-10-10 — Torre Nosferatu pipeline run (submission game)
 
 - Ran the full GAMEOTRON pipeline for the jam submission **Torre Nosferatu** (theme override;
