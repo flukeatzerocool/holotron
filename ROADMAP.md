@@ -7,10 +7,14 @@ Forward plan for Holotron. Completed work lands in `CHANGELOG.md`; this file tra
 
 - **B — Run the Torre pipeline.** `use gameotron with theme: Torre Nosferatu — …`.
   User-driven; the orchestrator's approval gates apply.
+- **Brief amended (2026-10-10).** Five recurring, roaming survivors and a descending, winding,
+  generated tower are locked into `TORRE_NOSFERATU.md`; staged delivery = descent core (wave 1) /
+  social + Dread (wave 2) / shared-resource survivor sim (wave 3). The brief now reaches the GDD as
+  `direction.txt` (with an acceptance checklist). See `CHANGELOG.md`.
 - **B7 gate.** After implementation, confirm the social + Dread systems actually shipped:
   `window.systemState()` returns a non-null `dread` clock and ≥1 NPC, `window.social(id)`
   exists and calls the UI handler, and a `required_encounters` entry is reachable on
-  `test_seed`. **Pass ⇒ unblocks C4/C5.**
+  `test_seed`. Phase 2 also reads the **pristine boot state** (pre-mutation). **Pass ⇒ unblocks C4/C5.**
 
 ## Now — C6 archetype validation (not gated on B7)
 

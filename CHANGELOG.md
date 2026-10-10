@@ -3,6 +3,28 @@
 All notable changes to Holotron are documented here.
 Format: date-stamped sections, bulleted entries.
 
+## 2026-10-10 — Torre brief: five survivors & the descending tower
+
+- `TORRE_NOSFERATU.md` now specifies a **descent** (wake at the **Spire**, escape the ground-floor
+  exit) and **five recurring survivors** — Vlask the hoarder, Sister Marta the archivist, Ilona the
+  bitten, Petr the innocent, Nadja the tomb-robber — as named **direction** (personalities + temptation
+  poles), with the mechanics left to the GDD/template (§1, §6.3, new §6.5, §7, §8, §9, §14, §15).
+- **Floor model (§6.5, §14):** floors generated from a **floor-agnostic** template; winding graph, not a
+  stack; `down`/`up` stairs; each floor generated once from `hash(seed, depth)`, cached and mutated in
+  place; survivors roam active-floor-only; per-floor escalation lives in the GDD. **No schema change.**
+- **Win/loss (§8):** key is recoverable (dropped on death); an escaped survivor leaves the exit **ajar**
+  for a window set by disposition + Dread (lesser ending + score penalty; raises Dread / draws creatures),
+  with a fixed-count fallback if social is cut; **Orlok (wax-out) remains the sole death**; distinguished
+  **snuff** from **guttering dark**. Fixed the Dread 4–5 clause so atonement is never wax-unaffordable.
+- **Pipeline:** the brief now reaches the GDD — the orchestrator writes `direction.txt` and passes it to
+  `gdd_agent`, which carries an **acceptance checklist** of the brief's must-haves; the approval gate's
+  object is defined (the brief constrains, does not pre-select). `world_agent.md` notes the flat NPC
+  roster + roaming + `required_encounters` pin; `code_agent.md` gains the multi-floor/`down`-`up`/
+  pristine-boot-hook and roaming/ajar-door contract; `puppeteer_agent.md` checks the **pristine boot
+  state** and the ≥1-NPC settlement; `world_template.schema.json` `x-runtime-state` documents the model.
+  (`gameotron.md`, `AGENTS.md`, `gdd_agent.md`, `world_agent.md`, `code_agent.md`, `puppeteer_agent.md`.)
+- Added the NPC/floor grill-me stress-test and the H2/M5 evaluation under `docs/` + `docs/plans/`.
+
 ## 2026-10-10 — Torre brief: the lore item (tradeable fragment)
 
 - `TORRE_NOSFERATU.md` now defines **lore** as a collectible item: a discrete fragment that is

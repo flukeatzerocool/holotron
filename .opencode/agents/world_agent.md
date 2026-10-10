@@ -43,6 +43,10 @@ player resource clocks, the NPC roster, and the warm/cold social-action table. T
    - **NPCs:** `manage_npc { action: "create", name, disposition, location, goals, mind:{directive} }`.
      `disposition` is a **free-form string**; `goals` is a **string** (not an array).
      Put the NPC's play directive under `mind.directive`.
+     ⚠️ The `npcs[]` roster is **flat** — there is no per-floor placement or recurrence field. For a
+     multi-floor game the survivors **roam** the tower (game-side, seeded-deterministic); recurrence is
+     not encoded in the template. Guarantee the Phase 2 check has something to find by adding an NPC to
+     `required_encounters` (with its `floor`) so at least one is reachable on `test_seed`.
    - **Relationships:** `manage_relationship { action: "set", entity_a, entity_b, type, value? }`.
      Valid `type`s: `ally`, `rival`, `neutral`, `mentor`, `dependent`, `suspicious`.
    - **Lore / world facts:** `manage_lore { action: "set", key, content, triggers, badge_scope }`.
@@ -116,6 +120,10 @@ Conforms to `world_template.schema.json`. Required keys: `archetypes`, `connecti
 - `social_actions[].dread_delta` is signed: negative = warm (lowers Dread), positive = cold.
 - The template is the **single documented source**; the game generates concrete floors from
   it seeded by `window.SEED` and exposes the result via `window.worldState()`.
+- **The template is floor-agnostic.** Its archetype `count` bounds describe *one* generated floor;
+  per-floor escalation (creature density, wax drain, darkness, NPC pressure) is applied by the game by
+  depth, from the GDD — the template carries **no `floors[]` section**. Vertical movement uses `down`/`up`
+  exits; each floor is generated once from `hash(seed, depth)` and cached.
 
 ## Outputs
 - `world_template.json` — conforms to `world_template.schema.json`; consumed by `code_agent`.

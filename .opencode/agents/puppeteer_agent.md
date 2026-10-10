@@ -51,17 +51,22 @@ script. Rooms are **hard** (a spatial mismatch fails the check); systemic is **a
 1. **Determinism.** Read `window.TEMPLATE.test_seed` and pin the layout by evaluating
    `window.SEED = <test_seed>` **before** the app script runs (e.g. `page.evaluateOnNewDocument`).
    If `test_seed` is null/absent, the check is **UNVERIFIED** — never pass.
-2. **Extract.** In-page, snapshot `window.worldState()` and `window.systemState()`. Normalize
-   `clocks[...].value` defensively (`.value ?? .current ?? 0`). Write `state_<seed>.json`:
-   `{ "world": <worldState>, "systems": <systemState> }`. Each room must carry its `archetype`
-   id (the checker validates role + per-archetype `count` bounds); if **no** room declares an
-   `archetype`, the archetype check is unexercised — not failed.
+2. **Extract.** In-page, snapshot `window.worldState()` and `window.systemState()` **at boot,
+   before any move** — the *pristine* generation state (runtime mutations are a separate delta the
+   checker does not compare). Normalize `clocks[...].value` defensively (`.value ?? .current ?? 0`).
+   Write `state_<seed>.json`: `{ "world": <worldState>, "systems": <systemState> }`. Each room must
+   carry its `archetype` id (the checker validates role + per-archetype `count` bounds); if **no**
+   room declares an `archetype`, the archetype check is unexercised — not failed. For a multi-floor
+   game, `worldState()` reports the **active floor**; ensure at least one room carries an archetype.
 3. **Behavioral (synthesize `socialLog`).** The documented `systemState()` has no `socialLog`,
    but the checker reads one — so build it here: for ≥1 warm and ≥1 cold action in
    `template.social_actions`, read `systemState().clocks.dread.value` before, call
    `window.social(id)`, read it after, and append `{ id, dreadBefore, dreadAfter }` to
    `systems.socialLog`. If `social_actions` are declared but no log can be produced, the
-   behavioral portion is **UNVERIFIED** — never a vacuous pass.
+   behavioral portion is **UNVERIFIED** — never a vacuous pass. Note (advisory): this drives
+   `window.social(id)` directly, bypassing the same-room co-location that opens an encounter in play —
+   so roaming determinism is not exercised here. Confirm at least one NPC is reachable on `test_seed`
+   (via `required_encounters` / `systemState().npcs`) as the settlement of the B7 gate.
 4. **Run.** `node scripts/check_template.mjs --template world_template.json --state
    state_<seed>.json --fail-on spatial`. (Reachability is validated structurally from the
    exported `worldState()`, whose hook wraps the same transition handler the UI uses.)

@@ -17,12 +17,12 @@ Phase 1: Discovery
 Phase 2: Ideation
 - Use ideation_agent to generate 20 distinct game concepts that work with the theme
 - Have browsergame_expert review the concepts for quality and feasibility
-- Get user approval on which concept will be implemented (approval gate is mandatory after concept review)
+- Get user approval on which concept will be implemented (approval gate is mandatory after concept review). The gate selects among the reviewed, on-theme concepts; a creative-direction brief (if supplied) constrains the concept space but does NOT pre-select the concept
 - Use evaluation_agent to rank concepts and select the best one
 
 Phase 3: Design
 - Use world_agent to author and validate the game world from the selected concept (Holonovel world model); it produces world_template.json (machine-readable) + world_template.txt
-- Use gdd_agent to create a comprehensive Game Design Document for the selected concept, using the world_agent outputs (world_template.json / world_template.txt)
+- Use gdd_agent to create a comprehensive Game Design Document for the selected concept, using the world_agent outputs (world_template.json / world_template.txt) and the run's creative-direction brief (if supplied) as a constraint source. At run start, write any supplied brief to `gameotron_output/<ts>/direction.txt` and pass it to gdd_agent; the GDD is checked against the brief's must-haves
 
 Phase 4: Concept Development
 - Use audio_agent to define audio direction

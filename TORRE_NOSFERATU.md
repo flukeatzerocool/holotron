@@ -20,9 +20,11 @@ Use gameotron with theme: Torre Nosferatu — escape a pitch-black candle-lit to
 
 ## 1. Logline
 
-You wake in the pitch-black Torre Nosferatu with only a candle. The flame reaches a
-few feet; beyond it is total dark. Find wax, matches, and the key to the exit — but
-every step burns your light, and when the candle dies, **Count Orlok finds you.**
+You wake at the top of the pitch-black Torre Nosferatu with only a candle. The flame
+reaches a few feet; beyond it is total dark. Work your way **down** the tower — floor by
+floor, toward the ground-floor door that is your only way out — finding wax, matches, and
+the key to the exit. Every step burns your light, and when the candle dies, **Count Orlok
+finds you.**
 
 ## 2. Tone
 
@@ -109,7 +111,14 @@ No traditional battle system. When a creature appears, choose:
 Creatures are hazards and decisions, never HP-sponges.
 
 ### 6.3 Social (the other survivors)
-**Four NPCs** are also trapped and hunting for the exit — rivals, assets, or dangers.
+**Five NPCs** are also trapped and hunting for the exit — roaming the tower floor to floor,
+like you. Each is a distinct personality and a distinct temptation: **Vlask** the hoarder
+(cold possession — a wax cache guarded dear), **Sister Marta** the archivist (knowledge —
+lore and information, never light), **Ilona** the bitten (the dark's bargain — she "knows
+the way", at a price), **Petr** the innocent (warmth's wager — a light worth protecting
+that slows you), and **Nadja** the tomb-robber (the rival — winsome, transactional, always
+one landing ahead). Their voices, goals, and the exact disposition each carries are
+authored downstream (GDD / world template), not fixed here.
 
 Social play runs on **two tracks**:
 
@@ -148,6 +157,27 @@ Exact numbers live in the GDD.
 Thematic obstacles kept deliberately simple to preserve the game's calm, decision-driven
 pace: a locked door needing a lever, a collapsing floor, a light-sensitive trap.
 
+### 6.5 The tower (floors and the descent)
+
+The tower **descends**: you wake at the **Spire** (the top floor) and work **down** to the
+**ground floor**, where the front door is the only exit. "Floor 1" for pacing purposes is
+the **first floor played** — the Spire — and it is wax and exploration only (§9).
+
+- **Generated, not authored.** Floors are generated at runtime from a static **tower
+  template** (room archetypes, the connectivity rules between them, and the thing/encounter
+  roster). The template describes *a* floor; the game decides depth.
+- **Winding, not a stack.** A floor is a graph — several stairwells, loops, dead ends, and
+  the occasional stair that skips a tier ("anything goes" geometry). Routing is a real
+  choice: the fast stair, the wax-rich stair, or the stair a survivor is camped on.
+- **Persistence.** Each floor is generated once and then lives — items you left, a key a
+  survivor dropped, doors you opened all remain. Backtracking returns you to the floor you
+  changed, not a fresh one.
+- **The survivors move too.** NPCs (§6.3) roam and change floors like you; they are active
+  where you are, and "elsewhere" where you are not.
+- **Budget.** A run targets ~5–8 minutes (~75–100 turns): wax ~30, ~1 burn per turn, and one
+  guaranteed refill room per floor so a floor is ~15–20 productive turns. The Spire's first
+  refill is reachable well inside 30 seconds (§9).
+
 ## 7. Creatures (classic, escalating)
 
 - **Bats** — swarm, startle, minor wax spill.
@@ -160,7 +190,18 @@ pace: a locked door needing a lever, a collapsing floor, a light-sensitive trap.
 
 ## 8. Loss / win / fail-forward
 
-- **Win:** hold the **key**, reach the **exit**, and escape the tower.
+- **Win (full):** hold the **key**, reach the ground-floor **exit**, and escape the tower
+  **on your own light** — the full victory and score.
+- **Win (borrowed):** a survivor who reaches the door first leaves it **ajar** for a short
+  window — **how long that window lasts depends on how they feel about you (disposition)
+  and how much the tower has turned against you (Dread)**; a warm, allied survivor at low
+  Dread holds it longer than a hostile one at high Dread. Slipping out through a borrowed
+  door is a **lesser ending** ("you slipped out in another's wake") with a **reduced
+  score**, and while it stands open the **Dread rises and creatures gather near the exit**.
+  The key remains the reliable, self-reliant path.
+- **Snuff vs. guttering dark:** a **snuff** (a creature snuffs the candle) is darkness you
+  recover from — you are not dead until the wax is gone. **Guttering dark** — zero wax — is
+  the terminal state, and the two must read as visibly and audibly different.
 - **Fail-forward (guttering dark):** at zero wax the flame gutters for a few turns —
   radius shrinks, Orlok closes in — and you may still reach a match or the exit. Only
   when that final grace is spent does Orlok take you. **Orlok is triggered only by
@@ -169,8 +210,9 @@ pace: a locked door needing a lever, a collapsing floor, a light-sensitive trap.
 
 ## 9. Progression & difficulty (jam requirements)
 
-- **Beginner-friendly entry, linear curve.** Floor 1 is generous: an early room with
-  extra wax/matches; the first light-tending success lands well **inside 30 seconds**.
+- **Beginner-friendly entry, linear curve.** The **Spire** — the first floor played — is
+  generous: an early room with extra wax/matches; the first light-tending success lands
+  well **inside 30 seconds**.
 - **First success < 30s:** the opening beat teaches "find wax, keep the flame" and
   delivers an immediately readable win (a saved candle / first wax found).
 - **Near-Miss Bonus:** reward grazing a creature or escaping with near-zero wax.
@@ -185,13 +227,14 @@ with *play* rather than floor. It reads as weather over the tower:
 |---|---|---|
 | 0–1 | Calm | NPCs start Neutral; Orlok at baseline. |
 | 2–3 | Watched | New NPCs start Wary; the dark presses closer. |
-| 4–5 | Marked | Warm acts cost an extra turn; Orlok's search advances. |
+| 4–5 | Marked | Warm acts draw the dark closer (a small extra Dread cost); Orlok's search advances. |
 | 6–7 | Hunted | No new Ally without atonement first; Orlok's reach widens. |
 | 8 | Hunted (full) | Every NPC reads Hostile until you atone; Orlok locks on. |
 
-Social play and Dread **arrive on floor 2–3, never floor 1** — floor 1 stays wax and
-exploration only, so the beginner rule and the <30s first success hold. A cold-built run
-can always claw back through warm gestures, so Dread never hard-locks the player.
+Social play and Dread **arrive on the second floor down, never on the Spire** — the first
+floor stays wax and exploration only, so the beginner rule and the <30s first success hold.
+Warm acts stay affordable at every Dread tier, so atonement is never wax-unaffordable and a
+cold-built run can always claw back through warm gestures: Dread never hard-locks the player.
 
 ## 10. Screens (≥6, per `COMPLIANCE.md`)
 
@@ -240,6 +283,16 @@ matches, key, creatures, NPCs). It emits `world_template.json` + `world_template
   C7). Rule Breaker's 1:1 graph check remains the sensitivity control.
 - Holonovel's `manage_world(action: generate)` is **not** used: it is ruleset-table-driven
   and content-absent ruleset-free (REQ-431).
+- **Floors.** The template is **floor-agnostic** — its archetype `count` bounds describe *one*
+  generated floor; per-floor escalation (creature density, wax drain, darkness, NPC pressure)
+  is applied by the game, by depth, from the GDD. There is **no `floors[]` section**.
+- **Stairs & state.** Vertical movement is `down`/`up` exits. Each floor is generated once
+  from a per-depth seed (`hash(seed, depth)`), cached, and mutated in place, so backtracking
+  returns the floor you changed. `worldState()` reports the **active floor**; the Phase 2
+  check validates the **pristine boot state** (pre-mutation), and runtime mutations are a
+  separate delta.
+- **Dread** is authored twice: as lore (`key: dread-dial`) for the world model, and as a
+  template `clocks[]` `tug_of_war` entry (0–8, with `tiers`) that the game and checker read.
 - A lore fragment is authored as a readable **thing** (`kind:"lore"`, `readable:true`,
   `read_text`); `read_text` is data rendered as text, **never** HTML.
 
@@ -247,11 +300,14 @@ matches, key, creatures, NPCs). It emits `world_template.json` + `world_template
 
 **Must:**
 - Single `index.html`, vanilla JS, embedded HTML/CSS/JS (per `COMPLIANCE.md`).
-- Candle-as-clock; wax/matches/key; grace on wax-out; four NPCs; ~6 social actions; a single 0–8 Dread dial; avoidance combat.
+- Candle-as-clock; wax/matches/key; grace on wax-out; five NPCs; ~6 social actions; a single 0–8 Dread dial; avoidance combat.
 - Touch + mouse; responsive; ≥6 screens; music/SFX toggles.
-- **Staged delivery:** ship the floor-1 core first (candle, wax/matches, key, exit, seeded
-  floors, one creature type) as wave 1; social + Dread land as wave 2 (floor 2–3). This keeps
-  the mandatory game shippable even if wave 2 is cut at T-6h.
+- **Staged delivery:** wave 1 = the **descent core** (candle, wax/matches, key, exit, seeded
+  winding floors, one creature type); wave 2 = **social + Dread** (the five survivors,
+  disposition, the Dread dial); wave 3 = the **shared-resource survivor sim** (NPCs carrying
+  wax, attacked by creatures, tripping traps, taking/using items). This keeps the mandatory
+  game shippable even if wave 2 or 3 is cut. If social is cut, the borrowed-door window (§8)
+  falls back to a fixed, short count.
 - **Lore:** wave 1 ships a readable/score fragment; wave 2 makes it the social key
   (disposition / information / safe passage — never wax or matches).
 
@@ -259,3 +315,15 @@ matches, key, creatures, NPCs). It emits `world_template.json` + `world_template
 - No traditional fight-the-monster battle system.
 - No hand-authored `index.html`; no bypassing the approval gate.
 - No hard death that contradicts the beginner-friendly first-success rule.
+
+---
+
+## 16. Handoff
+
+This brief is creative **direction**, paraphrased into agent prompts and passed to the
+pipeline as a **constraint source** — in particular `gdd_agent` receives it (the run's
+`direction.txt`) and its output is checked against the must-haves (§15). It is **not**
+authoritative on mechanics: the roster's numbers, the floors, and the per-depth escalation
+are agent outputs (`gdd.md` / `world_template.json`). The mandatory ideation approval gate
+still applies: this brief **constrains** the concept space, it does not pre-select the
+concept.

@@ -37,6 +37,18 @@ Generation:
 - Read **all** game systems from `window.TEMPLATE` — `resources`, `clocks`, `npcs`,
   `social_actions`, `encounter_roster`, `required_encounters`. Do not hard-code them.
 - Guarantee every `required_encounters` entry exists and is reachable on `test_seed`.
+- **Multi-floor descent.** Generate each floor once from `hash(seed, depth)`, cache it, and mutate it in
+  place (mutations are a delta). Move vertically via declared `down`/`up` exits. Per-floor escalation
+  (creature density, wax drain, darkness, NPC pressure) is applied by depth from the GDD — the template
+  is floor-agnostic. Expose a **pristine boot-state hook** (pre-mutation) so the Phase 2 checker validates
+  generation determinism; `worldState()` reports the **active floor**.
+- **Roaming survivors.** Simulate NPCs **active-floor-only** (off-floor survivors hold position),
+  seeded-deterministic so the same seed gives the same positions. Open an encounter on **same-room
+  co-location**, through the same handler `window.social(id)` uses.
+- **Borrowed door.** When a survivor reaches the exit, hold the door **ajar for N turns where
+  N = f(their disposition, current Dread)**; the ajar escape is a **lesser ending + score penalty** and
+  raises Dread / draws creatures near the exit. If the social layer is absent, fall back to a **fixed
+  short count**.
 
 Required hooks — each a thin wrapper over the **same** handler the UI uses, never a parallel path:
 - `window.worldState()` → `{ seed, start, rooms: { "<slug>": { "name": "<display>", "archetype": "<archetype id>", "exits": { "<dir>": "<slug>" }, "things": ["<slug>"] } } }`. `archetype` names the room's archetype from `TEMPLATE.archetypes`; the canonical state contract is `world_template.schema.json` (`x-runtime-state`).
