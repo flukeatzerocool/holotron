@@ -3,6 +3,21 @@
 All notable changes to Holotron are documented here.
 Format: date-stamped sections, bulleted entries.
 
+## 2026-10-10 — Jam-requirement interpretations codified in the pipeline
+
+- Clarified three pipeline behaviors to match the Gameotron jam requirements as
+  interpreted for this entry:
+  - **Theme:** the official theme may be "Anything Goes" (unconstrained content), but a
+    theme value is still recorded (`theme.txt`) and seeds ideation; a theme override
+    (`with theme: X`) is sanctioned. Phase 1 kept.
+  - **Concepts:** the 20 reviewed concepts are a pool to **choose from or adapt**; the
+    mandatory approval gate is preserved.
+  - **Deployment is opt-in:** the default run **hard-stops after Phase 5.5** and hands the
+    playable `index.html` back for playtesting; `deployment_agent` runs only on an explicit
+    request and stops before any `butler push` (which needs an explicit confirmation).
+- Mirrored across `.opencode/agents/gameotron.md`, `AGENTS.md`, `README.md`, `PROCESS.md`
+  (§4.7 + §6), and `juice_agent.md` (flow). Doc-only; no behavioral change to the agents.
+
 ## 2026-10-10 — Torre Nosferatu brief: visual direction + hazard system
 
 - **§11 Visual direction** — deepened the visual-direction feed for `visual_agent`: concrete

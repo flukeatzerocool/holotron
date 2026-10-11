@@ -49,9 +49,11 @@ Create game with theme: One Way Ticket
 | 4. Concept Art | `audio_agent` + `visual_agent` | **Parallel execution** |
 | 5. Implementation & Review Loop | `code_agent` → [`review_agent` + `puppeteer_agent` → `bugfix_agent`] × N | Max 3 cycles; stop when no CRITICAL/HIGH/MEDIUM remain |
 | 5.5 Polish | `juice_agent` | Particles, screenshake, hit-stop, transitions, popups — surgical additions only |
-| 6. Deployment | `deployment_agent` | Butler upload; user confirms first |
+| 6. Deployment | `deployment_agent` | **Separate, explicitly-requested run.** Default pipeline ends at 5.5 for user playtest; prepare assets only, Butler push on explicit confirmation |
 
 Execute **one agent at a time** (exception: audio + visual run in parallel). Never skip the user approval gate after concept review.
+
+The **default run hard-stops after Phase 5.5** and hands back `index.html` for playtesting; **deployment is opt-in** (a separate, explicitly-requested run), and Butler push requires an explicit second confirmation.
 
 ## Game requirements
 
@@ -131,7 +133,7 @@ Agents don't share state — orchestrator must explicitly pass file contents bet
 - **puppeteer_agent:** Tests at exactly 3 viewports (1920×1080, 800×600, 375×667) — touch events on mobile, mouse on desktop. **Phase 2 world-model check** (after runtime tests): browser work is agent-driven (repo forbids npm/puppeteer deps) — pin `window.SEED = TEMPLATE.test_seed`, export `worldState()`/`systemState()` to `state_<seed>.json`, synthesize `socialLog` by driving warm+cold `window.social(id)`, then run the dependency-free `scripts/check_template.mjs --fail-on spatial` (rooms **hard**, systemic **advisory**). Fail-closed: missing hooks / no `socialLog` / null `test_seed` ⇒ **unverified**, never pass. **Phase 2b audio check** (advisory, after Phase 2): if the game exposes `window.AUDIO_SPEC` + `window.audioTest`, enumerate `AUDIO_SPEC.scenarios`, `await audioTest(id, seed)` per scenario, and assert `rms`/`bandRms` against the declared thresholds (else the fixed default floor); an `overrides[]` entry lowers one floor only with a `reason`. No `AudioContext` ⇒ **N/A**; `AudioContext` but no hook ⇒ **unverified**. A miss is `[AUDIO][advisory]` — never promoted to a bugfix-triggering severity. Self-test against `scripts/audio-check/` fixtures before trusting green.
 - **bugfix_agent:** Must append fix summary to existing buglist, never rewrite `index.html` wholesale. Make minimal surgical changes.
 - **juice_agent:** Must not break working code — additives only. Max 5 juice categories per run to avoid bloat. All juice must be togglable via `juiceEnabled` flag. Runs after bugfix loop is clean, before deployment.
-- **deployment_agent:** Butler at `.\butler-windows-amd64\butler.exe`, target `username/project:html5`, API key from `$env:BUTLER_API_KEY`. Check auth with `butler status` before upload. User must confirm deployment before Butler runs.
+- **deployment_agent:** Butler at `.\butler-windows-amd64\butler.exe`, target `username/project:html5`, API key from `$env:BUTLER_API_KEY`. Check auth with `butler status` before upload. Runs only on an **explicit request** (not in the default run, which ends at 5.5 for playtest); prepare build assets only — `butler push` requires an explicit confirmation in the current session.
 - **Credentials (any agent):** itch.io credentials must come from `$ITCH_USERNAME` / `$ITCH_PASSWORD` (or `$BUTLER_API_KEY`) environment variables. Never hardcode credentials or store them in repository files.
 
 ## Phase 5 — Review/bugfix loop (detail)

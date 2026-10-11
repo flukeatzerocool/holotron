@@ -148,6 +148,17 @@ check (Phase 2b) against `scripts/audio-check/` control fixtures (dead bed must 
 floor, good bed must pass). Advisory means it can never false-fail a valid game; a miss is
 reported, not blocking. Lesson: a green pipeline is only green for what its rubrics assert.
 
+### 4.7 Deployment is opt-in; a playtest stop ends the default run (2026-10-10)
+
+- Codified the jam-requirement interpretation in the pipeline: the **default run ends at
+  Phase 5.5** (polish) and hands the playable `index.html` back for **playtesting before any
+  deployment**; `deployment_agent` runs only on an **explicit request** and stops before any
+  `butler push` (which needs an explicit confirmation). Theme handling and the mandatory
+  approval gate are unchanged; the 20 reviewed concepts are a pool to **choose from or adapt**.
+- Mirrored in `gameotron.md` (Phase 1/2/6), `AGENTS.md` (pipeline table + gotchas),
+  `README.md` (Phase 6), and `juice_agent.md` (flow). This is a *configuration* of
+  GAMEOTRON, recorded here per the "configured or improved" requirement.
+
 ## 5. Before/after metric
 
 Single-run proxy (per the approved plan) plus a sensitivity control. "Baseline" = the
@@ -173,7 +184,9 @@ From a clean checkout:
 3. Run `use gameotron with theme: Anything Goes`; at the approval gate select **#7**.
 4. Pipeline produces `gameotron_output/<ts>/` incl. `world_map.json`, `gdd.md`, `index.html`.
 5. Phase 2: `puppeteer_agent` runs the world↔game check + `test_worlds/malformed.json` control.
-6. Deploy: `butler login`; `butler push build/ <user>/<project>:html5 --userversion <ver>`.
+6. (Separate, explicitly-requested step) Deploy after playtesting: `butler login`;
+   `butler push build/ <user>/<project>:html5 --userversion <ver>`. The default run ends at
+   Phase 5.5 — deployment is opt-in and the push needs an explicit confirmation.
 
 ## 7. Torre Nosferatu run (submission game) — 2026-10-10
 

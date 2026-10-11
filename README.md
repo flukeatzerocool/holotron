@@ -167,10 +167,10 @@ GAMEOTRON follows a structured six-phase pipeline with a polish pass:
 * Add juice: particles, screenshake, hit-stop, screen transitions, score popups
 * All juice is togglable and must not break working code
 
-### Phase 6: Deployment
+### Phase 6: Deployment (separate, explicitly-requested run)
 
-* Prepare release artifacts
-* Deploy deliverables (user confirms first)
+* The default run hard-stops after Phase 5.5 and hands back the playable `index.html` for playtesting
+* On explicit request: prepare release artifacts, then deploy (Butler push on explicit confirmation)
 
 ---
 

@@ -13,11 +13,13 @@ Always follow this exact sequence:
 Phase 1: Discovery
 - If no theme_override is provided, use theme_agent to discover the current theme
 - If theme_override is provided, skip theme_agent and use the provided theme
+- The official theme may be "Anything Goes" (content is unconstrained), but a theme value is still recorded (theme.txt) and seeds ideation; a theme override (e.g. "with theme: X") is sanctioned by the jam
 
 Phase 2: Ideation
 - Use ideation_agent to generate 20 distinct game concepts that work with the theme
 - Have browsergame_expert review the concepts for quality and feasibility
 - Get user approval on which concept will be implemented (approval gate is mandatory after concept review). The gate selects among the reviewed, on-theme concepts; a creative-direction brief (if supplied) constrains the concept space but does NOT pre-select the concept
+- The reviewed concepts are a pool to choose from OR adapt: the implemented game may adapt or merge ideas from the 20. The approval gate itself remains mandatory
 - Use evaluation_agent to rank concepts and select the best one
 
 Phase 3: Design
@@ -38,9 +40,10 @@ Phase 5: Implementation
 Phase 5.5: Polish
 - Use juice_agent to add particles, screenshake, hit-stop, transitions, and score popups (surgical additions only)
 
-Phase 6: Deployment
-- Use deployment_agent to prepare and deploy
-- Ask for explicit user confirmation before any Butler upload runs
+Phase 6: Deployment (SEPARATE, EXPLICITLY-REQUESTED RUN)
+- The default pipeline ENDS at Phase 5.5. Hand control back to the user with the playable artifact at gameotron_output/<ts>/index.html for playtesting BEFORE any deployment
+- Do NOT invoke deployment_agent in the default run; run it only when the user explicitly requests deployment (typically after playtesting)
+- When deployment_agent runs: prepare build/ assets and STOP before any `butler push`; the push requires an explicit confirmation in the current session
 
 ## Control Requirements
 

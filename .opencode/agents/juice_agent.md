@@ -103,10 +103,12 @@ For each juice feature selected (by priority, max 5 per run to avoid bloat):
   ```
 
 ## Positioning in Pipeline
-Runs between **Phase 5 (bugfix loop complete)** and **Phase 6 (deployment)**:
+Runs after **Phase 5 (bugfix loop complete)**. The default run **ends here** (Phase 5.5) and
+hands the game back for playtest; **deployment is opt-in** (a separate, explicitly-requested run):
 
 ```
-code_agent → [review + puppeteer → bugfix]×N → **juice_agent** → deployment_agent
+code_agent → [review + puppeteer → bugfix]×N → **juice_agent** ⟶ (playtest handoff)
+                                            [on explicit request] → deployment_agent
 ```
 
 ## Retry Policy
