@@ -126,9 +126,10 @@ dark shifts, not the geometry.
 Coordinates: mask is centred on the player's tile-centre, in *tile units*,
 converted to device pixels. Radius `R_px = R_tiles × tile_px × tile_px`.
 
-`R_tiles` = GDD radius formula: `clamp(base − penalty(wax), 1, base)`,
-base 3→7, penalty 0/1/2/3/4 by wax band (0 for ≥24 … 4 for 1–5), and at
-wax = 0 → R = 1 (guttering). Radius changes are tweened over 220 ms so the
+`R_tiles` = GDD radius formula: `clamp(base − penalty(wax), min(base,2), base)`,
+base 3→7, **flattened** penalty 0 (wax ≥18) / 1 (6–17) / 2 (1–5): the lit radius never
+drops below 2 tiles while the flame burns, and at wax = 0 (or a snuff) → R = 1 (guttering).
+Runtime-tunable via `window.TUNING` (A/B). Radius changes are tweened over 220 ms so the
 frame visibly *closes in* rather than jumping.
 
 Gradient stops (normalised to R):

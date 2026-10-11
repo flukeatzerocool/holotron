@@ -277,6 +277,26 @@ From a clean checkout:
 - Deploy via `deployment_agent` / butler to the Torre project, **after user confirmation**, then
   set Public and confirm the page resolves + the jam entry is in (before 2026-10-11 12:00).
 
+### 7.4a Post-playtest revision (2026-10-11)
+After the default run handed back `index.html` for playtest, five user complaints were addressed
+from a static audit plus a new **zero-dependency autoplay harness** (`scripts/autoplay/`; committed
+source, agent-invoked, drives the real game through `worldState`/`systemState`/`testState`/`move`).
+- **One key per floor.** The auto-collected `exit-key` (which re-granted "THE KEY" on every stair,
+  §7.2 cycle 2) and the ambiguous `locked-door` "force it" puzzle are replaced: each floor places a
+  single `floor-key` (Spire: treasure room; floors 2-6: puzzle room) that unlocks that floor's
+  `down` gate; it is consumed by descending. Template `required_things` now includes `floor-key`.
+- **Run/Endure.** Run costs wax; Endure snuffs the candle for **no wax** and costs a **match** to
+  re-light (re-light adds no wax); a snuff with no match enters the guttering-dark grace.
+- **Wax (data-driven).** A greedy bot died 26 % of 50 seeds; the binding constraint was the 30-wax
+  **cap wasting refills**. Raising the pool to **32 start / 40 max / refill +14** lifted greedy
+  completion to **94 %** (median surplus 43.8 %, 0 ghost keys) — the success bar the grill set.
+- **Visibility.** The radius curve was flattened (`window.TUNING`, floor 2); arm B still spends
+  ~43 % of lit turns at radius 1, confirming the near-blind condition the fix removes. The bot
+  navigates by graph, so it cannot itself prove a comprehension gain — that remains a human check.
+- **Gate:** `check_template.mjs --fail-on spatial` → **spatial 0, systemic 0, exit 0** on the
+  revised template/state. Reports: `playtest_ab.json` / `playtest_ab_summary.txt`; stress-test:
+  `docs/grill-me/2026-10-11-torre-nosferatu-autoplay-and-fixes-stress-test.md`.
+
 ### 7.5 Reproduction (Torre Nosferatu)
 
 From a clean checkout, this path produces the **submission game** (see §6 for the baseline run):

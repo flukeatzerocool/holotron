@@ -20,7 +20,7 @@
 | **Theme interpretation** | The jam theme is open-ended — *anything goes* — so the entry turns that permission inward: the tower is a **lawless jumble** of rooms, floors, and encounters obeying no single logic. "Anything goes" *in the dark*. |
 | **Defining hook** | **The candle is your clock, your health, and your map.** Every turn burns wax; the reveal radius shrinks as wax falls; at zero wax the flame gutters and Count Orlok closes. |
 | **Primary pressure** | **Dread Weather** — a single tower-wide 0–8 tug-of-war dial. Cold acts raise it (buying light now); warm acts lower it (spending light now). Dread sets survivors' wariness and Orlok's closing speed. |
-| **Win** | Hold the **key**, reach the **ground-floor exit**, escape on your own light (**full**). Or slip through a survivor's **borrowed door** (lesser ending, reduced score). |
+| **Win** | Find each floor's **key** to open the way down; hold the **ground-floor key**, reach the **ground-floor exit**, escape on your own light (**full**). Or slip through a survivor's **borrowed door** (lesser ending, reduced score). |
 | **Lose** | The **only death is Orlok by wax-out** — and only after the guttering-dark grace is spent. |
 | **Target audience** | 13+; players who like atmospheric, decision-driven horror, resource tension, and emergent social systems. Runs ~5–8 minutes (~75–100 turns). |
 | **Session shape** | One run = one descent, Spire (top) → ground floor. Replayable via seed variation and route/social choices. |
@@ -37,7 +37,7 @@ One turn = **one wax burn** (1 wax, from the template `resources.wax.burn_per_tu
 2. **Reveal** — the candle lights a fixed radius (`candle_radius`, start 3, max 7, scales with wax). Everything outside the radius is absolute black. Exploring costs light; not exploring finds nothing.
 3. **Encounter** — entering a room may trigger an **exploration**, **avoidance-combat**, **puzzle**, or **social** scene (archetype + roster driven from `window.TEMPLATE`).
 4. **Resolve** — spend/gain wax and matches, gain lore/loot, change NPC disposition, shift Dread.
-5. **Survive** — keep the candle lit, gather the key, reach the exit before wax-out.
+5. **Survive** — keep the candle lit, find each floor's key, reach the exit before wax-out.
 
 ### 2.2 The descent and the tower
 
@@ -59,11 +59,13 @@ Every generated room carries its **archetype id**. The generator honors each arc
 | `shadow-hall` | hazard | [0, 3] | — |
 | `scribe-alcove` | puzzle | [0, 2] | `lore-fragment` |
 | `survivor-camp` | social | [0, 2] | — |
-| `descending-stair` | exit | [1, 2] | `exit-key` |
+| `descending-stair` | exit | [1, 2] | — (the `down` gate is **locked** until the floor's `floor-key` is held) |
 
 **Connectivity rules** (legal transitions): `entry -> corridor*`; `entry -> treasure`; `corridor -> corridor*`; `corridor -> treasure | hazard | puzzle | social`; `treasure | hazard | puzzle | social -> corridor*`; `corridor -> exit`; `exit -> down`. Vertical movement is `down`/`up`.
 
-**Guarantees per floor:** `wax-cake`, `matches`, `lore-fragment` are placed and reachable from start; `exit-key` is guaranteed via `descending-stair`. `hazard`/`puzzle`/`social` minima are 0 so the Spire (wax+exploration only) can never hard-fail the spatial gate.
+**Guarantees per floor:** `wax-cake`, `matches`, `lore-fragment`, and exactly one **`floor-key`** are placed and reachable from start. `hazard`/`puzzle`/`social` minima are 0 so the Spire (wax+exploration only) can never hard-fail the spatial gate.
+
+**The key model — one key per floor (the single door rule).** Each floor holds **exactly one `floor-key`**; the floor's `down` stair gate stays locked until you hold it. **Floor 1 (Spire)** places its key in the guaranteed treasure room (`candle-nook`, adjacent to the entry) so the tutorial floor carries no keyed puzzle; **floors 2–6** place it in the floor's puzzle room (`scribe-alcove`). The key is **consumed by descending** — the next floor starts keyless. On the **ground floor the key *is* the exit key**: hold it and reach the exit for the full win. There is no "forcing" — a locked gate only ever opens with that floor's key.
 
 ### 2.4 Floor-by-floor escalation (applied BY THE GAME, by depth — the template is floor-agnostic)
 
@@ -72,22 +74,22 @@ Every generated room carries its **archetype id**. The generator honors each arc
 | # | Floor | New variable this floor | Creatures | Puzzles | NPCs | Notes |
 |---|---|---|---|---|---|---|
 | 1 | **Spire** (first played) | *(none — tutorial)* | `bats` (threat 1, `wax-spill`) | — | **none** | Wax + exploration only. **No social, Dread frozen at 0.** Generous: one extra `candle-nook` guaranteed within 2 moves; extra wax/matches. First success well inside 30 s. |
-| 2 | Descent A | **NPC pressure** (social + Dread arrive) | `rats` (match-destroy) | `locked-door` (wax-cost) | `vlask` (−1), `sister-marta` (0), `petr` (+1) | Dread ticks begin. New NPCs start at template disposition **modified by Dread tier**. |
+| 2 | Descent A | **NPC pressure** (social + Dread arrive) | `rats` (match-destroy) | — | `vlask` (−1), `sister-marta` (0), `petr` (+1) | Dread ticks begin. New NPCs start at template disposition **modified by Dread tier**. First floor with the puzzle-room key. |
 | 3 | Descent B | **Creature density** | `spiders` (turn-cost), +1 creature per room | `collapsing-floor` | `ilona` (−1), `nadja` (−1) join | Roster widens; two types may share a room. |
 | 4 | Descent C | **Trap frequency** | `wolves` (run-wax-spill, threat 3) | `light-trap` | roamers | Trap/puzzle count +1 over floor-3 baseline. |
 | 5 | Descent D | **Darkness** | `shades` (wax-drain, threat 3) | `dark-leap` | roamers | **Baseline candle radius −1**; occasional unlit rooms; `dark-leap` is a scout-then-commit recon problem. |
 | 6 | **Ground floor** | **Wax drain** | `light-eater` (snuff, threat 4) | `light-trap` | roamers + exit race | **Ambient drain: on turns ≡ 0 (mod 6), lose 1 extra wax.** The exit door is here. Orlok pressure highest. |
 
 - **Dread is the one pressure that escalates with *play*, not floor.** Floor 1 freezes it; it moves only from floor 2 down.
-- Each floor has **exactly one guaranteed refill room** (`candle-nook`), so a floor is ~15–20 productive turns at ~1 burn/turn. **Run budget:** ~5–8 min, ~75–100 turns, wax pool ~30 + refills.
+- Each floor has **exactly one guaranteed refill room** (`candle-nook`), so a floor is ~15–20 productive turns at ~1 burn/turn. **Run budget:** ~5–8 min, ~75–100 turns, wax pool ~32 + refills (cap 40, so refills bank). *(Autoplay 2026-10-11: a no-map greedy player completes 94% of 50 seeds within budget.)*
 
 ### 2.5 Encounters (avoidance combat — no HP, no attack rolls)
 
 Entering a hazardous/puzzle/npc room triggers a scene. Creatures are **decisions, not HP-sponges**.
 
 **Avoidance menu (creature encounters):**
-- **Run** — escape, but **spills wax** (the creature's `effect`, e.g. `wax-spill`). No candle loss.
-- **Endure / be spooked** — **spills wax AND snuffs the candle** (needs a `match` to re-light). Thematic "spooked" outcome.
+- **Run** — escape, but **spills wax** (the creature's `effect`, e.g. `wax-spill`). The candle stays lit.
+- **Endure / be spooked** — **snuffs the candle** and costs **no wax**; the flame returns only when you spend a **`match`** to re-light. With **no match in hand**, a snuff drops you into the **guttering-dark grace** (§2.8). Thematic "spooked" outcome, now a genuine fuel-vs-match trade.
 
 | Creature | Threat | Effect | First floor |
 |---|---|---|---|
@@ -98,7 +100,7 @@ Entering a hazardous/puzzle/npc room triggers a scene. Creatures are **decisions
 | `shades` | 3 | wax-drain | 5 |
 | `light-eater` | 4 | snuff | 6 |
 
-**Puzzles/traps** are **turn-and-light problems, not reflex tests** — a wrong answer costs wax, never a life: `locked-door` (wax-cost), `collapsing-floor` (wax-cost; longer safe path trades turns), `light-trap` (snuff; route around or spend a match to cross blind), `dark-leap` (wax-cost; scout the landing before committing).
+**Puzzles/traps** are **turn-and-light problems, not reflex tests** — a wrong answer costs wax, never a life: `collapsing-floor` (wax-cost; longer safe path trades turns), `light-trap` (snuff; route around or spend a match to cross blind), `dark-leap` (wax-cost; scout the landing before committing). *(The former `locked-door` "force the door" puzzle is removed: the keyed `down` stair gate replaces it, so a lock only ever opens with the floor's `floor-key` — no ambiguous "forcing".)*
 
 **Count Orlok is deliberately excluded from the roster** — he is the wax-out terminal state only (§2.7), never rolled into a normal encounter.
 
@@ -131,7 +133,7 @@ Entering a hazardous/puzzle/npc room triggers a scene. Creatures are **decisions
 
 **Balance:** *warmth buys light later; cruelty buys light now.* Warm acts cost wax and lower Dread; cold acts give instant light and raise Dread (accelerating Orlok). **Lore never buys wax or matches** — it buys disposition, information (a hint that saves exploration = saved wax), or safe passage, bounded by the per-NPC disposition cap.
 
-**Social wax budget (beginner-safe, brief-mandated):** cumulative **wax spent on social actions is capped at 7** (≤~25% of the starting pool of 30). Once the cap is reached, wax-costing warm acts are disabled for the rest of the run; free acts (`bargain`, `trade`) and cold acts remain available. Refills do **not** raise the cap. Warm acts stay affordable at every Dread tier, so **atonement is never wax-unaffordable and Dread never hard-locks the player**.
+**Social wax budget (beginner-safe, brief-mandated):** cumulative **wax spent on social actions is capped at 7** (≤~22% of the starting pool of 32). Once the cap is reached, wax-costing warm acts are disabled for the rest of the run; free acts (`bargain`, `trade`) and cold acts remain available. Refills do **not** raise the cap. Warm acts stay affordable at every Dread tier, so **atonement is never wax-unaffordable and Dread never hard-locks the player**.
 
 ### 2.7 Dread Weather — the 0–8 tug-of-war dial
 
@@ -150,13 +152,13 @@ Authored twice in the template: as lore `key: dread-dial` (world model) and as t
 
 ### 2.8 Snuff vs. guttering dark vs. death (fail-forward)
 
-- **Snuff** (a creature snuffs the candle, or `light-trap`/`light-eater` fires): darkness you **recover from** — you are **not** dead unless wax is gone. Radius collapses to 1; spend a `match` to re-light (restores the candle to **8 wax** and radius to base). Visually/audibly a **hard instant blackout** + a lone match-strike.
+- **Snuff** (a creature snuffs the candle, or `light-trap`/`light-eater` fires, or you **Endure**): darkness you **recover from** — you are **not** dead unless wax is gone. Radius collapses to 1; spend a `match` to re-light. A re-light **restores the flame only — it never adds wax** (light ≠ fuel). With **no `match` in hand**, a snuff is not recoverable and drops you straight into the **guttering-dark grace** below. Visually/audibly a **hard instant blackout** + a lone match-strike.
 - **Guttering dark** (wax = 0): the terminal *act*, not the game-over screen. Radius = 1, Orlok's footsteps converge. You have a **grace window** of turns (set by Dread tier, §2.7) in which you may still reach a `match` (relights and ends the guttering dark) or the **exit** (borrowed or keyed). Slow wobble + swelling drone — visibly/audibly **distinct from a snuff**.
 - **Death:** only when the grace turns are spent **and** Orlok reaches you. `resource.wax.gutters_at = 0`. **Count Orlok is triggered only by wax-out; Dread sets how fast he closes.** At Dread 8, `orlok-lock` means Grace = 1.
 
 ### 2.9 Win, borrowed door, and score
 
-- **Full win:** hold the `key`, reach the ground-floor exit, escape on your own light. Highest score.
+- **Full win:** hold the **ground floor's `floor-key`**, reach the ground-floor exit, escape on your own light. Highest score.
 - **Borrowed win:** a survivor who reaches the door first leaves it **ajar** for a window; slipping out is the lesser ending *"you slipped out in another's wake"* with a **reduced score**. While it stands open, **Dread +1 per 2 turns** and creatures gather near the exit.
   - **Borrowed-door window** = `clamp(dispo_turns − floor(Dread / 2), 1, 6)` turns, where `dispo_turns`: allied(+2)=5, friendly(+1)=4, neutral(0)=3, wary/suspicious(−1)=2, hostile(−2)=1. A warm ally at low Dread holds it longest; a hostile at high Dread barely at all.
   - **Fixed-count fallback:** if the social layer is cut, the window is a **fixed 3 turns**.
@@ -221,19 +223,19 @@ Touch and mouse are **both required** (per COMPLIANCE). Keyboard is layered on f
 ### 4.2 Resources (from `window.TEMPLATE.resources`)
 | Resource | Start / bounds | Role |
 |---|---|---|
-| **wax** | start 30 / max 30 / min 0 / **burn 1/turn** / gutters at 0 | clock, health, map |
+| **wax** | start 32 / max 40 / min 0 / **burn 1/turn** / gutters at 0 | clock, health, map |
 | **matches** | start 2 / max 6 | re-light a snuffed candle (restores candle to 8 wax) |
-| **key** | start 0 → win condition | opens the ground-floor exit |
-| **candle_radius** | start 3 / max 7 / scales with wax | reveal radius in tiles (see formula below) |
+| **key** | start 0 → one `floor-key` per floor; win condition | opens the floor's `down` gate; the ground-floor key opens the exit |
+| **candle_radius** | start 3 / max 7 / scales with wax (flattened curve) | reveal radius in tiles (see formula below) |
 | **Dread** | 0–8 tug-of-war | weather; NPC wariness + Orlok speed |
 | **lore** | collected, readable, unique per archetype/floor | score + standing; **never** wax/matches |
 
-**Radius formula (design decision):** `base = candle_radius tier (3, +upgrades to max 7)`. Effective radius = `clamp(base − gutteringPenalty(wax), 1, base)` where penalty = 0 for wax ≥ 24, 1 for 18–23, 2 for 12–17, 3 for 6–11, 4 for 1–5, and `base` (⇒ radius 1) at 0. So the frame literally closes in as the wax burns.
+**Radius formula (design decision — flattened, visibility-first):** `base = candle_radius tier (3, +upgrades to max 7)`. Effective radius = `clamp(base − penalty(wax), min(base, 2), base)`, with the **flattened** penalty curve: **0 for wax ≥ 18, 1 for 6–17, 2 for 1–5**. So the frame closes in as the wax burns but **never drops below radius 2** while the flame is lit — the flame stays a usable map even at low wax. (The prior curve collapsed to radius 1 for wax ≤ 17, which read as "not enough wax" when it was really near-blindness. The curve is a runtime-tunable `window.TUNING` value so the harness can A/B it; the chosen curve is stored in `resources.candle_radius.penalty`.)
 
-**Refill (`wax-cake`):** restores the candle by **+12 wax** (capped at 30) and counts as the floor's guaranteed refill room. **`matches` pickup:** +1 match.
+**Refill (`wax-cake`):** restores the candle by **+14 wax** (capped at 40) and counts as the floor's guaranteed refill room. **`matches` pickup:** +1 match. *(Data: 2026-10-11 autoplay — raising the cap so refills **bank** lifted a no-map greedy player from 74% to 94% completion; the binding constraint was the 30-wax cap wasting refills, not the refill amount. See `playtest_ab_summary.txt`.)*
 
 ### 4.3 Win / lose conditions
-- **Win:** exit the ground floor with the key (full) **or** through a survivor's borrowed door (lesser). Reaching the exit is always a win — including during the guttering dark.
+- **Win:** find and hold the **ground-floor key**, exit the ground floor (full) **or** through a survivor's borrowed door (lesser). Reaching the exit is always a win — including during the guttering dark.
 - **Lose:** the only death is **Orlok by wax-out** after the grace window is spent. No HP, no combat death, no trap death (traps/wrong answers cost wax, never a life).
 
 ### 4.4 DIFFICULTY BALANCE — BEGINNER-FRIENDLY & MOTIVATING (REQUIRED)
@@ -318,10 +320,11 @@ Encounter/social/journal are **in-scene overlays** over Gameplay, not counted as
 
 ### Screen 2 — How to Play
 Clear, beginner-friendly instructions for **all** controls and every mechanic:
-- **The candle is your clock, health, and map.** Every turn burns 1 wax. Below it: radius shrinks; at 0 wax the guttering dark begins.
+- **The candle is your clock, health, and map.** Every turn burns 1 wax. Below it: radius shrinks (but never below 2 tiles while lit); at 0 wax the guttering dark begins.
 - **Move:** tap/click an adjacent tile (or WASD/arrows). **One move = one wax.**
-- **Run / Endure** at creature encounters: Run spills wax; Endure spills wax **and** snuffs the candle (needs a match).
-- **Matches** re-light a snuff; **key** opens the exit.
+- **One key per floor.** Find the floor's **key**, then reach the **Descending Stair** and press **Descend**. The stair gate stays locked until you hold that floor's key.
+- **Run / Endure** at creature encounters: **Run** costs **wax** (candle stays lit); **Endure** **snuffs the candle** (no wax) — spend a **match** to re-light. No match, no light.
+- **Matches** re-light a snuff (they do not add wax); on the ground floor the **key** also opens the exit.
 - **Warm / cold actions** at survivors: warm lowers Dread and costs light; cold buys light and raises Dread.
 - **Dread (0–8)** reads as weather; it sets how fast Orlok closes.
 - Touch controls and mouse controls explained side by side; keyboard listed.
@@ -482,9 +485,10 @@ The brief states "exact numbers live in the GDD" and leaves the following open. 
 | **Wax-out grace window by Dread tier** | Calm 5 / Watched 4 / Marked 3 / Hunted 2 / Hunted-full 1 turns | Encodes §2.7 "Dread sets how fast Orlok closes"; the concrete escalation the brief deferred. |
 | **Borrowed-door window formula** | `clamp(dispo_turns − floor(Dread/2), 1, 6)`; dispo allied 5 / friendly 4 / neutral 3 / wary 2 / hostile 1; **fallback 3** | Turns §8's "depends on disposition + Dread" into a number; warm ally @ low Dread = longest. |
 | **Social wax-spend cap** | **7 wax** cumulative per run (≤ ~25% of 30) | Satisfies the brief's "warm/social spend ≤ ~25% of the run's wax"; free + cold acts unaffected. |
-| **Refill amount (`wax-cake`)** | **+12 wax** (cap 30); `matches` +1 | One guaranteed refill/floor at ~15–20 productive turns; keeps run ~5–8 min. |
-| **Match relight value** | restores candle to **8 wax**, radius to base | Makes a match a meaningful save without trivializing wax. |
-| **Candle radius formula** | `clamp(base − penalty(wax), 1, base)`; penalty 0/1/2/3/4 progressively | Reconciles template's start 3 / max 7 with "scales with wax"; frame closes in as wax burns. |
+| **Refill amount (`wax-cake`)** | **+14 wax** (cap 40); `matches` +1 | One guaranteed refill/floor at ~15–20 productive turns; data-driven: the cap was raised from 30 so floor refills **bank** rather than overspill (autoplay: greedy completion 74%→94%). |
+| **Match relight value** | clears the snuff, **adds no wax**; a snuff with no match enters the guttering-dark grace | Makes a match a save against darkness, not a wax refill; keeps the Run(wax)-vs-Endure(match) trade honest. |
+| **Candle radius formula** | `clamp(base − penalty(wax), min(base,2), base)`; **flattened** penalty 0 (≥18) / 1 (6–17) / 2 (1–5) | Visibility-first: the flame stays a usable map at low wax; the old curve collapsed to radius 1 for wax ≤ 17. Runtime-tunable via `window.TUNING` for A/B. |
+| **Key model** | one `floor-key` per floor; the `down` gate is locked until held; consumed by descending; ground-floor key = exit key; floor 1 key in treasure room, floors 2–6 in the puzzle room | Replaces the old per-stair auto-`exit-key` (which re-granted "THE KEY" every floor) and the ambiguous `locked-door` "force" puzzle. |
 | **Dread tier mechanical effects** | ±1 starting disposition step (Watched+); +1 extra Dread after warm act (Marked+); no new Ally without atonement (Hunted); all Hostile + `orlok-lock` (Hunted-full) | Gives the tier table concrete teeth while keeping atonement always affordable (no hard-lock). |
 | **Per-floor escalation assignment** | F2 NPC pressure · F3 creature density · F4 trap frequency · F5 darkness (−1 radius) · F6 wax drain (ambient −1 wax every 6 turns) | One new variable per floor, using all five brief-named variables across floors 2–6. |
 | **Score values** | full 1000 / borrowed 400; +10/wax, +25/match, +75/lore, +30 warm, −20 cold; Zone +100/floor; Near-Miss +50/event | Fills in the brief's named bonuses with numbers (Near-Miss +50 fixed per AGENTS contract). |

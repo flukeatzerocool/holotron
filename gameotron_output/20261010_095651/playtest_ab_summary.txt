@@ -1,0 +1,13 @@
+# Autoplay report — gameotron_output/20261010_095651/index.html
+seeds: 50 (20261010..20261059)  arms: A,B  policies: optimal,greedy  enc: adaptive
+
+arm policy   n  complete  full  borrowed  dead   stuck  medTurn  medDepth  medWaxEnd  medSurplus%  lowVisTurn  ghostKeys  snuffs
+A   optimal  50  100.0%   100.0%   0.0%    0.0%   0.0%      64        6        18       56.3%        0.0          0       0
+A   greedy   50   94.0%    94.0%   0.0%    6.0%   0.0%      64        6        14       43.8%        0.0          0       0
+B   optimal  50  100.0%   100.0%   0.0%    0.0%   0.0%      64        6        18       56.3%       27.5          0       0
+B   greedy   50   94.0%    94.0%   0.0%    6.0%   0.0%      64        6        14       43.8%       28.0          0       0
+
+SUCCESS BAR (greedy, arm A): completion 94.0% >= 80% -> PASS
+                             median surplus 43.8% >= 15% -> PASS
+                             ghost keys 0 == 0 -> PASS
+VERDICT: PASS

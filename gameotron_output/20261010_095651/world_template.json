@@ -49,7 +49,7 @@
       "name": "Descending Stair",
       "role": "exit",
       "count": [1, 2],
-      "things": ["exit-key"]
+      "things": []
     }
   ],
   "connectivity": {
@@ -63,17 +63,17 @@
       "exit -> down"
     ]
   },
-  "required_things": ["wax-cake", "matches", "lore-fragment"],
+  "required_things": ["wax-cake", "matches", "lore-fragment", "floor-key"],
   "required_encounters": [
     { "id": "bats", "kind": "creature", "floor": 1, "reachable": true },
     { "id": "vlask", "kind": "npc", "floor": 2, "reachable": true },
     { "id": "rats", "kind": "creature", "floor": 2, "reachable": true }
   ],
   "resources": {
-    "wax": { "start": 30, "max": 30, "min": 0, "burn_per_turn": 1, "gutters_at": 0, "role": "candle fuel; clock, health and map at once" },
+    "wax": { "start": 32, "max": 40, "min": 0, "burn_per_turn": 1, "gutters_at": 0, "role": "candle fuel; clock, health and map at once" },
     "matches": { "start": 2, "max": 6, "role": "re-light a snuffed candle" },
     "key": { "start": 0, "win_condition": true, "role": "opens the ground-floor exit" },
-    "candle_radius": { "start": 3, "max": 7, "scales_with": "wax", "role": "reveal radius in tiles" }
+    "candle_radius": { "start": 3, "max": 7, "scales_with": "wax", "role": "reveal radius in tiles", "penaltyFloor": 2, "penalty": [[18, 0], [6, 1], [1, 2]] }
   },
   "clocks": [
     {
@@ -82,7 +82,7 @@
       "behavior": "decrement",
       "direction": "decrement",
       "min": 0,
-      "max": 30,
+      "max": 40,
       "badge_scope": "shared"
     },
     {
@@ -172,7 +172,6 @@
     { "id": "wolves", "kind": "creature", "threat": 3, "effect": "run-wax-spill", "floor": 4 },
     { "id": "shades", "kind": "creature", "threat": 3, "effect": "wax-drain", "floor": 5 },
     { "id": "light-eater", "kind": "creature", "threat": 4, "effect": "snuff", "floor": 6 },
-    { "id": "locked-door", "kind": "puzzle", "threat": 1, "effect": "wax-cost", "floor": 2 },
     { "id": "collapsing-floor", "kind": "puzzle", "threat": 2, "effect": "wax-cost", "floor": 3 },
     { "id": "light-trap", "kind": "puzzle", "threat": 2, "effect": "snuff", "floor": 4 },
     { "id": "dark-leap", "kind": "puzzle", "threat": 1, "effect": "wax-cost", "floor": 5 },

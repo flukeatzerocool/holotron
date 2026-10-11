@@ -3,6 +3,35 @@
 All notable changes to Holotron are documented here.
 Format: date-stamped sections, bulleted entries.
 
+## 2026-10-11 — Torre Nosferatu: post-playtest revision + autoplay harness
+
+- **New `scripts/autoplay/`** (zero-dependency, agent-invoked): `bot.js` plays the real
+  `index.html` through public hooks (`worldState`/`systemState`/`testState`/`move`) + modal DOM
+  clicks; `playtest.mjs` runs seed batches per policy and arm, writes `*.json` + `*_summary.txt`;
+  `README.md` documents usage and the `playwright-cli`+Firefox preflight. Two policies
+  (**optimal** = full-graph BFS, **greedy** = frontier/no-map-memory) and two radius arms
+  (A flattened, B original) via a runtime `window.TUNING`.
+- **`index.html` mechanics (from five playtest complaints):**
+  - **One key per floor.** `exit-key` → per-floor **`floor-key`** (Spire: treasure room;
+    floors 2-6: puzzle room); the floor's `down` stair is **locked** until held and the key is
+    consumed by descending. Removes the repeating "THE KEY" toast and the ambiguous
+    `locked-door` "force it" puzzle.
+  - **Run = wax; Endure = snuff.** Endure now costs **no wax** and **snuffs**; a **match**
+    re-lights (re-light adds **no wax**); a snuff with **0 matches** enters the guttering-dark
+    grace. Removes Endure's strict domination.
+  - **Flattened radius curve** (`window.TUNING`, radius floors at 2) — visibility-first.
+  - **Wax pool 32 start / 40 max / refill +14** so floor refills **bank** instead of overspilling.
+  - Added read-only `window.testState()` (harness accessor); `win`/`endGame`/`newRun` now close
+    any open modal (a run could previously end with an encounter modal stuck open).
+- **`gdd.md` / `world_template.json`+`.txt` / `world_map.json`+`.txt` / `visual_direction.txt`**
+  updated to match (key model, Run/Endure, radius formula, wax numbers, roster minus `locked-door`,
+  `required_things` += `floor-key`).
+- **Verification:** `check_template.mjs --fail-on spatial` → **spatial 0, systemic 0, exit 0**;
+  autoplay bar (greedy, arm A) **PASS** — 94 % completion, 43.8 % median surplus, 0 ghost keys
+  (`gameotron_output/20261010_095651/playtest_ab*`). Stress-test:
+  `docs/grill-me/2026-10-11-torre-nosferatu-autoplay-and-fixes-stress-test.md`.
+- `PROCESS.md` §7.4a and `ROADMAP.md` updated. Docs + game; **no pipeline behavioral change**.
+
 ## 2026-10-10 — Reorient PROCESS.md to GAMEOTRON developers
 
 - Reframed `PROCESS.md` as the dev-facing "documented fork" the Gameotron jam asks participants

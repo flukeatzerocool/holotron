@@ -61,7 +61,8 @@
         },
         "things": [
           "wax-cake",
-          "matches"
+          "matches",
+          "floor-key"
         ],
         "npc": null,
         "encounter": null
@@ -89,7 +90,7 @@
           "lore-fragment"
         ],
         "npc": null,
-        "encounter": "locked-door"
+        "encounter": "collapsing-floor"
       },
       "d1-scribe-alcove-2": {
         "name": "Ink-Stained Cell",
@@ -101,7 +102,7 @@
           "lore-fragment"
         ],
         "npc": null,
-        "encounter": "locked-door"
+        "encounter": "collapsing-floor"
       },
       "d1-shadow-hall-1": {
         "name": "Shadow Hall",
@@ -130,9 +131,7 @@
         "exits": {
           "south": "d1-stair-corridor-3"
         },
-        "things": [
-          "exit-key"
-        ],
+        "things": [],
         "npc": null,
         "encounter": null
       },
@@ -142,9 +141,7 @@
         "exits": {
           "north": "d1-spire-entry-1"
         },
-        "things": [
-          "exit-key"
-        ],
+        "things": [],
         "npc": null,
         "encounter": null
       }
@@ -155,9 +152,9 @@
     "dread": 0,
     "clocks": {
       "wax": {
-        "value": 30,
+        "value": 32,
         "min": 0,
-        "max": 30
+        "max": 40
       },
       "dread": {
         "value": 0,
@@ -169,7 +166,7 @@
       {
         "id": "vlask",
         "name": "Vlask",
-        "disposition": "wary",
+        "disposition": "suspicious",
         "numeric": -1,
         "floor": 2,
         "room": "d2-survivor-camp-1"
@@ -222,7 +219,6 @@
       "wolves",
       "shades",
       "light-eater",
-      "locked-door",
       "collapsing-floor",
       "light-trap",
       "dark-leap",

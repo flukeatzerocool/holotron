@@ -30,7 +30,7 @@
       "name": "Candle Nook",
       "archetype": "candle-nook",
       "exits": { "west": "spire-landing", "north": "wax-coffer-room" },
-      "things": ["wax-cake", "matches"]
+      "things": ["wax-cake", "matches", "floor-key"]
     },
     "wax-coffer-room": {
       "name": "Wax Coffer Room",
@@ -66,7 +66,7 @@
       "name": "Down Stair",
       "archetype": "descending-stair",
       "exits": { "up": "shadow-hall", "north": "scribes-alcove" },
-      "things": ["exit-key"]
+      "things": []
     }
   }
 }

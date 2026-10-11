@@ -10,13 +10,13 @@ ROOMS (slug — name [archetype])
   long-gallery       Long Gallery        [stair-corridor]
   broken-stair       Broken Stair        [stair-corridor]
   cold-hearth-hall   Cold Hearth Hall    [stair-corridor]
-  candle-nook        Candle Nook         [candle-nook]        things: wax-cake, matches
+  candle-nook        Candle Nook         [candle-nook]        things: wax-cake, matches, floor-key
   wax-coffer-room    Wax Coffer Room     [candle-nook]
   wainscot-warren    Wainscot Warren     [shadow-hall]        things: lore-bleeding-wall
   shadow-hall        Shadow Hall         [shadow-hall]
   scribes-alcove     Scribe's Alcove     [scribe-alcove]      things: lore-fragment
   survivor-camp      Survivor Camp       [survivor-camp]
-  down-stair         Down Stair          [descending-stair]   things: exit-key
+  down-stair         Down Stair          [descending-stair]   (the down gate is locked until floor-key is held)
 
 EXITS (directed; the reverse is generated automatically by the server)
   spire-landing    north -> long-gallery      east -> candle-nook
@@ -39,13 +39,13 @@ THINGS
   candle             (light)    at spire-landing  — the player's clock/health/map
   wax-cake           (resource) at candle-nook    — refills the candle
   matches            (resource) at candle-nook    — re-lights a snuff
-  exit-key           (key)      at down-stair     — opens the ground-floor door
+  floor-key          (key)      at candle-nook    — opens this floor's down gate (one per floor)
   lore-fragment      (lore, readable) at scribes-alcove
   lore-bleeding-wall (lore, readable) at wainscot-warren
 
 REACHABILITY
   Every room is reachable from spire-landing; every required thing (wax-cake, matches,
-  lore-fragment) is placed on a reachable room. No dangling exits.
+  lore-fragment, floor-key) is placed on a reachable room. No dangling exits.
 
 NPCs PLACED (roam the tower; simulation is active-floor-only, state is tower-wide)
   Vlask (wary)          wax-coffer-room

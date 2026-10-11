@@ -116,13 +116,14 @@
     <div class="veil"></div>
     <h2>How to Play</h2>
     <div class="panel scroll">
-      <p><b>The candle is your clock, your health, and your map.</b> Every turn burns 1 wax. As wax falls your light radius closes in. At 0 wax the <span class="warm">guttering dark</span> begins.</p>
+      <p><b>The candle is your clock, your health, and your map.</b> Every turn burns 1 wax. As wax falls your light radius closes in (but never below 2 tiles while lit). At 0 wax the <span class="warm">guttering dark</span> begins.</p>
       <p><b>Move:</b> tap/click an adjacent room tile, or use <b>WASD / arrow keys</b>. One move = one wax. <b>Space</b> waits (burns 1 wax).</p>
-      <p><b>Creatures:</b> choose <b>Run</b> (spills wax) or <b>Endure</b> (spills wax and snuffs the candle — you need a match to re-light). There is no HP and no battle.</p>
-      <p><b>Matches</b> re-light a snuffed candle (restores it to 8 wax). The <b>key</b> opens the ground-floor exit.</p>
+      <p><b>One key per floor.</b> Find the floor's <b>key</b>, then reach a <b>Descending Stair</b> and press <b>Descend</b>. The stair gate stays locked until you hold that floor's key. On the ground floor the key also opens the exit.</p>
+      <p><b>Creatures:</b> <b>Run</b> costs <b>wax</b> (candle stays lit); <b>Endure</b> <b>snuffs the candle</b> and costs no wax — spend a <b>match</b> to re-light it. No match, no light. There is no HP and no battle.</p>
+      <p><b>Matches</b> re-light a snuffed candle (they do not add wax).</p>
       <p><b>Survivors (floor 2 down):</b> six actions. <span class="warm">Warm</span> acts (share light, ally, bargain, trade) lower Dread but cost light. <span class="cold">Cold</span> acts (steal, threaten) buy light now but raise Dread.</p>
       <p><b>Dread (0–8)</b> is weather: it starts strangers warier and speeds Orlok when your flame dies. Warm acts make it roll away.</p>
-      <p><b>Descend:</b> stand in a Descending Stair and press <b>Descend</b> (or move down). Reach the ground floor with the key to escape.</p>
+      <p><b>Descend:</b> stand in a Descending Stair holding the floor's key and press <b>Descend</b> (or move down). Reach the ground floor with its key to escape.</p>
       <p><b>Lose:</b> the only death is Count Orlok after the grace turns run out while your candle is out.</p>
       <p class="legend">Keyboard: WASD / arrows move · Space wait/confirm · Esc pause · 1–6 social actions.</p>
     </div>
@@ -320,7 +321,7 @@
       "name": "Descending Stair",
       "role": "exit",
       "count": [1, 2],
-      "things": ["exit-key"]
+      "things": []
     }
   ],
   "connectivity": {
@@ -334,17 +335,17 @@
       "exit -> down"
     ]
   },
-  "required_things": ["wax-cake", "matches", "lore-fragment"],
+  "required_things": ["wax-cake", "matches", "lore-fragment", "floor-key"],
   "required_encounters": [
     { "id": "bats", "kind": "creature", "floor": 1, "reachable": true },
     { "id": "vlask", "kind": "npc", "floor": 2, "reachable": true },
     { "id": "rats", "kind": "creature", "floor": 2, "reachable": true }
   ],
   "resources": {
-    "wax": { "start": 30, "max": 30, "min": 0, "burn_per_turn": 1, "gutters_at": 0, "role": "candle fuel; clock, health and map at once" },
+    "wax": { "start": 32, "max": 40, "min": 0, "burn_per_turn": 1, "gutters_at": 0, "role": "candle fuel; clock, health and map at once" },
     "matches": { "start": 2, "max": 6, "role": "re-light a snuffed candle" },
-    "key": { "start": 0, "win_condition": true, "role": "opens the ground-floor exit" },
-    "candle_radius": { "start": 3, "max": 7, "scales_with": "wax", "role": "reveal radius in tiles" }
+    "key": { "start": 0, "win_condition": true, "role": "one floor-key per floor; opens the floor's down gate; the ground-floor key opens the exit" },
+    "candle_radius": { "start": 3, "max": 7, "scales_with": "wax", "role": "reveal radius in tiles", "penaltyFloor": 2, "penalty": [[18, 0], [6, 1], [1, 2]] }
   },
   "clocks": [
     {
@@ -353,7 +354,7 @@
       "behavior": "decrement",
       "direction": "decrement",
       "min": 0,
-      "max": 30,
+      "max": 40,
       "badge_scope": "shared"
     },
     {
@@ -443,7 +444,6 @@
     { "id": "wolves", "kind": "creature", "threat": 3, "effect": "run-wax-spill", "floor": 4 },
     { "id": "shades", "kind": "creature", "threat": 3, "effect": "wax-drain", "floor": 5 },
     { "id": "light-eater", "kind": "creature", "threat": 4, "effect": "snuff", "floor": 6 },
-    { "id": "locked-door", "kind": "puzzle", "threat": 1, "effect": "wax-cost", "floor": 2 },
     { "id": "collapsing-floor", "kind": "puzzle", "threat": 2, "effect": "wax-cost", "floor": 3 },
     { "id": "light-trap", "kind": "puzzle", "threat": 2, "effect": "snuff", "floor": 4 },
     { "id": "dark-leap", "kind": "puzzle", "threat": 1, "effect": "wax-cost", "floor": 5 },
@@ -467,12 +467,12 @@ var MINIMAL_FALLBACK = {
   seed_default:null, test_seed:20261010,
   archetypes:[{id:'spire-entry',name:'Spire Entry',role:'entry',count:[1,1],things:[]}],
   connectivity:{rules:[]},
-  required_things:['wax-cake','matches','lore-fragment'],
+  required_things:['wax-cake','matches','lore-fragment','floor-key'],
   required_encounters:[],
-  resources:{wax:{start:30,max:30,min:0,burn_per_turn:1,gutters_at:0},
+  resources:{wax:{start:32,max:40,min:0,burn_per_turn:1,gutters_at:0},
     matches:{start:2,max:6},key:{start:0},
-    candle_radius:{start:3,max:7}},
-  clocks:[{id:'wax',behavior:'decrement',min:0,max:30},
+    candle_radius:{start:3,max:7,penaltyFloor:2,penalty:[[18,0],[6,1],[1,2]]}},
+  clocks:[{id:'wax',behavior:'decrement',min:0,max:40},
     {id:'dread',behavior:'tug_of_war',min:0,max:8,tiers:[{range:[0,8],state:'calm'}]}],
   npcs:[], social_actions:[], encounter_roster:[]
 };
@@ -637,9 +637,15 @@ function genFloor(seed, depth){
     var a=rooms[slug].archetype, things=[];
     if(a==='candle-nook') things=['wax-cake','matches'];
     else if(a==='scribe-alcove') things=['lore-fragment'];
-    else if(a==='descending-stair') things=['exit-key'];
     rooms[slug].things=things; rooms[slug].items=things.slice();
   });
+  // ONE KEY PER FLOOR: floor 1 -> treasure room; floors 2-6 -> puzzle room (both guaranteed reachable).
+  var keyRoom = (depth===1)
+    ? Object.keys(rooms).filter(function(s){return rooms[s].archetype==='candle-nook';})[0]
+    : Object.keys(rooms).filter(function(s){return rooms[s].archetype==='scribe-alcove';})[0];
+  if(!keyRoom) keyRoom = Object.keys(rooms).filter(function(s){return s!==entry && rooms[s].archetype!=='descending-stair';})[0];
+  if(!keyRoom) keyRoom = entry;
+  rooms[keyRoom].things.push('floor-key'); rooms[keyRoom].items.push('floor-key');
 
   // encounters
   var creatures = ROSTER.filter(function(x){return x.kind==='creature';});
@@ -722,7 +728,7 @@ function makeState(seed){
     waxStart:WAXR.start||30,
     matches:MATR.start||2,
     baseRadius:RADR.start||3,
-    key:false, lore:0, loreSet:{}, loreFragments:[],
+    key:false, floorKey:{}, lore:0, loreSet:{}, loreFragments:[],
     dread:0, turn:0,
     guttering:false, grace:0, snuffed:false, dead:false, won:false, wonType:null,
     inGame:false, _dreadTier:0,
@@ -759,9 +765,15 @@ function makeState(seed){
    6. DERIVED VALUES
    ========================================================= */
 function effectiveWax(){ return clamp(G.wax, WAXCLK.min||0, WAXCLK.max||30); }
+var DEFAULT_PENALTY = [[18,0],[6,1],[1,2]]; // flattened, visibility-first
+window.TUNING = window.TUNING || {
+  radiusPenalty: (RADR && RADR.penalty) ? RADR.penalty : DEFAULT_PENALTY,
+  penaltyFloor: (RADR && typeof RADR.penaltyFloor==='number') ? RADR.penaltyFloor : 2
+};
 function radiusPenalty(w){
-  if(w>=24) return 0; if(w>=18) return 1; if(w>=12) return 2; if(w>=6) return 3; if(w>=1) return 4;
-  return 99;
+  var t=(window.TUNING && window.TUNING.radiusPenalty) || DEFAULT_PENALTY;
+  for(var i=0;i<t.length;i++){ if(w>=t[i][0]) return t[i][1]; }
+  return t.length ? t[t.length-1][1]+1 : 99;
 }
 function baseRadius(){
   var b = clamp(G.baseRadius - (G.depth>=5?1:0), 1, RADR.max||7);
@@ -777,7 +789,8 @@ function effRadius(){
   if(G.dead||G.won) return 1;
   if(G.snuffed||G.guttering) return 1;
   var b=baseRadius();
-  return clamp(b - radiusPenalty(G.wax), 1, b);
+  var lo=Math.min(b, (window.TUNING && window.TUNING.penaltyFloor!=null) ? window.TUNING.penaltyFloor : 2);
+  return clamp(b - radiusPenalty(G.wax), lo, b);
 }
 function dreadTierIndex(v){
   var tiers=DREADCLK.tiers||[];
@@ -1088,7 +1101,7 @@ function renderHUD(){
   document.getElementById('scoreVal').textContent = computeScore().total;
   var here = coLocatedNpc();
   document.getElementById('btn-talk').style.display = here?'inline-block':'none';
-  var canRelight = (G.snuffed||G.guttering) && G.matches>0;
+  var canRelight = (G.snuffed||G.guttering) && G.matches>0 && !(G.guttering && G.wax<=0);
   document.getElementById('btn-usematch').style.display = canRelight?'inline-block':'none';
   var inExit = fl && fl.rooms[G.pos] && fl.rooms[G.pos].archetype==='descending-stair';
   var db=document.getElementById('btn-descend');
@@ -1256,7 +1269,7 @@ function pickup(room){
   var pp=playerScreen();
   for(var i=items.length-1;i>=0;i--){
     var t=items[i];
-    if(t==='wax-cake'){ G.wax=clamp(G.wax+12,0,WAXCLK.max||30); Audio.waxFound(); toast('WAX FOUND  +12'); items.splice(i,1);
+    if(t==='wax-cake'){ var rf=(window.TUNING&&typeof window.TUNING.refill==='number')?window.TUNING.refill:14; G.wax=clamp(G.wax+rf,0,WAXCLK.max||40); Audio.waxFound(); toast('WAX FOUND  +'+rf); items.splice(i,1);
       Juice.burst(pp.x,pp.y,14,'#FFD27A',2.2,2.4,700); Juice.pop('+12 WAX',pp.x,pp.y-34,'#FFD27A'); Juice.punchTo(0.5); Juice.flashWarm(); }
     else if(t==='matches'){ G.matches=clamp(G.matches+1,0,MATR.max||6); Audio.matchPickup(); toast('MATCH  +1'); items.splice(i,1);
       Juice.burst(pp.x,pp.y,8,'#E8912B',2.4,1.8,480); Juice.pop('+1 MATCH',pp.x,pp.y-34,'#E8912B'); }
@@ -1270,7 +1283,7 @@ function pickup(room){
       }
       items.splice(i,1);
     }
-    else if(t==='exit-key'){ G.key=true; Audio.keyFound(); toast('THE KEY'); items.splice(i,1);
+    else if(t==='floor-key'){ G.floorKey[G.depth]=true; G.key=true; Audio.keyFound(); toast('THE KEY — THIS FLOOR'); items.splice(i,1);
       Juice.burst(pp.x,pp.y,18,'#FFD27A',2.6,2.6,800,0.02); Juice.pop('THE KEY',pp.x,pp.y-38,'#FFD27A',17); Juice.flashWarm(); Juice.punchTo(0.8); }
   }
 }
@@ -1306,6 +1319,7 @@ function tryMove(dir){
   var fl=G.floors[G.depth]; var room=fl.rooms[G.pos]; if(!room) return false;
   if(dir==='down'){
     if(room.archetype==='descending-stair'){
+      if(!G.floorKey[G.depth]){ toast('THE STAIR GATE IS LOCKED — FIND THIS FLOOR\'S KEY'); return false; }
       if(G.depth<MAX_DEPTH){ descend(); return true; }
       attemptExit(); return true;
     }
@@ -1324,10 +1338,11 @@ function tryMove(dir){
 function descend(){
   var here=G.floors[G.depth] && G.floors[G.depth].rooms[G.pos];
   if(!here || here.archetype!=='descending-stair') return;
+  if(!G.floorKey[G.depth]){ toast('THE STAIR GATE IS LOCKED — FIND THIS FLOOR\'S KEY'); return; }
   if(G.depth>=MAX_DEPTH){ attemptExit(); return; }
   if(!G.descendedFrom) G.descendedFrom={};
   G.descendedFrom[G.depth]=G.pos;
-  G.depth++; G.pos=G.floors[G.depth].start;
+  G.depth++; G.pos=G.floors[G.depth].start; G.key=false; // one key per floor: the next floor starts keyless
   Audio.zone(); toast('DESCENT — '+(G.depth===MAX_DEPTH?'GROUND FLOOR':'FLOOR '+G.depth));
   Juice.transition(); Juice.shake(3);
   var pd=playerScreen(); Juice.burst(pd.x,pd.y,12,'#4C5A6B',2.0,2.2,760,0.02);
@@ -1387,8 +1402,8 @@ function npcItemSweep(room,slug){
   if(items.length<2) return; // never strip a room's last item
   var idx=-1;
   for(var i=items.length-1;i>=0;i--){
-    // never remove required things (REQ_THINGS) or the exit-key
-    if(items[i]==='exit-key' || REQ_THINGS.indexOf(items[i])>=0) continue;
+    // never remove required things (REQ_THINGS) or the floor-key
+    if(items[i]==='floor-key' || REQ_THINGS.indexOf(items[i])>=0) continue;
     idx=i; break;
   }
   if(idx>=0 && NPCRng()<0.5){
@@ -1499,11 +1514,10 @@ function encTitle(id){
     wolves:'A wolf watches from the stair',shades:'A shade unfolds', 'light-eater':'Something that eats the flame'}[id] || 'A shape in the dark';
 }
 function puzzleTitle(id){
-  return {'locked-door':'A locked door','collapsing-floor':'The floor gives way','light-trap':'A light-trap waits','dark-leap':'The dark leap'}[id] || 'A problem in the dark';
+  return {'collapsing-floor':'The floor gives way','light-trap':'A light-trap waits','dark-leap':'The dark leap'}[id] || 'A problem in the dark';
 }
 function puzzleDesc(id){
-  return {'locked-door':'The iron is cold and barred. Force it and burn wax, or waste a turn finding the catch.',
-    'collapsing-floor':'Beams sag. The long way is safe but slow; the short way costs light.',
+  return {'collapsing-floor':'Beams sag. The long way is safe but slow; the short way costs light.',
     'light-trap':'A snare for flame. Cross blind and spend a match, or go around.',
     'dark-leap':'A black gap. Leap and spend wax, or feel your way and lose a turn.'}[id] || 'A choice costs light either way.';
 }
@@ -1514,12 +1528,13 @@ function resolveCreature(kind){
   if(eff==='turn-cost'){ burnWax(2); }
   if(kind==='run'){ burnWax(spill); toast('YOU RUN — WAX SPILLS'); }
   else {
-    burnWax(spill);
+    // ENDURE: snuffs the candle and costs NO wax; a match re-lights it.
     G.snuffed=true; Audio.snuff(); toast('THE CANDLE IS SNUFFED');
-    if(G.matches>0) toast('ENDURED — SPEND A MATCH (JOURNAL/WAIT to re-light)');
+    if(G.matches>0) toast('ENDURED — SPEND A MATCH TO RE-LIGHT');
   }
   if(eff==='snuff'){ G.snuffed=true; Audio.snuff(); }
   if(G.wax<=0) enterGuttering();
+  else if(G.snuffed && G.matches<=0) enterGuttering(); // snuff with no match -> the guttering-dark grace
   // juice: impact shake + hit-stop + burst + popup (additive)
   var pc=playerScreen();
   Juice.shake(kind==='endure'?6:4); Juice.stop(kind==='endure'?4:3); Juice.punchTo(0.9);
@@ -1565,7 +1580,8 @@ function sfxMaybeSnuffRecover(){ /* no-op placeholder for parity */ }
 function tryRelight(){
   if(!G.snuffed && !G.guttering) return false;
   if(G.matches<=0) return false;
-  G.matches--; G.wax=Math.max(G.wax,8); G.snuffed=false; G.guttering=false;
+  if(G.guttering && G.wax<=0) return false; // no fuel: a match cannot re-light an empty candle
+  G.matches--; G.snuffed=false; G.guttering=false; // re-light restores the flame only — it never adds wax
   Audio.matchStrike(); toast('THE MATCH CATCHES — LIGHT RETURNS');
   var pr=playerScreen(); Juice.shake(2); Juice.punchTo(0.5); Juice.flashWarm();
   Juice.burst(pr.x,pr.y,16,'#FFD27A',2.4,2.2,650,0.02); Juice.pop('LIGHT RETURNS',pr.x,pr.y-40,'#FFD27A');
@@ -1660,6 +1676,7 @@ function computeScore(){
    ========================================================= */
 function win(type){
   G.won=true; G.wonType=type; G.inGame=false;
+  closeOpenModal();
   Audio.victory(type==='borrowed');
   Juice.flashWarm(); Juice.punchTo(1); Juice.burst(playerScreen().x,playerScreen().y,20,'#FFD27A',3,2.6,900,0.02);
   Juice.transition();
@@ -1672,6 +1689,7 @@ function win(type){
 }
 function endGame(){
   G.dead=true; G.inGame=false;
+  closeOpenModal();
   Audio.death();
   Juice.flashRed(); Juice.shake(6); Juice.punchTo(1); Juice.burst(playerScreen().x,playerScreen().y,18,'#8A3D12',2.6,2.4,900,0.02);
   Juice.transition();
@@ -1708,7 +1726,7 @@ function openJournal(){
   var body=document.getElementById('journalBody');
   body.innerHTML=lines.join('<br>')+
     '<div class="btnrow" style="margin-top:10px;">'+
-    (G.matches>0 && (G.snuffed||G.guttering) ? '<button class="mbtn small" id="jn-relight">Use Match</button>' : '')+
+    (G.matches>0 && (G.snuffed||G.guttering) && !(G.guttering && G.wax<=0) ? '<button class="mbtn small" id="jn-relight">Use Match</button>' : '')+
     '</div>';
   openModal('modal-journal');
   var rb=document.getElementById('jn-relight');
@@ -1839,7 +1857,7 @@ function drawScene(c){
     drawArchetypeGlyph(c, sp.x, sp.y, r.archetype);
     // things
     (r.items||[]).forEach(function(it,i){
-      c.fillStyle= it==='exit-key' ? '#FFD27A' : (it==='matches'?'#E8912B':'#8A3D12');
+      c.fillStyle= it==='floor-key' ? '#FFD27A' : (it==='matches'?'#E8912B':'#8A3D12');
       c.beginPath(); c.arc(sp.x-half+10+i*9, sp.y+half-10, 3, 0, Math.PI*2); c.fill();
     });
     // creature silhouette
@@ -2052,6 +2070,13 @@ window.social=function(id){
   var t=G.socialTarget || Object.keys(G.npcs)[0];
   return applySocial(id, t);
 };
+// Read-only test accessor (same family as worldState/systemState) for the autoplay harness.
+window.testState=function(){
+  return { turn:G.turn, depth:G.depth, pos:G.pos, wax:G.wax, matches:G.matches, key:G.key,
+    floorKey:G.floorKey, snuffed:G.snuffed, guttering:G.guttering, grace:G.grace,
+    dead:G.dead, won:G.won, wonType:G.wonType, inGame:G.inGame, dread:G.dread,
+    baseRadius:baseRadius(), effRadius:effRadius(), npcs:npcList() };
+};
 window.pristineWorldState=function(){ return deepClone(G.pristine); };
 window.pristineState=window.pristineWorldState;
 window.pristineSystemState=function(){
@@ -2086,6 +2111,7 @@ function startGame(seed){
 }
 function newRun(seed){
   makeState(seed);
+  closeOpenModal();
   window.SEED=seed;
   window.flags=G.flags;
   // pristine boot snapshot (floor 1, pre-mutation)
@@ -2153,7 +2179,7 @@ function bindUI(){
   document.getElementById('btn-win-title').addEventListener('click',function(){ Audio.ui(); showScreen('title'); });
 
   document.getElementById('btn-wait').addEventListener('click',function(){ Audio.ui(); if(G.inGame&&!isModalOpen()){ takeTurn('wait'); } });
-  document.getElementById('btn-usematch').addEventListener('click',function(){ Audio.ui(); if(G.inGame&&!isModalOpen()){ if(!tryRelight()){ toast('NO MATCHES'); } } });
+  document.getElementById('btn-usematch').addEventListener('click',function(){ Audio.ui(); if(G.inGame&&!isModalOpen()){ if(!tryRelight()){ toast('CANNOT RE-LIGHT'); } } });
   document.getElementById('btn-descend').addEventListener('click',function(){ Audio.ui(); if(G.inGame&&!isModalOpen()){
     if(G.depth<MAX_DEPTH){ descend(); } else { attemptExit(); }
   } });

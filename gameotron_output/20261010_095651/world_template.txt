@@ -14,9 +14,13 @@ ARCHETYPES (role — id, name, count per floor, things carried)
   corridor  stair-corridor    Stair Corridor     [2,4]
   treasure  candle-nook       Candle Nook        [1,2]  things: wax-cake, matches
   hazard    shadow-hall       Shadow Hall        [0,3]
-  puzzle    scribe-alcove     Scribe's Alcove    [0,2]  things: lore-fragment
+  puzzle    scribe-alcove     Scribe's Alcove    [0,2]  things: lore-fragment (floors 2-6: + floor-key)
   social    survivor-camp     Survivor Camp      [0,2]
-  exit      descending-stair  Descending Stair   [1,2]  things: exit-key
+  exit      descending-stair  Descending Stair   [1,2]
+  NOTE: ONE KEY PER FLOOR. A single `floor-key` is placed per floor (ground floor's key is
+  the exit key); the floor's `down` gate stays locked until it is held. Floor 1 (Spire) puts
+  its key in the treasure room (candle-nook) so the tutorial floor carries no keyed puzzle;
+  floors 2-6 put it in the puzzle room (scribe-alcove). The key is refreshed per floor.
   NOTE: hazard/puzzle/social minima are 0 so the Spire (the checked active floor, which is
   wax+exploration only — social+Dread arrive on the second floor down) can never hard-fail
   the spatial gate. The start room's archetype MUST be `spire-entry`.
@@ -32,8 +36,8 @@ CONNECTIVITY (legal transitions between roles)
   Vertical movement is down/up. Descent: Spire (top) -> ground-floor exit.
 
 REQUIRED THINGS (every generated floor must place and make reachable from start)
-  wax-cake, matches, lore-fragment
-  (exit-key is guaranteed via the descending-stair archetype's things list.)
+  wax-cake, matches, lore-fragment, floor-key
+  (floor-key is placed in the treasure room on floor 1 and the puzzle room on floors 2-6.)
 
 REQUIRED ENCOUNTERS (must exist/reachable on test_seed; >=1 reachable)
   bats    creature floor 1  reachable: true   <- pinned reachable (Spire hazard)
@@ -43,13 +47,14 @@ REQUIRED ENCOUNTERS (must exist/reachable on test_seed; >=1 reachable)
   must appear in systemState().encounters even when it roams a lower floor.
 
 RESOURCES (start, bounds, role)
-  wax             start 30 / max 30 / burn 1 per turn / gutters at 0   (clock, health, map)
+  wax             start 32 / max 40 / burn 1 per turn / gutters at 0   (clock, health, map; refill wax-cake +14)
   matches         start 2  / max 6                                     (re-light a snuff)
-  key             start 0  (win condition)                             (opens the exit)
+  key             start 0  (per-floor; win condition)                   (opens the floor's down gate; ground floor: the exit)
   candle_radius   start 3  / max 7 / scales_with wax                   (reveal radius)
+                  penalty [[18,0],[6,1],[1,2]] penaltyFloor 2           (flattened curve: radius floors at 2)
 
 CLOCKS
-  wax    behavior decrement   direction decrement  [0,30]  (the deployed native countdown)
+  wax    behavior decrement   direction decrement  [0,40]  (the deployed native countdown)
   dread  behavior tug_of_war  direction increment  [0,8]   badge_scope shared
          tiers (contiguous, cover 0..8 exactly):
            0-1 calm | 2-3 watched | 4-5 marked | 6-7 hunted | 8 hunted-full
@@ -88,7 +93,6 @@ ENCOUNTER ROSTER (kind — threat, effect, first floor)
   wolves        creature 3  run-wax-spill   floor 4
   shades        creature 3  wax-drain       floor 5
   light-eater   creature 4  snuff           floor 6
-  locked-door      puzzle 1  wax-cost       floor 2
   collapsing-floor puzzle 2  wax-cost       floor 3
   light-trap       puzzle 2  snuff          floor 4
   dark-leap        puzzle 1  wax-cost       floor 5

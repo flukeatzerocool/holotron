@@ -16,6 +16,13 @@ Forward plan for Holotron. Completed work lands in `CHANGELOG.md`; this file tra
 - **C5 end-to-end: DONE.** `scripts/check_template.mjs --fail-on spatial` on the real Torre artifacts
   on `test_seed` → **spatial 0, systemic 0, exit 0**. Control fixtures unchanged (golden 0/exit0;
   malformed 4 spatial/exit1; malformed_archetypes 3 spatial/exit1; malformed_systems 7 systemic/exit0).
+- **2026-10-11 post-playtest revision: DONE.** Five playtest complaints addressed from a static
+  audit + a new zero-dep autoplay harness (`scripts/autoplay/`): one `floor-key` per floor gates
+  the `down` stair (removes the repeating "THE KEY" and the ambiguous `locked-door` "force"
+  puzzle); **Run = wax, Endure = snuff (no wax, re-light with a match)**; flattened radius curve
+  (`window.TUNING`, task-legibility); wax pool **32 start / 40 max / refill +14** (refills now bank).
+  Gate: `check_template.mjs --fail-on spatial` → **spatial 0, systemic 0, exit 0**; autoplay bar
+  (greedy, arm A) **PASS** — 94 % completion, 43.8 % median surplus, 0 ghost keys (`playtest_ab_summary.txt`).
 
 ## Next — deploy & submit (P5; user-gated)
 
