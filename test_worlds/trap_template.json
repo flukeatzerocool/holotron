@@ -1,0 +1,15 @@
+{
+  "test_seed": 1,
+  "archetypes": [
+    { "id": "entry", "role": "entry", "count": [1, 1] },
+    { "id": "corridor", "role": "corridor" },
+    { "id": "trap-alcove", "role": "trap" },
+    { "id": "treasure", "role": "treasure" }
+  ],
+  "connectivity": { "rules": ["entry -> corridor*"] },
+  "required_things": ["floor-key"],
+  "encounter_roster": [
+    { "id": "spiders", "kind": "creature", "threat": 2, "effect": "turn-cost", "floor": 2 },
+    { "id": "spider-web", "kind": "trap", "threat": 2, "effect": "wax-cost", "floor": 2, "companion": "spiders" }
+  ]
+}

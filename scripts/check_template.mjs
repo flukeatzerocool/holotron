@@ -82,18 +82,19 @@ function checkSpatial(tpl, state, mismatches) {
 
   checkArchetypes(tpl, state, mismatches);
   checkPlacement(tpl, state, mismatches);
+  checkCompanions(tpl, state, mismatches);
 }
 
-// Invariant: a hazard's room is never required for progress — a room carrying a creature/hazard
+// Invariant: a trap's room is never required for progress — a room carrying a creature/trap
 // encounter must NOT also hold a required thing (the key/lore). Template-driven: it fires only when
-// the template declares a creature/hazard encounter roster, so it is a no-op for games without one.
+// the template declares a creature/trap encounter roster, so it is a no-op for games without one.
 function checkPlacement(tpl, state, mismatches) {
   const world = state.world && state.world.rooms ? state.world : state;
   const rooms = world.rooms;
   if (!rooms || typeof rooms !== 'object') return;
   const taxing = new Map();
   for (const e of (Array.isArray(tpl.encounter_roster) ? tpl.encounter_roster : [])) {
-    if (e && (e.kind === 'creature' || e.kind === 'hazard')) taxing.set(e.id, e.kind);
+    if (e && (e.kind === 'creature' || e.kind === 'trap')) taxing.set(e.id, e.kind);
   }
   if (taxing.size === 0) return; // no taxing encounters declared: scope not exercised
   const required = new Set(Array.isArray(tpl.required_things) ? tpl.required_things : []);
@@ -103,7 +104,42 @@ function checkPlacement(tpl, state, mismatches) {
     if (!enc || !taxing.has(enc)) continue;
     const hit = (room.things || []).filter(t => required.has(t));
     if (hit.length) {
-      mismatches.push({ kind: 'spatial', detail: `room '${slug}' (${taxing.get(enc)} encounter '${enc}') also holds required thing(s) ${JSON.stringify(hit)} — a hazard room must not be required for progress` });
+      mismatches.push({ kind: 'spatial', detail: `room '${slug}' (${taxing.get(enc)} encounter '${enc}') also holds required thing(s) ${JSON.stringify(hit)} — a trap room must not be required for progress` });
+    }
+  }
+}
+
+// Companion-event adjacency: a trap declaring a `companion` (e.g. a spider web and its spiders)
+// must sit next to a room hosting that companion on the active floor. Template-driven: a no-op
+// unless the template declares a `kind:"trap"` entry with `companion` AND that companion in
+// `encounter_roster`; the adjacency is exercised only when the state places both on the floor.
+function checkCompanions(tpl, state, mismatches) {
+  const world = state.world && state.world.rooms ? state.world : state;
+  const rooms = world.rooms;
+  if (!rooms || typeof rooms !== 'object') return;
+  const roster = Array.isArray(tpl.encounter_roster) ? tpl.encounter_roster : [];
+  const pairs = roster.filter(e => e && e.kind === 'trap' && typeof e.companion === 'string');
+  if (pairs.length === 0) return; // no companion events declared: scope not exercised
+  const roomOf = new Map(); // encounter id -> [slug]
+  for (const [slug, room] of Object.entries(rooms)) {
+    const enc = room && room.encounter;
+    if (!enc) continue;
+    if (!roomOf.has(enc)) roomOf.set(enc, []);
+    roomOf.get(enc).push(slug);
+  }
+  for (const trap of pairs) {
+    const trapRooms = roomOf.get(trap.id) || [];
+    const compRooms = roomOf.get(trap.companion) || [];
+    if (trapRooms.length === 0 || compRooms.length === 0) continue; // not both placed: not exercised
+    for (const t of trapRooms) {
+      const adj = compRooms.some(c => {
+        const a = (rooms[t] && rooms[t].exits) || {};
+        const b = (rooms[c] && rooms[c].exits) || {};
+        return Object.values(a).includes(c) || Object.values(b).includes(t);
+      });
+      if (!adj) {
+        mismatches.push({ kind: 'spatial', detail: `companion event: trap '${trap.id}' in '${t}' is not adjacent to any room hosting its companion '${trap.companion}'` });
+      }
     }
   }
 }

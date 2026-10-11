@@ -1,0 +1,13 @@
+{
+  "world": {
+    "seed": 1,
+    "start": "entry-hall",
+    "rooms": {
+      "entry-hall": { "name": "Entry Hall", "archetype": "entry", "exits": { "north": "corridor" }, "things": [] },
+      "corridor": { "name": "Corridor", "archetype": "corridor", "exits": { "south": "entry-hall", "east": "web-room", "north": "treasure-room" }, "things": [] },
+      "web-room": { "name": "Web Room", "archetype": "trap-alcove", "exits": { "west": "corridor", "south": "spider-room" }, "encounter": "spider-web", "things": [] },
+      "spider-room": { "name": "Spider Room", "archetype": "corridor", "exits": { "north": "web-room" }, "encounter": "spiders", "things": [] },
+      "treasure-room": { "name": "Treasure Room", "archetype": "treasure", "exits": { "south": "corridor" }, "things": ["floor-key"] }
+    }
+  }
+}

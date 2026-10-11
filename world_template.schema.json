@@ -27,7 +27,7 @@
         "properties": {
           "id": { "type": "string" },
           "name": { "type": "string" },
-          "role": { "enum": ["entry", "corridor", "hazard", "treasure", "social", "exit", "puzzle"] },
+          "role": { "enum": ["entry", "corridor", "trap", "treasure", "social", "exit"] },
           "count": { "type": "array", "items": { "type": "integer" }, "minItems": 2, "maxItems": 2 },
           "things": { "type": "array", "items": { "type": "string" } }
         }
@@ -57,7 +57,7 @@
         "required": ["id", "kind"],
         "properties": {
           "id": { "type": "string" },
-          "kind": { "enum": ["npc", "creature", "puzzle", "hazard"] },
+          "kind": { "enum": ["npc", "creature", "trap"] },
           "floor": { "type": "integer" },
           "reachable": { "type": "boolean" }
         }
@@ -147,10 +147,14 @@
         "required": ["id", "kind"],
         "properties": {
           "id": { "type": "string" },
-          "kind": { "enum": ["creature", "puzzle", "npc", "hazard"] },
+          "kind": { "enum": ["creature", "npc", "trap"] },
           "threat": { "type": "integer" },
           "effect": { "type": "string" },
-          "floor": { "type": "integer" }
+          "floor": { "type": "integer" },
+          "companion": {
+            "type": "string",
+            "description": "Optional. For a companion event (e.g. a spider web trap beside its spiders): the id of the encounter_roster entry that must be placed adjacent on the same floor. check_template.mjs asserts the adjacency."
+          }
         }
       }
     }

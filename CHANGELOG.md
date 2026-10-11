@@ -3,6 +3,34 @@
 All notable changes to Holotron are documented here.
 Format: date-stamped sections, bulleted entries.
 
+## 2026-10-11 — Torre Nosferatu: hazard→trap rename + always-visible Orlok (brief + world contract)
+
+- **Hazard → trap (canonical).** `TORRE_NOSFERATU.md` collapses hazard/puzzle/movement into one
+  **trap** vocabulary; puzzles and simple platforming are cut (§6.1). The machine contract follows:
+  `world_template.schema.json` `encounter_roster.kind` / `required_encounters.kind` now enumerate
+  `trap` (not `hazard`/`puzzle`), and `archetypes.role` drops `hazard`/`puzzle` for `trap`.
+  `scripts/check_template.mjs` taxes `kind:"trap"`, so the **"a trap room is never required for
+  progress"** invariant fires again — it had gone silently vacuous once the word changed.
+- **Trap escalation by density/region.** Removed "one new trap per floor" (it required 7 floors on a
+  6-floor tower, contradicted the roster's own "First appears" column, and collided with the creature
+  budget); traps now escalate by density/tier, sharing one creature+trap per-floor budget (§6.1.2/§9).
+- **Companion events.** Spiders own doorways as the creature; the spider web is a separate trap placed
+  **adjacent to a room hosting its Spiders companion**. `world_template.schema.json` gains an optional
+  `encounter_roster[].companion`; `check_template.mjs` gains a **companion-adjacency** spatial
+  assertion; §14 documents it.
+- **Always-visible Orlok.** Orlok hovers at the mask's edge from turn one (seen, not implied; §7/§11)
+  with a **pre-registered legibility falsifier** and a render seat **against the spill-ring floor
+  (`#0a0708`) with a rim-light**, never in the pure-black void; §6.3 names him the dark's one exception.
+- **Lore info reward.** Cutting puzzles removed the lever-hint referent; lore's "information" now
+  reveals **floor/stair layout** (§5.1).
+- **Fixtures.** `test_worlds/trap_template.json` + `trap_pass_state.json` (exit 0) / `trap_fail_state.json`
+  (trap room holds a required thing → exit 1) / `companion_fail_state.json` (non-adjacent companion →
+  exit 1); `golden_*` unchanged (0/exit 0).
+- **Run artifacts unchanged.** `20261011_004054/` and `gameotron_output/` still author
+  `kind:"hazard"`/`"puzzle"` (historical snapshot); the next `world_agent`/`code_agent` run emits
+  `kind:"trap"`/`role:"trap"`. No `index.html` hand-edit (hard boundary).
+- Evidence: this change; `docs/grill-me/2026-10-11-torre-hazard-to-trap-rename-stress-test.md`.
+
 ## 2026-10-11 — Torre Nosferatu: organ bed replaces the drone (audio, user-directed)
 
 - **The "static" bed is gone.** Judged by the user as static, the 38 Hz sub-drone plus broadband
