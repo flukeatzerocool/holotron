@@ -26,7 +26,8 @@ OpenCode agent workspace for Gameotron game jam. No source code — only agent `
 ```
 
 - **`opencode.json`** — added by the Holotron fork to mount the Holonovel world-model MCP server (scoped to `world_agent`); agents are still invoked by name by the orchestrator. The launcher `scripts/holonovel-mcp.sh` pins the Holonovel commit (`b6a182a`) and fails loudly on drift.
-- **No npm/node/bun** — `.opencode/.gitignore` blocks `node_modules`, `package.json`, `package-lock.json`, `bun.lock`
+- **No npm/node/bun** — the root `.gitignore` blocks `node_modules`, `package.json`, `package-lock.json`, `bun.lock`; this also covers the opencode-managed `.opencode/` scratch (the nested `.opencode/.gitignore` was consolidated into the root in `e0b0b4d`)
+- **`build/index.html` is the tracked deployable (canonical).** A run dir's `index.html` (e.g. `20261011_095532/index.html`) is frozen run evidence, not the deploy source. Keep `build/index.html` identical to the latest reviewed run artifact before any push.
 - **`trijam_gamedev.md` is a legacy orchestrator.** Use `gameotron.md` (primary). Individual `.opencode/agents/*.md` files are authoritative.
 
 ## Usage

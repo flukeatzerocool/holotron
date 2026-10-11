@@ -126,6 +126,7 @@
       <p><b>Move:</b> tap/click an adjacent room tile, or use <b>WASD / arrow keys</b>. One move = one wax. <b>Space</b> waits (burns 1 wax).</p>
       <p><b>One key per floor.</b> Find the floor's <b>key</b>, then reach a <b>Descending Stair</b> and press <b>Descend</b>. The stair gate stays locked until you hold that floor's key. On the ground floor the key also opens the exit.</p>
       <p><b>Creatures:</b> <b>Run</b> costs <b>wax</b> (candle stays lit); <b>Endure</b> <b>snuffs the candle</b> and costs no wax — spend a <b>match</b> to re-light it. No match, no light. There is no HP and no battle.</p>
+      <p><b>Traps (floor 2 down):</b> exploration's obstacle — never a puzzle. <b>Go around</b> and lose turns (turns are wax); or <b>spring it</b> and the flame is <b>snuffed</b>, then spend a <b>match</b> to re-light. Each trap is telegraphed before you commit, and a trap's room is never on the path to the key or a refill.</p>
       <p><b>Matches</b> re-light a snuffed candle (they do not add wax).</p>
       <p><b>Survivors (floor 2 down):</b> six actions. <span class="warm">Warm</span> acts (share light, ally, bargain, trade) lower Dread but cost light. <span class="cold">Cold</span> acts (steal, threaten) buy light now but raise Dread.</p>
       <p><b>Dread (0–8)</b> is weather: it starts strangers warier and speeds Orlok when your flame dies. Warm acts make it roll away.</p>
@@ -305,14 +306,14 @@
     {
       "id": "shadow-hall",
       "name": "Shadow Hall",
-      "role": "hazard",
+      "role": "trap",
       "count": [0, 3],
       "things": []
     },
     {
       "id": "scribe-alcove",
       "name": "Scribe's Alcove",
-      "role": "puzzle",
+      "role": "treasure",
       "count": [0, 2],
       "things": []
     },
@@ -336,8 +337,8 @@
       "entry -> corridor*",
       "entry -> treasure",
       "corridor -> corridor*",
-      "corridor -> treasure | hazard | puzzle | social",
-      "treasure | hazard | puzzle | social -> corridor*",
+      "corridor -> treasure | trap | social",
+      "treasure | trap | social -> corridor*",
       "corridor -> exit",
       "exit -> down"
     ]
@@ -451,12 +452,12 @@
     { "id": "wolves", "kind": "creature", "threat": 3, "effect": "run-wax-spill", "floor": 4 },
     { "id": "shades", "kind": "creature", "threat": 3, "effect": "wax-drain", "floor": 5 },
     { "id": "light-eater", "kind": "creature", "threat": 4, "effect": "snuff", "floor": 6 },
-    { "id": "collapsing-floor", "kind": "hazard", "threat": 2, "effect": "wax-cost", "floor": 3 },
-    { "id": "light-trap", "kind": "hazard", "threat": 2, "effect": "snuff", "floor": 4 },
-    { "id": "pressure-plate", "kind": "hazard", "threat": 2, "effect": "wax-cost", "floor": 2 },
-    { "id": "cursed-ward", "kind": "hazard", "threat": 3, "effect": "snuff", "floor": 5 },
-    { "id": "crumbling-stair", "kind": "hazard", "threat": 2, "effect": "wax-cost", "floor": 6 },
-    { "id": "dark-leap", "kind": "puzzle", "threat": 1, "effect": "wax-cost", "floor": 5 },
+    { "id": "pressure-plate", "kind": "trap", "threat": 2, "effect": "snuff", "floor": 2 },
+    { "id": "collapsing-floor", "kind": "trap", "threat": 2, "effect": "snuff", "floor": 3 },
+    { "id": "snap-trap", "kind": "trap", "threat": 2, "effect": "snuff", "floor": 3 },
+    { "id": "spider-web", "kind": "trap", "threat": 2, "effect": "snuff", "floor": 3, "companion": "spiders" },
+    { "id": "light-glyph", "kind": "trap", "threat": 2, "effect": "snuff", "floor": 4 },
+    { "id": "cursed-ward", "kind": "trap", "threat": 3, "effect": "snuff", "floor": 5 },
     { "id": "vlask", "kind": "npc", "threat": 0, "effect": "social", "floor": 2 },
     { "id": "sister-marta", "kind": "npc", "threat": 0, "effect": "social", "floor": 2 },
     { "id": "ilona", "kind": "npc", "threat": 0, "effect": "social", "floor": 3 },
@@ -633,13 +634,13 @@ function genFloor(seed, depth){
     var parent = (depth===1 && t===0) ? entry : pick(rng,corridorPool());
     var s = attach(parent,'candle-nook'); if(!s) s=attachAny('candle-nook');
   }
-  // Two puzzle/hazard alcoves on floors 2-6 (>=2 so one hosts the hazard while the key room stays
-  // hazard-free); the Spire (floor 1) stays a puzzle-free tutorial.
+  // Two trap-free treasure alcoves on floors 2-6: scribe-alcove hosts the floor's key + lore,
+  // never a trap (placement invariant, §6.1.1). The Spire (floor 1) has neither traps nor social.
   var nP = (depth===1) ? 0 : 2;
   for(var p=0;p<nP;p++){ var ps=attach(pick(rng,corridorPool()),'scribe-alcove'); if(!ps) attachAny('scribe-alcove'); }
-  // hazard: floor 1 carries exactly one teaching creature; else 0..3
-  var nH = (depth===1) ? 1 : Math.min(3, Math.floor(rng()*3) + (rng()<0.55?0:1));
-  if(depth===2 && nH<1) nH=1;
+  // encounter rooms (shadow-hall, role `trap`). The Spire carries only the teaching creature;
+  // deeper floors escalate by density and share ONE creature+trap budget (§9).
+  var nH = (depth===1) ? 1 : Math.min(3, 1 + Math.floor(rng()*2) + Math.floor((depth-1)/4));
   for(var h=0;h<nH;h++){ var hs=attach(pick(rng,corridorPool()),'shadow-hall'); if(!hs) attachAny('shadow-hall'); }
   // social (floor1: 0 ; else 0..2) — floor2 forces >=1 for vlask via required pass
   var nS = (depth===1) ? 0 : Math.floor(rng()*3);
@@ -657,9 +658,8 @@ function genFloor(seed, depth){
     else if(a==='scribe-alcove') things=[]; // lore-fragment travels with the floor-key (see keyRoom)
     rooms[slug].things=things; rooms[slug].items=things.slice();
   });
-  // ONE KEY PER FLOOR, in the hazard-free key room (floor 1 -> treasure; floors 2-6 -> first alcove).
-  // If a floor somehow has <2 alcoves, the key falls back to the treasure nook so the sole alcove can
-  // still host the hazard — every required thing stays in an encounter-free room.
+  // ONE KEY PER FLOOR, in the TRAP-FREE key room (floor 1 -> the refill nook; floors 2-6 -> the
+  // first scribe-alcove). No required thing ever sits in a creature/trap room (placement invariant).
   var alcoveSlugs = Object.keys(rooms).filter(function(s){return rooms[s].archetype==='scribe-alcove';});
   var keyRoom = (depth===1)
     ? Object.keys(rooms).filter(function(s){return rooms[s].archetype==='candle-nook';})[0]
@@ -670,32 +670,47 @@ function genFloor(seed, depth){
   if(!keyRoom) keyRoom = Object.keys(rooms).filter(function(s){return s!==entry && rooms[s].archetype!=='descending-stair';})[0];
   if(!keyRoom) keyRoom = entry;
   rooms[keyRoom].things.push('floor-key'); rooms[keyRoom].items.push('floor-key');
-  // Required things are confined to the hazard-free key room on every floor
-  // (invariant: a hazard's room is never required for progress).
+  // Required things are confined to the trap-free key room on every floor
+  // (invariant: a creature/trap room is never required for progress).
   rooms[keyRoom].things.push('lore-fragment'); rooms[keyRoom].items.push('lore-fragment');
 
-  // encounters
+  // encounters — traps (role `trap`, `shadow-hall`) and creatures share ONE per-floor budget (§9):
+  // the floor's creature takes the first encounter room, the rest become traps by density (§6.1.2).
+  // No puzzles exist; `scribe-alcove` is the TRAP-FREE key/lore room (§6.1.1).
   var creatures = ROSTER.filter(function(x){return x.kind==='creature';});
-  // hazards and routing puzzles share the encounter slot (a hazard is `kind:"hazard"`, §14)
-  var puzzles = ROSTER.filter(function(x){return x.kind==='puzzle'||x.kind==='hazard';});
+  var traps = ROSTER.filter(function(x){return x.kind==='trap';});
   function byFloor(list,d){ return list.filter(function(x){return x.floor===d;})[0]; }
   function atOrBelow(list,d){ var l=list.filter(function(x){return x.floor<=d;}); return l.length?l[l.length-1]:list[0]; }
   function creatureFor(d){ return byFloor(creatures,d) || atOrBelow(creatures,d); }
-  // every hazard/puzzle declared on this floor, in roster order; each scribe-alcove takes one,
-  // cycling. Each named hazard sits on exactly one floor, so all five are introduced one per floor.
-  function puzzleListAt(d){ var l=puzzles.filter(function(x){return x.floor===d;}); if(l.length) return l; var b=atOrBelow(puzzles,d); return b?[b]:[]; }
+  function trapPool(d){ var l=traps.filter(function(x){return x.floor<=d;}); return l.length?l:traps; }
 
-  var alcoveIdx=0;
-  Object.keys(rooms).forEach(function(slug){
-    var a=rooms[slug].archetype;
-    if(a==='shadow-hall'){ var c=creatureFor(depth); rooms[slug].encounter=c?c.id:null; }
-    else if(a==='scribe-alcove'){
-      if(slug===keyRoom){
-        // The key room may host a routing PUZZLE (kind:"puzzle") but never a creature/hazard,
-        // so no taxing encounter ever gates the required things (§6.4.1).
-        var qps=puzzles.filter(function(x){return x.kind==='puzzle' && x.floor===depth;});
-        rooms[slug].encounter=qps.length?qps[0].id:null;
-      } else { var pl=puzzleListAt(depth); rooms[slug].encounter=pl.length?pl[alcoveIdx%pl.length].id:null; alcoveIdx++; }
+  var shadowSlugs = Object.keys(rooms).filter(function(s){return rooms[s].archetype==='shadow-hall';});
+  var trapIdx=0, creaturePlaced=false;
+  // Traps escalate by density AND region (§6.1.2, §15): rotate the eligible pool by depth so
+  // deeper roster entries (snap-trap at f3, light-glyph at f4, cursed-ward at f5) actually enter
+  // play. A fixed prefix index reset per floor left three trap types unreachable on every seed.
+  var trapOffset = depth-2;
+  shadowSlugs.forEach(function(slug){
+    if(depth===1){ var c1=creatureFor(1); rooms[slug].encounter=c1?c1.id:null; return; }
+    if(!creaturePlaced){ var c2=creatureFor(depth); rooms[slug].encounter=c2?c2.id:null; creaturePlaced=true; }
+    else { var pool=trapPool(depth); rooms[slug].encounter=pool.length?pool[(trapOffset+trapIdx)%pool.length].id:null; trapIdx++; }
+  });
+
+  // D3 companion adjacency: a trap declaring `companion` (spider-web -> spiders) must sit in a
+  // shadow-hall ADJACENT to a room hosting that companion. A trap room never holds a required thing.
+  traps.forEach(function(tp){
+    if(!tp.companion) return;
+    var host=shadowSlugs.filter(function(s){return rooms[s].encounter===tp.companion;})[0];
+    if(!host) return;
+    var okHere=Object.keys(rooms[host].exits).some(function(d){ var nb=rooms[host].exits[d]; return nb&&rooms[nb]&&rooms[nb].encounter===tp.id; });
+    if(okHere) return;
+    var adj=null;
+    Object.keys(rooms[host].exits).forEach(function(d){ var nb=rooms[host].exits[d]; if(adj==null && nb && rooms[nb] && rooms[nb].archetype==='shadow-hall' && rooms[nb].encounter!==tp.companion) adj=nb; });
+    if(!adj){ var ns=attach(host,'shadow-hall'); if(ns){ adj=ns; shadowSlugs.push(ns); } }
+    if(adj){
+      // keep it unique: demote any other room hosting this trap to a fallback trap
+      shadowSlugs.forEach(function(s){ if(s!==adj && rooms[s].encounter===tp.id){ var alt=trapPool(depth).filter(function(x){return x.id!==tp.id;}); rooms[s].encounter=alt.length?alt[0].id:null; } });
+      rooms[adj].encounter=tp.id;
     }
   });
 
@@ -775,7 +790,7 @@ function makeState(seed){
     waxStart:WAXR.start||30,
     matches:MATR.start||2,
     baseRadius:RADR.start||3,
-    key:false, floorKey:{}, lore:0, loreSet:{}, loreFragments:[],
+    key:false, floorKey:{}, lore:0, loreSet:{}, loreFragments:[], loreHints:[],
     dread:0, turn:0,
     guttering:false, gutterCause:null, grace:0, snuffed:false, dead:false, won:false, wonType:null,
     inGame:false, _dreadTier:0,
@@ -1151,6 +1166,17 @@ var Audio = (function(){
       else if(id==='light-eater'){ toneAt(ctx,sfxGain,Math.random,180,0.7,'sine',0.05*g,90,p); }
       else { toneAt(ctx,sfxGain,Math.random,400,0.1,'sine',0.03*g,null,p); }
     },
+    // Traps have a voice (§12): one distinct intrinsic cue per type, attenuated outside the radius.
+    trap:function(id,pan,far){
+      var g=far?0.55:1, p=clampPan(pan||0);
+      if(id==='collapsing-floor'){ noiseAt(ctx,sfxGain,Math.random,380,0.34,0.05*g,p); toneAt(ctx,sfxGain,Math.random,120,0.30,'sine',0.03*g,90,p); } // stone grind
+      else if(id==='snap-trap'){ noiseAt(ctx,sfxGain,Math.random,1900,0.025,0.06*g,p); toneAt(ctx,sfxGain,Math.random,1500,0.05,'square',0.035*g,null,p); } // coiled click
+      else if(id==='spider-web'){ noiseAt(ctx,sfxGain,Math.random,6000,0.10,0.03*g,p); } // chitinous rustle
+      else if(id==='pressure-plate'){ noiseAt(ctx,sfxGain,Math.random,650,0.05,0.055*g,p); toneAt(ctx,sfxGain,Math.random,200,0.06,'sine',0.03*g,null,p); } // mechanism thunk
+      else if(id==='light-glyph'){ toneAt(ctx,sfxGain,Math.random,96,0.5,'sine',0.05*g,null,p); } // low glyph tone
+      else if(id==='cursed-ward'){ toneAt(ctx,sfxGain,Math.random,70,0.6,'sine',0.05*g,null,p); noiseAt(ctx,sfxGain,Math.random,520,0.4,0.02*g,p); } // cold ward hum
+      else { noiseAt(ctx,sfxGain,Math.random,900,0.12,0.04*g,p); }
+    },
     voice:function(id){
       if(id==='vlask') toneAt(ctx,sfxGain,Math.random,180,0.25,'square',0.03);
       else if(id==='sister-marta') toneAt(ctx,sfxGain,Math.random,220,0.35,'sine',0.03);
@@ -1177,6 +1203,7 @@ var Audio = (function(){
       if(st.bed!==false){ cycleInto(c,g.organ,g.choir,g.crackle,rng,0,Math.min(dur,3)); }
       if(scenario==='tick'){ toneAt(c,S,rng,110,0.04,'sine',0.03); noiseAt(c,S,rng,2200,0.025,0.028); }
       else if(scenario==='creature'){ noiseAt(c,S,rng,2500,0.12,0.05); }
+      else if(scenario==='trap'){ noiseAt(c,S,rng,1900,0.04,0.06); toneAt(c,S,rng,1500,0.06,'square',0.04); }
       else if(scenario==='wax'){ toneAt(c,S,rng,392,0.16,'sine',0.06); toneAt(c,S,rng,523,0.20,'sine',0.06); }
       else if(scenario==='guttering'){ orlokInto(c,M,rng); }
       else if(scenario==='victory'){ toneAt(c,S,rng,392,0.5,'sine',0.06); toneAt(c,S,rng,523,0.6,'sine',0.06); toneAt(c,S,rng,659,0.8,'sine',0.05); }
@@ -1438,6 +1465,20 @@ var LORE_TEXT = [
   'Scrap: "Count Orlok is not a wolf. He is the dark the candle was never enough to hold back."'
 ];
 
+// D5 — a lore offer yields a floor/stair LAYOUT HINT (key / refill / fast stair). Never wax/matches.
+function hintForFloor(){
+  var fl=G.floors[G.depth]; if(!fl) return 'Hint — the stones say nothing of this floor.';
+  var keyRoom=Object.keys(fl.rooms).filter(function(s){return (fl.rooms[s].items||[]).indexOf('floor-key')>=0;})[0];
+  var refill=Object.keys(fl.rooms).filter(function(s){return (fl.rooms[s].items||[]).indexOf('wax-cake')>=0;})[0];
+  var stairs=Object.keys(fl.rooms).filter(function(s){return fl.rooms[s].archetype==='descending-stair';});
+  var bits=[];
+  function bare(s){ return String(s||'').replace(/^(?:The|A|An)\s+/,''); } // avoid "the The X"
+  if(keyRoom) bits.push('the key rests in the '+bare(fl.rooms[keyRoom].name));
+  if(refill) bits.push('a wax-cake waits in the '+bare(fl.rooms[refill].name));
+  if(stairs.length) bits.push('the fast stair is the '+bare(fl.rooms[stairs[0]].name));
+  return bits.length ? ('Hint — '+bits.join('; ')+'.') : 'Hint — the stones keep their counsel.';
+}
+
 function pickup(room){
   var items=room.items||[];
   var pp=playerScreen();
@@ -1617,7 +1658,7 @@ function simNpcs(){
       if(!n.trippedRooms) n.trippedRooms={};
       var e=ROSTER.filter(function(x){return x.id===rr.encounter;})[0];
       // per-room tracking: a survivor can spring a trap in each room/floor, not once tower-wide
-      if(!n.trippedRooms[tripKey] && e && (e.kind==='hazard'||e.kind==='puzzle')){ n.trippedRooms[tripKey]=true; G.cleared[tripKey]=true; }
+      if(!n.trippedRooms[tripKey] && e && e.kind==='trap'){ n.trippedRooms[tripKey]=true; G.cleared[tripKey]=true; }
     }
     // allies split wax drain (flag-gated detail)
     if(G.flags.allianceRadius && n.numeric>=2 && n.room===G.pos){ /* radius handled in baseRadius() */ }
@@ -1681,11 +1722,12 @@ function openEncounter(room,slug,enc){
     b.appendChild(mkBtn('Endure','cold',function(){ resolveCreature('endure'); }));
     Audio.creature(enc.id,0,false);
   } else {
-    t.textContent = puzzleTitle(enc.id);
-    d.innerHTML = puzzleDesc(enc.id);
+    t.textContent = trapTitle(enc.id);
+    d.innerHTML = trapDesc(enc.id);
     b.innerHTML='';
-    b.appendChild(mkBtn('Press on','',function(){ resolvePuzzle('risk'); }));
-    b.appendChild(mkBtn('Turn back','cold',function(){ resolvePuzzle('safe'); }));
+    b.appendChild(mkBtn('Spring it','',function(){ resolveTrap('spring'); }));
+    b.appendChild(mkBtn('Go around','cold',function(){ resolveTrap('avoid'); }));
+    Audio.trap(enc.id,0,false); // §12: the trap's distinct voice, played on encounter
   }
   openModal('modal-encounter');
 }
@@ -1694,17 +1736,18 @@ function encTitle(id){
   return {bats:'Bats pour from the rafters',rats:'Rats gnaw at your kit',spiders:'Spiders drop on threads',
     wolves:'A wolf watches from the stair',shades:'A shade unfolds', 'light-eater':'Something that eats the flame'}[id] || 'A shape in the dark';
 }
-function puzzleTitle(id){
-  return {'collapsing-floor':'The floor gives way','light-trap':'A light-trap waits','dark-leap':'The dark leap',
-    'pressure-plate':'A pressure-plate shifts','cursed-ward':'A cursed ward glows','crumbling-stair':'The stair crumbles'}[id] || 'A problem in the dark';
+function trapTitle(id){
+  return {'collapsing-floor':'The floor gives way','snap-trap':'A snap-trap waits in the stone',
+    'spider-web':'Thick webbing bars the way','light-glyph':'A light-glyph pulses',
+    'pressure-plate':'A pressure-plate shifts','cursed-ward':'A cursed ward glows cold'}[id] || 'A trap in the dark';
 }
-function puzzleDesc(id){
-  return {'collapsing-floor':'Beams sag. The long way is safe but slow; the short way costs light.',
-    'light-trap':'A snare for flame. Cross blind and spend a match, or go around.',
-    'dark-leap':'A black gap. Leap and spend wax, or feel your way and lose a turn.',
-    'pressure-plate':'A slab sinks underfoot. Hurry across and spend wax, or circle wide.',
-    'cursed-ward':'A ward drunk on light. Break it and it snuffs your flame, or leave it be.',
-    'crumbling-stair':'Steps shear away. Climb fast and spend wax, or take the long landing.'}[id] || 'A choice costs light either way.';
+function trapDesc(id){
+  return {'collapsing-floor':'Beams sag, dust settling. Go around (lose turns) or spring it — the tile gives way and snuffs the flame.',
+    'snap-trap':'A seam in the stone, a faint glint. Skirt the mechanism, or spring the coiled release — it snaps shut and snuffs the flame.',
+    'spider-web':'Webbing, and a dry rattle. Cut a way through (extra turns), or plunge through — the clinging mass smothers the flame.',
+    'light-glyph':'A faint glyph pulse. Route around the ward, or cross lit and it snuffs the flame — spend a match to re-light.',
+    'pressure-plate':'A worn plate, scuffed stone. Step over the sequence, or spring it and the plate trips a snuff-ward.',
+    'cursed-ward':'A cold glow at the doorframe. Take the warded hall\'s detour, or snuff to pass unseen.'}[id] || 'A choice costs light either way.';
 }
 function resolveCreature(kind){
   var enc=G.activeEncounter.enc; var eff=enc.effect;
@@ -1739,24 +1782,26 @@ function resolveCreature(kind){
   renderHUD();
   takeTurn('encounter');
 }
-function resolvePuzzle(kind){
-  var enc=G.activeEncounter.enc; var eff=enc.effect;
-  if(kind==='risk'){
-    // "spring" a snuffing hazard: the candle goes out; the match stays in hand and is spent
+function resolveTrap(mode){
+  // Traps are `armed -> sprung`; ONLY a sprung trap is a permanent edit (G.cleared is the delta).
+  // Avoid -> costs wax (a longer route) and leaves the trap ARMED + telegraphed.
+  // Spring -> snuffs the flame + costs a match, for EVERY trap type (§6.1.1).
+  var enc=G.activeEncounter.enc;
+  if(mode==='spring'){
+    // springing ANY trap snuffs the flame: the match stays in hand and is spent
     // by the player via Use Match (mirrors resolveCreature — never double-charge the re-light).
-    if(eff==='snuff'){ G.snuffed=true; Audio.snuff(); toast(G.matches>0?'THE TRAP SNUFFS THE FLAME — SPEND A MATCH TO RE-LIGHT':'THE TRAP SNUFFS THE FLAME'); }
-    else { burnWax(2); toast('YOU PRESS ON — WAX COSTS'); }
+    G.snuffed=true; Audio.snuff();
+    toast(G.matches>0?'THE TRAP SNUFFS THE FLAME — SPEND A MATCH TO RE-LIGHT':'THE TRAP SNUFFS THE FLAME');
     if(G.wax<=0 || (G.snuffed && G.matches<=0)) enterGuttering(G.wax<=0?'wax':'snuff'); // snuff holding no match -> guttering dark
   } else {
-    burnWax(1); toast('YOU TURN BACK — A TURN LOST');
+    burnWax(1); toast('YOU GO AROUND — A TURN LOST');
   }
   // juice: light impact on the choice (additive)
   var ppz=playerScreen();
   Juice.shake(3); Juice.stop(2); Juice.punchTo(0.5);
-  if(kind==='risk' && enc.effect==='snuff'){ Juice.flashRed(); Juice.edgeFlash(); Juice.hitFlash(); Juice.burst(ppz.x,ppz.y,12,'#4C5A6B',2.4,2.2,650,0.02); Juice.pop('SNUFFED',ppz.x,ppz.y-40,'#8394a5'); }
-  else if(kind==='risk'){ Juice.burst(ppz.x,ppz.y,8,'#8A3D12',2.0,1.8,520); Juice.pop('WAX COSTS',ppz.x,ppz.y-40,'#E8912B'); }
+  if(mode==='spring'){ Juice.flashRed(); Juice.edgeFlash(); Juice.hitFlash(); Juice.burst(ppz.x,ppz.y,12,'#4C5A6B',2.4,2.2,650,0.02); Juice.pop('SNUFFED',ppz.x,ppz.y-40,'#8394a5'); }
   else { Juice.pop('TURN LOST',ppz.x,ppz.y-40,'#8394a5'); }
-  G.cleared[G.depth+':'+G.activeEncounter.slug]=true;
+  if(mode==='spring') G.cleared[G.depth+':'+G.activeEncounter.slug]=true; // avoid leaves it armed
   G.activeEncounter=null;
   closeModal('modal-encounter');
   renderHUD();
@@ -1841,16 +1886,20 @@ function applySocial(id, targetId){
     var d=ddr[0]+Math.floor((G.rng?G.rng():Math.random())*(ddr[1]-ddr[0]+1));
     npc.numeric=clamp(npc.numeric+d,-2,2); npc.disposition=dispoName(npc.numeric);
   }
-  // Wave-2 social key: lore is tradeable. Offering it on a bargain/trade buys a
-  // disposition bump — bounded to one trade per NPC and to the disposition cap.
-  // It NEVER awards wax or matches (only disposition / a way through).
+  // Wave-2 social key: lore is tradeable. Offering it on a bargain/trade yields a
+  // FLOOR/STAIR LAYOUT HINT (where the key, a refill, or the fast stair is) plus a
+  // bounded disposition bump — one trade per NPC. It NEVER awards wax or matches
+  // (knowledge buys standing and information, never light, §5.1).
   if(npc && (id==='bargain'||id==='trade') && G.lore>0 && npc.numeric<2){
     if(!G.loreTraded) G.loreTraded={};
     if(!G.loreTraded[targetId]){
       G.loreTraded[targetId]=true;
       npc.numeric=clamp(npc.numeric+1,-2,2); npc.disposition=dispoName(npc.numeric);
-      toast('LORE TRADED — '+npc.name.toUpperCase()+' OWES A WAY THROUGH');
-      Juice.pop('LORE TRADED',playerScreen().x,playerScreen().y-40,'#C8BEA8');
+      var hint=hintForFloor();
+      if(!G.loreHints) G.loreHints=[];
+      G.loreHints.push(hint);
+      toast('LORE TRADED — '+npc.name.toUpperCase()+' MAPS THE FLOOR');
+      Juice.pop('A WAY THROUGH',playerScreen().x,playerScreen().y-40,'#C8BEA8');
     }
   }
   if(act.polarity==='warm'){ G.warmActs++; } else { G.coldActs++; }
@@ -1930,6 +1979,10 @@ function openJournal(){
   if(G.loreFragments && G.loreFragments.length){
     lines.push('&mdash; lore recovered &mdash;');
     G.loreFragments.forEach(function(txt,i){ lines.push('<i>'+txt+'</i>'); });
+  }
+  if(G.loreHints && G.loreHints.length){
+    lines.push('&mdash; what the survivors told you &mdash;');
+    G.loreHints.forEach(function(txt){ lines.push(txt); });
   }
   Object.keys(G.npcs).forEach(function(id){ var n=G.npcs[id];
     if(n.floor===G.depth) lines.push(n.name+' — '+n.disposition+' (floor '+n.floor+')'); });
@@ -2086,23 +2139,35 @@ function drawScene(c){
       var e=ROSTER.filter(function(x){return x.id===r.encounter;})[0];
       if(e && e.kind==='creature' && isRev){ drawSilhouette(c, sp.x, sp.y, e.id, 0); }
     }
-    // npc silhouette
-    if(r.npc){
-      var live=Object.keys(G.npcs).filter(function(id){return G.npcs[id].room===slug && G.npcs[id].floor===G.depth;});
-      if(live.length && isRev){ drawNpc(c, sp.x+14, sp.y-8, live[0]); }
-    }
-    // hazard pre-commit telegraph (SFX-independent): an uncleared hazard room shows a
-    // pulsing hairline crack so the tax on light is readable before the move commits.
+    // trap pre-commit telegraph (SFX-independent): an uncleared trap room shows its INTRINSIC
+    // cue in the spill ring so the tax on light is readable before the move commits (§6.1.1).
     if(r.encounter && isRev && !G.cleared[G.depth+':'+slug]){
       var et=ROSTER.filter(function(x){return x.id===r.encounter;})[0];
-      if(et && (et.kind==='puzzle'||et.kind==='hazard')){
-        var hp=0.5+0.5*Math.sin(flick*4);
-        c.strokeStyle='rgba(192,26,26,'+(0.30+0.40*hp).toFixed(3)+')'; c.lineWidth=2;
-        c.beginPath(); c.moveTo(sp.x-11,sp.y-13); c.lineTo(sp.x-3,sp.y-3); c.lineTo(sp.x-9,sp.y+3); c.lineTo(sp.x+1,sp.y+13); c.stroke();
-      }
+      if(et && et.kind==='trap'){ drawTrapTelegraph(c, sp.x, sp.y, et.id); }
     }
     c.restore();
   });
+  // D6 NPC visibility: survivors show on the map whenever they are inside your light —
+  // full-brightness inside the candle radius, a silhouette in the spill ring, invisible outside.
+  // Gate on each survivor's ACTUAL position (roaming survivors leave their camp), never the
+  // static room.npc field set once at generation (§6.3).
+  (function drawSurvivorsInLight(){
+    var here=fl.rooms[G.pos]; if(!here) return;
+    var rad=effRadius();
+    var grouped={};
+    Object.keys(G.npcs).forEach(function(id){
+      var n=G.npcs[id]; if(n.floor!==G.depth||n.escaped||!n.room) return;
+      (grouped[n.room]=grouped[n.room]||[]).push(id);
+    });
+    Object.keys(grouped).forEach(function(slug){
+      var nr=fl.rooms[slug]; if(!nr) return;
+      var dd=Math.hypot(nr.x-here.x, nr.y-here.y);
+      if(dd>rad+1) return; // outside the light: invisible
+      var ns=roomScreen(nr.x,nr.y), ids=grouped[slug];
+      if(dd<=rad){ ids.forEach(function(id,i){ drawNpc(c, ns.x+14-i*10, ns.y-8, id); }); }
+      else { c.save(); c.globalAlpha=0.4; ids.forEach(function(id,i){ drawNpc(c, ns.x+14-i*10, ns.y-8, id); }); c.restore(); }
+    });
+  })();
   // player at center
   var p=playerScreen();
   drawPlayer(c, p.x, p.y);
@@ -2133,6 +2198,30 @@ function drawArchetypeGlyph(c,x,y,arch){
     c.fillStyle='rgba(232,145,43,0.7)'; c.beginPath(); c.moveTo(x,y-12); c.lineTo(x-12,y+10); c.lineTo(x+12,y+10); c.closePath(); c.fill();
   } else if(arch==='spire-entry'){
     c.strokeStyle='rgba(76,90,107,0.9)'; c.beginPath(); c.arc(x,y+8,16,Math.PI,0); c.stroke();
+  }
+  c.restore();
+}
+function drawTrapTelegraph(c,x,y,id){
+  // Intrinsic, SFX-independent cues (§6.1.1). Snap-trap reads as a seam + faint glint;
+  // spider-web as thick webbing; the rest keep a hairline crack / a glyph pulse.
+  var hp=0.5+0.5*Math.sin(flick*4);
+  c.save();
+  if(id==='snap-trap'){
+    c.strokeStyle='rgba(150,140,128,'+(0.35+0.35*hp).toFixed(3)+')'; c.lineWidth=2;
+    c.beginPath(); c.moveTo(x-9,y-12); c.lineTo(x-6,y-2); c.lineTo(x-8,y+8); c.lineTo(x-4,y+13); c.stroke();
+    c.fillStyle='rgba(255,247,214,'+(0.30+0.55*hp).toFixed(3)+')';
+    c.beginPath(); c.arc(x-6,y+9,1.8,0,Math.PI*2); c.fill();
+  } else if(id==='spider-web'){
+    c.strokeStyle='rgba(168,176,186,'+(0.35+0.35*hp).toFixed(3)+')'; c.lineWidth=1.4;
+    for(var i=0;i<6;i++){ var a=i*Math.PI/3; c.beginPath(); c.moveTo(x,y); c.lineTo(x+Math.cos(a)*13,y+Math.sin(a)*13); c.stroke(); }
+    c.beginPath(); c.arc(x,y,7,0,Math.PI*2); c.stroke();
+    c.beginPath(); c.arc(x,y,11,0,Math.PI*2); c.stroke();
+  } else if(id==='light-glyph'||id==='cursed-ward'){
+    c.strokeStyle='rgba(192,26,26,'+(0.30+0.40*hp).toFixed(3)+')'; c.lineWidth=2;
+    c.beginPath(); c.arc(x,y,9+hp*2,0,Math.PI*2); c.stroke();
+  } else {
+    c.strokeStyle='rgba(192,26,26,'+(0.30+0.40*hp).toFixed(3)+')'; c.lineWidth=2;
+    c.beginPath(); c.moveTo(x-11,y-13); c.lineTo(x-3,y-3); c.lineTo(x-9,y+3); c.lineTo(x+1,y+13); c.stroke();
   }
   c.restore();
 }
@@ -2169,6 +2258,57 @@ function drawNpc(c,x,y,id){
   else { c.beginPath(); c.moveTo(-6,-14); c.lineTo(8,-8); c.lineTo(4,10); c.lineTo(-8,6); c.closePath(); c.fill(); c.stroke(); }
   c.restore();
 }
+// Orlok geometry: he rides the mask's edge from turn 1. His angle drifts slowly; his inward
+// offset and scale track threat (far/small at full radius + low Dread; large/near as wax falls
+// and Dread rises). The flame leans AWAY from him (see drawPlayer).
+function orlokAngle(){ return -Math.PI/2 + (reducedMotion?0:Math.sin(flick*0.25)*0.5); }
+function orlokThreat(){
+  if(!G) return 0;
+  var waxFrac=clamp(G.wax/(WAXCLK.max||30),0,1), dreadFrac=clamp(G.dread/(DREADCLK.max||8),0,1);
+  var t=clamp((1-waxFrac)*0.7 + dreadFrac*0.5, 0, 1);
+  if(G.guttering||G.snuffed) t=Math.max(t,0.9);
+  return t;
+}
+function drawOrlok(c, p, RR){
+  if(!G || G.won) return;
+  var t=orlokThreat();
+  var ang=orlokAngle();
+  var ring=RR*(1.16 - 0.34*t);       // stays in the spill ring, drifts inward as threat rises
+  var ox=p.x+Math.cos(ang)*ring, oy=p.y+Math.sin(ang)*ring;
+  var scale=0.7 + 0.62*t;
+  var bob=reducedMotion?0:Math.sin(flick*1.1)*2.0; // slow hover-drag bob
+  c.save();
+  c.translate(ox, oy+bob);
+  c.scale(scale,scale);
+  // seated against the spill ring's low floor (#0a0708): a faint seat so black-on-black never
+  // erases him — he is NEVER drawn in the pure-black void (§11).
+  var g=c.createRadialGradient(0,0,0,0,0,30);
+  g.addColorStop(0,'rgba(10,7,8,0.96)');
+  g.addColorStop(1,'rgba(10,7,8,0)');
+  c.fillStyle=g; c.beginPath(); c.arc(0,0,30,0,Math.PI*2); c.fill();
+  // 1922 overhead: long, thin, hunched silhouette with elongated clawed arms; the outline is the read.
+  c.fillStyle='rgba(3,2,3,0.98)';
+  c.strokeStyle='rgba(143,29,29,0.55)'; c.lineWidth=1.2; // faint arterial rim-light
+  c.beginPath();
+  c.moveTo(0,-22);
+  c.quadraticCurveTo(6,-16,5,-6);
+  c.quadraticCurveTo(9,2,6,12);
+  c.lineTo(-6,12);
+  c.quadraticCurveTo(-9,2,-5,-6);
+  c.quadraticCurveTo(-6,-16,0,-22);
+  c.closePath(); c.fill(); c.stroke();
+  // arms far too long, ending in splayed clawed fingers that hang past the knees
+  c.beginPath(); c.moveTo(-4,-4); c.quadraticCurveTo(-20,6,-24,20); c.stroke();
+  c.beginPath(); c.moveTo(4,-4); c.quadraticCurveTo(20,6,24,20); c.stroke();
+  for(var sgn=-1;sgn<=1;sgn+=2){
+    for(var f=0;f<3;f++){ c.beginPath(); c.moveTo(sgn*24,20); c.lineTo(sgn*(28+f*3),26+f*2); c.stroke(); }
+  }
+  // two faint red eye-points — an accent only; the silhouette carries the identification.
+  c.fillStyle='rgba(211,56,46,'+(0.55+0.35*t).toFixed(3)+')';
+  c.beginPath(); c.arc(-2.6,-16,1.1,0,Math.PI*2); c.fill();
+  c.beginPath(); c.arc(2.6,-16,1.1,0,Math.PI*2); c.fill();
+  c.restore();
+}
 function drawPlayer(c,x,y){
   c.save(); c.translate(x,y);
   c.fillStyle='rgba(5,4,3,0.98)'; c.strokeStyle='rgba(255,210,122,0.85)'; c.lineWidth=1.6;
@@ -2176,12 +2316,14 @@ function drawPlayer(c,x,y){
   // flame
   var fl = G.guttering?4:(G.wax<=6?5:6);
   var wob = reducedMotion?0:Math.sin(flick*8)*1.6;
+  // the flame leans AWAY from Orlok (horizontal opposite his offset, tip dragged down as he nears)
+  var oa=orlokAngle(), leanX=reducedMotion?0:(-Math.cos(oa)*2.2), leanY=orlokThreat()*2.4;
   // juice: low-wax danger tint (§8). Red is the reserved danger hue; wax<=6 is danger.
   var lowwax = G.flags.juiceEnabled && G.wax<=6;
   c.fillStyle = lowwax ? 'rgba(192,26,26,0.95)' : 'rgba(255,210,122,0.95)';
-  c.beginPath(); c.ellipse(wob,-26,4,fl,0,0,Math.PI*2); c.fill();
+  c.beginPath(); c.ellipse(wob+leanX,-26+leanY,4,fl,0,0,Math.PI*2); c.fill();
   c.fillStyle = lowwax ? 'rgba(217,122,30,0.75)' : 'rgba(232,145,43,0.7)';
-  c.beginPath(); c.ellipse(wob,-30,2.4,fl*0.7,0,0,Math.PI*2); c.fill();
+  c.beginPath(); c.ellipse(wob+leanX,-30+leanY,2.4,fl*0.7,0,0,Math.PI*2); c.fill();
   c.restore();
 }
 function roundRect(c,x,y,w,h,r){
@@ -2259,6 +2401,8 @@ function render(now){
       ctx.fillStyle='rgba(192,26,26,'+(ha*0.45).toFixed(3)+')';
       ctx.beginPath(); ctx.arc(p.x,p.y-6,13,0,Math.PI*2); ctx.fill();
     }
+    // D4 Count Orlok — visible at the mask's edge from turn 1 (inside the shake transform).
+    drawOrlok(ctx, p, RR);
     // dust motes
     if(G.flags.juiceEnabled && !reducedMotion){
       for(var i=0;i<10;i++){
@@ -2336,7 +2480,7 @@ window.testState=function(){
 window.pristineWorldState=function(){ return deepClone(G.pristine); };
 window.pristineState=window.pristineWorldState;
 // Read-only pristine view of any generated floor (valid before any move — at boot every floor is
-// untouched). Lets the Phase-2 checker exercise the hazard/placement invariant on a hazard floor.
+// untouched). Lets the Phase-2 checker exercise the trap/placement invariant on a trap floor.
 window.pristineFloor=function(d){
   d=Math.max(1,Math.min(MAX_DEPTH,(d|0)||1));
   var fl=G.floors[d];
@@ -2364,6 +2508,7 @@ window.AUDIO_SPEC = {
     { id:'bed', kind:'bed' },
     { id:'tick', kind:'cue' },
     { id:'creature', kind:'cue' },
+    { id:'trap', kind:'cue' },
     { id:'wax', kind:'cue' },
     { id:'guttering', kind:'cue' },
     { id:'victory', kind:'cue' }

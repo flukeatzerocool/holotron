@@ -3,6 +3,17 @@
 All notable changes to Holotron are documented here.
 Format: date-stamped sections, bulleted entries.
 
+## 2026-10-11 — Repo cleanup: build/index.html tracked (canonical)
+
+- **`build/index.html` is now tracked as the canonical deployable** (`.gitignore`: `build/*` +
+  `!build/index.html`); it is byte-identical to the latest reviewed run artifact
+  `20261011_095532/index.html`, which is retained as frozen evidence.
+- **Removed the duplicated `20261011_004054/index.html`** (preserved as
+  `20261011_095532/index.pre-update.html`); the run's reports and state are kept as evidence for
+  the process half of the submission.
+- **Pruned opencode-managed scratch** (`.opencode/node_modules`, `package.json`,
+  `package-lock.json`, `.opencode/.gitignore`); the root `.gitignore` guards it durably.
+
 ## 2026-10-11 — Torre Nosferatu: conformance update (game artifacts to the revised brief)
 
 - **The game now conforms to the `f82e549` brief revision.** `hazard`→`trap` rename runs through
