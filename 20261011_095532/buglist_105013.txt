@@ -1,0 +1,166 @@
+# buglist_105013 — Torre Nosferatu conformance update, CYCLE 2 static review
+# Target: /home/fluke/Holotron/20261011_095532/index.html (136,025 bytes, mtime 2026-10-11 10:38)
+# Baseline: index.update.diff = diff -u index.pre-update.html index.html (521 unified-diff lines)
+# References: direction.txt (§6.1.1, §6.1.2, §6.3, §7, §9, §10, §12, §14, §15), world_template.json
+# Method: full static scan + dependency-free node/vm harness of the embedded script.
+#   - node --check on the extracted main script (exit 0); embedded TEMPLATE deep-equals world_template.json.
+#   - 800-seed x 6-floor generator sweep (archetype bounds, dangling exits, reachability, required
+#     things, placement invariant, companion adjacency, trap tallies).
+#   - scripts/check_template.mjs --fail-on spatial on freshly exported pristine states, floors 1-6.
+#   - Behavioral instrumentation of resolveTrap / enterRoom / render / drawNpc under a DOM stub.
+#   - 40-round x ~120-step randomized move/encounter fuzz (4,078 moves, 53 encounters).
+# Counts: CRITICAL 0, HIGH 0, MEDIUM 0, LOW 5. No new CRITICAL/HIGH/MEDIUM regressions.
+
+================================================================================
+PREVIOUS FINDINGS — VERIFICATION (each actually fixed, not merely claimed)
+================================================================================
+[H1] Spring on wax-cost traps burned wax instead of snuffing — RESOLVED.
+  Location index.html:1785-1809 (resolveTrap), world_template.json:175-180.
+  Evidence: both traps' `effect` is "snuff" in BOTH the embedded <script id="world-template">
+  block and world_template.json; JSON.stringify parity === true. `resolveTrap('spring')` no longer
+  has the `else { burnWax(2) }` path — it unconditionally sets G.snuffed=true + Audio.snuff().
+  Behavioral (all six trap ids, wax=20, matches=3): snuffed=true, wax loss = 1 (the per-turn burn
+  from takeTurn only) for every type → PASS. Avoid still costs route wax: loss = 2 (burnWax(1) +
+  turn burn 1) → PASS. No trap-triggered extra wax burn remains.
+
+[H2] snap-trap / light-glyph / cursed-ward never spawned — RESOLVED.
+  Location index.html:685-697 (trapPool + per-depth trapOffset rotation).
+  Evidence: 800-seed x 6-floor sweep (seeds 500000+i*104729) — all six trap types place:
+  pressure-plate 403, collapsing-floor 377, snap-trap 411, spider-web 1581, light-glyph 1191,
+  cursed-ward 419. trapPool(d)=floor<=d still gates tier entry (no trap appears before its declared
+  floor). 0 placement/spatial/companion/bound violations across 800x6 = 4,800 floor-checks.
+  NOTE (informational, not a defect): because the per-floor rotation is `trapOffset=depth-2` and a
+  floor carries 0-2 trap slots, each type's first appearance lands one tier later than its `floor`
+  label (snap-trap label f3 → first seen f4; light-glyph f4 → f5; cursed-ward f5 → f6, ~50% of
+  seeds). direction.txt:158-159 states the "First appears" column is "a tier label, not a floor
+  number" and traps "escalate by density and region", so this is conformant. See LOW-2.
+
+[H3] D6 NPC-in-light non-functional for roaming survivors — RESOLVED.
+  Location index.html:2150-2170 (drawSurvivorsInLight), replacing the old `if(r.npc)` block.
+  Evidence: the static `r.npc` render gate is gone; survivors are grouped by their ACTUAL `n.room`
+  on the active floor (filter n.floor!==G.depth, n.escaped, !n.room) and drawn only when the room's
+  distance to the player is <= effRadius() (full brightness) or <= rad+1 (alpha-0.4 silhouette).
+  Instrumented drawNpc over render(): a survivor placed in the player's room is drawn; the old
+  room.npc field is absent from live floors. 0 exceptions on render() on floors 1 and 3.
+
+[M1] "Go around" disarmed the trap and removed its telegraph — RESOLVED.
+  Location index.html:1804; simNpcs gate index.html:1661.
+  Evidence: `G.cleared[depth:slug]` is set ONLY in the `spring` branch. Behavioral: after
+  resolveTrap('avoid') → cleared false, snuffed false; re-entering the same room re-opens the
+  encounter (verified with a live floor-3 trap `d3-shadow-hall-2`, title "Thick webbing bars the
+  way": modal open on entry, false-cleared after Go around, modal re-opens on re-entry). After
+  spring → cleared true and no re-trigger. NPC trip path now only clears `kind==='trap'` encounters.
+
+[M2] Traps had no audio voice / no AUDIO_SPEC scenario — RESOLVED.
+  Location index.html:1169-1179 (Audio.trap), 1730 (openEncounter call), 1206 (offline branch),
+  2505-2517 (AUDIO_SPEC).
+  Evidence: Audio.trap(id,pan,far) provides one distinct intrinsic cue per type (collapsing-floor
+  stone grind, snap-trap coiled click, spider-web chitinous rustle, pressure-plate mechanism thunk,
+  light-glyph low tone, cursed-ward cold ward hum), invoked from the trap branch of openEncounter.
+  AUDIO_SPEC.scenarios now = [bed,tick,creature,trap,wax,guttering,victory] with `{id:'trap',
+  kind:'cue'}`. The offline render path (`scenario==='trap'`, index.html:1206) uses the seeded
+  `rng`, not Math.random → deterministic; `audioTest` and `OfflineAudioContext` hook intact.
+
+================================================================================
+REGRESSION CHECKS (no CRITICAL / HIGH / MEDIUM)
+================================================================================
+- Template parity: embedded window.TEMPLATE deep-equals world_template.json (stringify === true).
+- Syntax: node --check on the extracted main script = exit 0.
+- Spatial gate: scripts/check_template.mjs --fail-on spatial on FRESHLY exported pristine floors 1-6
+  at test_seed 20261010 → "PASS — no spatial mismatch" on all six, exit 0. Full mode (--fail-on any)
+  on floor 3 → 0 mismatches (spatial 0, systemic 0).
+- Generator invariants (800 seeds x 6 floors): dangling exits 0, unreachable rooms 0, missing
+  required things 0, placement-invariant violations 0 (no required thing in a creature/trap room),
+  archetype-count violations 0, start-archetype wrong 0, companion adjacency (spider-web <-> spiders)
+  violations 0.
+- Screens: 7 intact (title, howto, settings, pause, over, victory + gameplay HUD); Pause has
+  Music/SFX toggles + Resume + How-to-Play + Settings + Back-to-title; Settings has Music/SFX.
+  Encounter/Social/Journal modals present.
+- Hooks intact: TEMPLATE, SEED, worldState, systemState, move, social, audioTest, AUDIO_SPEC,
+  pristineWorldState/pristineState/pristineFloor/pristineSystemState, testState, setSeed.
+- Juice/game-feel intact: Juice.shake/stop/hitFlash/flashRed/flashWarm/edgeFlash/burst/pop/
+  transition/punchTo; `juiceEnabled` flag + `reducedMotion` respected.
+- Mobile: viewport meta present; touchstart/touchmove/touchend + mousedown/mousemove/mouseup on
+  canvas; tile=Math.max(48,...); buttons min-height 48px.
+- D4 Orlok + trap telegraph: drawOrlok called after the mask blit; drawTrapTelegraph uses the
+  in-scope `flick`; render() runs clean.
+- Fuzz: 40 rounds x ~120 random moves (4,078 moves, 53 encounters, 1 trap) → 0 runtime errors.
+
+================================================================================
+[LOW] Dead local + latent double-invoke null deref in resolveTrap
+================================================================================
+Location: index.html:1789 (`var enc=G.activeEncounter.enc;`).
+Explanation: `enc` is now unused (the spring branch no longer reads `enc.effect`). More
+importantly, if the encounter modal's button handler fires twice before the modal is dismissed
+(e.g. a rapid double-tap; mkBtn's click handler calls the resolver directly and G.activeEncounter
+is nulled at the end of the first invocation), the second call dereferences
+`G.activeEncounter.enc` → TypeError. This mirrors the old resolvePuzzle, so it is pre-existing,
+not a regression, but the fix made the dereference pointless.
+Fix approach: delete line 1789; read `enc.id` only where needed, or guard
+`if(!G.activeEncounter) return;` at the top of resolveTrap.
+
+================================================================================
+[LOW] Trap tier labels land one tier later than declared (informational)
+================================================================================
+Location: index.html:692 (`trapOffset = depth-2`), index.html:685 (trapPool).
+Explanation: With <=2 trap slots per floor, the rotation makes the first trap per floor
+deterministic (f2 pressure-plate, f3 collapsing-floor, f4 snap-trap, f5 spider-web, f6 light-glyph),
+so a type's first appearance is one tier after its `floor` label; cursed-ward (label f5) appears only
+on f6 and only when f6 rolls 2 trap slots (~50% of seeds). direction.txt declares `floor` a tier
+label and traps density/region-driven, so this is conformant, but the offset obscures the intended
+early→mid→late progression and makes `floor` a weak predictor.
+Fix approach (optional): index the pool by tier rather than `depth-2`, or seed trapOffset from a
+per-floor hash, so first appearances track the declared tier; add a regression assertion mapping
+each trap id to an expected tier window.
+
+================================================================================
+[LOW] §12 "quieter outside the radius" trap attenuation is unreachable
+================================================================================
+Location: index.html:1169-1179 (Audio.trap `far`), index.html:1730 (only caller passes far=false).
+Explanation: Audio.trap accepts `far` (g=0.55) to attenuate off-radius cues, but the sole call site
+(openEncounter) always passes `false`, so the attenuation branch is dead. Traps only voice on
+encounter, so the brief's "panned and attenuated like creature cues, quieter outside the radius"
+is not exercised. Same shape as the pre-existing creature cue.
+Fix approach: either wire a proximity-based far flag where a trap is telegraphed/re-entered, or
+drop the parameter and document that traps cue only on encounter.
+
+================================================================================
+[LOW] Trap telegraphs collapse to three shapes, not six
+================================================================================
+Location: index.html:2204-2221 (drawTrapTelegraph).
+Explanation: `snap-trap` (seam+glint) and `spider-web` (webbing) are distinct, but
+collapsing-floor and pressure-plate share the hairline crack, and light-glyph and cursed-ward share
+the circle pulse — whereas §6.1.2 distinguishes the light-glyph's in-room pulse from the cursed
+ward's "cold glow at the doorframe". Readability is intact (every trap is telegraphed before
+commit), so this is polish, not a defect.
+Fix approach: give cursed-ward a doorframe/edge treatment distinct from the light-glyph ring, and
+pressure-plate a plate-specific glyph, per §6.1.2.
+
+================================================================================
+[LOW] Stale Phase-2b audio artifact in the run folder
+================================================================================
+Location: /home/fluke/Holotron/20261011_095532/phase2_report_102306.txt §7 (timestamp 10:23).
+Explanation: The report's audio table lists only [bed,tick,creature,wax,guttering,victory] — it
+predates the 10:38 fix that added the `trap` scenario, so the artifact does not reflect the shipped
+AUDIO_SPEC. (The exported state_20261010*.json files DO match current generation — regression-
+checked fresh, 0 mismatches — so only the audio section of the report is stale.) Advisory for the
+orchestrator: do not treat this report as a post-fix verification of the `trap` scenario.
+Fix approach: regenerate the Phase-2b audio table against the current index.html, or note the
+invalidation when passing artifacts downstream.
+
+================================================================================
+UNFIXED (carried, pre-existing LOW — not regressions)
+================================================================================
+- Repeated lore trades can duplicate hints; "fast stair" picks stairs[0] (arbitrary). Unchanged.
+- Companion adjacency attach fallback can theoretically add a 4th shadow-hall if no adjacent host
+  exists; not observed in 800x6 seeds (0 bound violations). Unchanged.
+- keyRoom fallback (index.html:670) can still select a shadow-hall in a pathological floor where
+  neither candle-nook nor scribe-alcove exists; not observed. Unchanged.
+
+================================================================================
+SCORE
+================================================================================
+CRITICAL 0 | HIGH 0 | MEDIUM 0 | LOW 5
+Previous H1/H2/H3/M1/M2: all RESOLVED and independently reproduced.
+New regressions: NONE at CRITICAL/HIGH/MEDIUM.
+Cycle-2 verdict: SHIP-READY for Phase 5.5 — no bugfix-triggering severity remains.

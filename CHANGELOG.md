@@ -3,6 +3,30 @@
 All notable changes to Holotron are documented here.
 Format: date-stamped sections, bulleted entries.
 
+## 2026-10-11 — Torre Nosferatu: conformance update (game artifacts to the revised brief)
+
+- **The game now conforms to the `f82e549` brief revision.** `hazard`→`trap` rename runs through
+  the generator, encounter logic, UI and help copy (no `hazard`/`puzzle` role/kind values remain);
+  puzzles are cut; the former puzzle room (`scribe-alcove`) is a **trap-free loot/treasure room**
+  hosting the floor `floor-key` + `lore-fragment`.
+- **6-trap roster** (`pressure-plate, collapsing-floor, snap-trap, spider-web, light-glyph,
+  cursed-ward`): avoid costs wax; **spring snuffs + costs a match**; `armed→sprung` persists
+  (going around leaves it armed). Traps escalate by **density/region** on a single shared
+  creature+trap per-floor budget.
+- **Companion event:** the `spider-web` trap is exit-adjacent to its `spiders` companion
+  (checker-asserted on the pinned seed).
+- **Always-visible Orlok** at the mask's edge from turn 1 (spill-ring seat `#0a0708` + rim-light,
+  never pure void; red eye-points accent-only); **lore = floor/stair layout hint**; **NPCs visible
+  within the candle radius**; distinct trap audio cues + an `AUDIO_SPEC` `trap` scenario.
+- **Method:** hybrid — `world_agent` re-authored the template (Novel `torre-nosferatu-trap-20261011`)
+  → `code_agent` **modified the polished `build/index.html` in place** (12.5 % diff, ~25 lines net in
+  the bugfix; off-contract usage, guarded by a diff-budget review). No ideation re-run — the approval
+  gate fired for concept #14 and this is an update, not a new concept.
+- **Evidence:** embedded `window.TEMPLATE` deep-equals the authored template; `check_template.mjs
+  --fail-on spatial` exit 0 (spatial 0 / systemic 0 on floors 1–3); puppeteer 52/52, 0 console errors;
+  Phase-2b audio 7/7; autoplay greedy **100 %** completion / 50 % surplus / 0 ghost keys. Run:
+  `20261011_095532/`. Stress-test: `docs/grill-me/2026-10-11-torre-conformance-update-stress-test.md`.
+
 ## 2026-10-11 — Torre Nosferatu: hazard→trap rename + always-visible Orlok (brief + world contract)
 
 - **Hazard → trap (canonical).** `TORRE_NOSFERATU.md` collapses hazard/puzzle/movement into one

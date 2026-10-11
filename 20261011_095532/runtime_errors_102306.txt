@@ -1,0 +1,48 @@
+RUNTIME ERRORS — Torre Nosferatu (torre-nosferatu-trap conformance update)
+Agent: puppeteer_agent (browser work agent-driven via playwright-cli / Firefox headless)
+Game: /home/fluke/Holotron/20261011_095532/index.html  (sha1 a87a8030…, mtime 2026-10-11 10:10:07)
+Served: python3 -m http.server 8812 --directory /home/fluke/Holotron/20261011_095532
+Timestamp: 2026-10-11 10:23  |  suffix 102306
+Seed pinned: window.SEED = 20261010 (via context.addInitScript + ?test=1); verified window.SEED === TEMPLATE.test_seed.
+
+===============================================================================
+CONSOLE / PAGE ERRORS  (collected per viewport, fresh context each)
+===============================================================================
+desktop       1920x1080 (mouse)  : 0 errors, 0 warnings
+desktop-small 800x600   (mouse)  : 0 errors, 0 warnings
+mobile        375x667   (touch)  : 0 errors, 1 warning
+
+Uncaught exceptions (pageerror):  NONE at any viewport.
+console.error:                   NONE at any viewport.
+
+The single warning is NOT emitted by the game — it is a Juggler driver internal
+message from the Firefox automation harness (chrome://juggler/...), reproduced
+verbatim:
+
+  [JavaScript Warning: "Layout was forced before the page was fully loaded. If
+   stylesheets are not yet loaded this may cause a flash of unstyled content."
+   {file: "chrome://juggler/content/content/main.js" line: 94}]
+
+Classified: LOW / non-game (automation-harness noise). No action required.
+
+===============================================================================
+FAILED INTERACTION MECHANICS
+===============================================================================
+None. 52/52 game checks passed across the three viewports (see test_report_102306.txt).
+Hit detection (elementFromPoint) fired on every button; canvas pointer input moved
+the player and burned exactly one wax per move at every viewport.
+
+===============================================================================
+VIEWPORT-SPECIFIC ISSUES
+===============================================================================
+- No layout overflow at 375x667, 800x600 or 1920x1080 (docX=false, docY=false).
+- No touch targets below 30px on the active screens at any viewport.
+- Canvas rendered non-blank at all three viewports.
+- Touch path exercised with real touchscreen taps (hasTouch context) on mobile;
+  mouse path with real mouse clicks on the two desktop viewports.
+
+===============================================================================
+SUMMARY
+===============================================================================
+CRITICAL: 0   HIGH: 0   MEDIUM: 0   LOW: 1 (harness-internal warning, non-game)
+Runtime is CLEAN.

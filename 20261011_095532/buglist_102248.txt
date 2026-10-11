@@ -1,0 +1,232 @@
+# buglist_102248 — Torre Nosferatu conformance update (D1–D7) static review
+# Target: 20261011_095532/index.html (133,916 bytes) vs index.pre-update.html + index.update.diff
+# References: direction.txt (§6.1.1, §6.1.2, §6.3, §7, §9, §10, §12, §14, §15), world_template.json, gdd.md
+# Method: full static scan + node/vm harness of the embedded script (deterministic seed 20261010),
+#         400-seed generator sweep, check_template.mjs spatial gate on all 6 floors, behavioral
+#         calls to resolveTrap/enterRoom/hintForFloor/render.
+# Counts: CRITICAL 0, HIGH 3, MEDIUM 2, LOW 4.
+
+================================================================================
+VERIFIED CLEAN (no issue)
+================================================================================
+- D1/D2 rename COMPLETE: no `hazard`/`puzzle` role or kind values remain; no dead
+  `resolvePuzzle`/`puzzleTitle`/`puzzleDesc`/`light-trap`/`crumbling-stair`/`dark-leap`
+  references anywhere in index.html (the only `puzzle` token is prose in the How-to-Play).
+- Embedded `window.TEMPLATE` deep-equals world_template.json (JSON.stringify parity = true).
+- check_template.mjs --fail-on any: 0 mismatches on all 6 floors at test_seed 20261010.
+- 400-seed x 6-floor sweep of the spatial invariants (dangling exits, reachability,
+  required things, archetype count bounds, start-archetype, creature/trap placement
+  invariant, companion adjacency): 2,400/2,400 PASS, 0 failures.
+- 7 screens + ids intact (title/howto/settings/gameplay-HUD/pause/over/victory);
+  Pause has resume+back+music+SFX+How-to-Play+Settings; Settings has music+SFX.
+- All required hooks present: TEMPLATE, SEED, worldState, systemState, move, social,
+  audioTest, AUDIO_SPEC, pristineWorldState/pristineState/pristineFloor/pristineSystemState,
+  testState, setSeed. one floor-key/floor, Run/Endure, wax economy, `juiceEnabled` intact.
+- touch + mouse handlers present; canvas scales to viewport; tile >= 48px.
+- Game-feel present: Juice.shake/stop/hitFlash/flashRed/edgeFlash/burst/pop/transition/punchTo.
+- Orlok render (D4) draws after the mask blit (outside destination-in), so always visible;
+  no render() exceptions on the active floor.
+- Behavioral: avoid burns wax and persists; spring(snuff) sets snuffed without consuming the
+  match (match spent via Use Match, per brief); 500 random `window.move` calls, 0 exceptions.
+
+================================================================================
+[HIGH] Spring on wax-cost traps burns wax instead of snuffing — contradicts their own
+       descriptions and the §6.1.1 cost grammar
+================================================================================
+Location: index.html:1771-1775 (resolveTrap spring branch), index.html:455-456 (template
+          effects), index.html:1727 & 1731 (trapDesc collapsing-floor / pressure-plate),
+          index.html:129 (How-to-Play), world_template.json:175-176.
+Explanation: §6.1.1 fixes the trap grammar as "Spring -> snuffs the candle + costs a match".
+`pressure-plate` and `collapsing-floor` are declared with `"effect":"wax-cost"`, so
+`resolveTrap('spring')` falls into the `else { burnWax(2); ... }` branch and does NOT snuff.
+Confirmed by harness: springing pressure-plate at 20 wax -> 17 wax, `snuffed` false.
+But `trapDesc('collapsing-floor')` says "...spring it — the tile gives way and snuffs the
+flame", `trapDesc('pressure-plate')` says "...the plate trips a snuff-ward", and the
+How-to-Play text says "spring it and the flame is snuffed". The player is told a snuff and
+gets a wax bill — a direct gameplay/text contradiction and a deviation from §6.1.1
+("Avoid -> wax; Spring -> snuff + match").
+Fix approach: align data and code. Either (a) set both traps' `effect` to `"snuff"` (and
+regenerate/parity the embedded template + world_template.json), or (b) if a wax-cost spring
+is intended, rewrite the descriptions/How-to-Play to say "spring it — wax is spilled", and
+reconcile §6.1.1. (a) matches the brief.
+
+================================================================================
+[HIGH] Three of the six declared traps are dead data — snap-trap, light-glyph and
+       cursed-ward never spawn on any seed
+================================================================================
+Location: index.html:643 (nH), index.html:685 (trapPool), index.html:687-693 (trap
+          assignment), world_template.json:177-180 / index.html:457-460 (roster).
+Explanation: `trapPool(d)` returns `traps.filter(floor<=d)` **in roster order**
+[pressure-plate, collapsing-floor, snap-trap, spider-web, light-glyph, cursed-ward], and the
+per-floor assignment uses `pool[trapIdx % pool.length]` with `trapIdx` reset to 0 for every
+floor. Per floor: one shadow-hall is consumed by the creature, and `nH` is capped at 3
+(`Math.min(3, ...)`), so at most 2 trap slots exist and only pool indices 0 and 1 are ever
+reached. Instrumented generator over 1,500 seeds x 6 floors: `snap-trap` 0, `light-glyph` 0,
+`cursed-ward` 0 placements; only `pressure-plate` (5,273), `collapsing-floor` (1,542) and the
+companion-forced `spider-web` (1,467) ever appear. The "traps escalate by density and region —
+new types enter by tier" requirement (§6.1.2) and the §15 must-have "the remaining traps
+(snap trap, spider web, light-glyph, pressure plate, cursed ward) by density" are unmet; three
+authored trap types are unreachable code/data. `trapTitle`/`trapDesc` entries for them are
+likewise never shown.
+Fix approach: make trap selection reach the later roster entries — e.g. seed `trapIdx` from a
+per-floor hash/offset, or index the pool by depth (`pool[(depth-2 + trapIdx) % pool.length]`),
+or raise the trap budget, and/or introduce trap types by tier rather than as a fixed prefix.
+Add a regression assertion that each declared trap can appear within the playable depth range.
+
+================================================================================
+[HIGH] D6 NPC-in-light is non-functional for roaming survivors
+================================================================================
+Location: index.html:2126-2132 (render/DrawScene NPC block).
+Explanation: §6.3 requires survivors to be "visible on the map whenever they are inside your
+visibility range ... you watch them move turn by turn". The new brightness/silhouette code is
+still nested under `if(r.npc)`, where `r.npc` is a static field set once at floor generation
+(index.html:718/735) for the room a survivor *started* in. `simNpcs()` (index.html:1616-1648)
+reassigns `n.room` as survivors roam, but never sets `rooms[...].npc` on the destination room,
+so a roamed survivor has no `r.npc` gate anywhere. Harness (test_seed, 10 turns at depth 3):
+Petr ends in `d3-candle-nook-2` (r.npc = null) => not drawn. In practice survivors leave their
+camps within a few turns, so NPCs are effectively invisible on the map, defeating the D6 goal
+(and the pre-existing §6.3 requirement).
+Fix approach: iterate survivor positions instead of room fields — loop `Object.keys(G.npcs)`
+on the active floor, read the NPC's actual room (`fl.rooms[n.room]`), compute distance to the
+player's room, and draw at that room's screen coords (full-brightness <= radius, alpha 0.4
+silhouette <= radius+1). Do not gate on `r.npc`.
+
+================================================================================
+[MEDIUM] "Go around" disarms the trap: avoid marks the room cleared and removes the telegraph
+================================================================================
+Location: index.html:1786 (resolveTrap avoid path sets `G.cleared[...]`), index.html:2135-2136
+          and :1506 (encounter/telegraph gate on `G.cleared`).
+Explanation: §6.1.1 fixes the persistent state change as `armed -> sprung` (only a *sprung*
+trap is a permanent edit). Avoiding is supposed to cost only tempo/wax — the trap stays armed.
+But `resolveTrap` sets `G.cleared[depth:slug]=true` on *both* branches, so after "Go around"
+the room never re-triggers (`enterRoom`, index.html:1506) and its telegraph disappears
+(index.html:2135). The floor is silently edited even though the trap was never sprung.
+Fix approach: only set `G.cleared` in the `spring` branch (or track a separate
+`G.sprung[depth:slug]` for persistence and leave the trap retriggerable/telegraphed after an
+avoid).
+
+================================================================================
+[MEDIUM] Traps have no audio voice (§12) and AUDIO_SPEC declares no trap scenario
+================================================================================
+Location: index.html:1711-1712 (trap modal, no `Audio.*` call), index.html:2477-2488
+          (AUDIO_SPEC scenarios).
+Explanation: §12 "Traps have a voice" requires a distinct cue per trap type (stone grind,
+coiled click, chitinous rustle, mechanism thunk, low glyph tone), attenuated outside the
+radius. `openEncounter` plays `Audio.creature(...)` for creatures but emits nothing for traps,
+and AUDIO_SPEC lists only bed/tick/creature/wax/guttering/victory. The SFX-independent visual
+telegraph is implemented (good), but the audio half of the trap identity is absent.
+Fix approach: add a trap cue dispatcher (per trap id) invoked from the trap branch of
+`openEncounter`, and add a trap scenario to AUDIO_SPEC so Phase 2b can verify it.
+
+================================================================================
+[LOW] Floor hint reads "the The X" — double article from generated room names
+================================================================================
+Location: index.html:1459-1461 (`hintForFloor`).
+Explanation: Room names already begin with "The"/"A" (e.g. "The Cataloguer", "The Guttering
+Shelf"). The hint strings prefix "the"/"a", producing "the key rests in the The Cataloguer"
+and "a wax-cake waits in the The Guttering Shelf". Confirmed by direct call. User-visible text.
+Fix approach: drop the leading article in the hint and interpolate the name directly, e.g.
+`'the key rests in '+fl.rooms[keyRoom].name` — or strip a leading "The " from the name.
+
+================================================================================
+[LOW] Repeated lore trades can duplicate hints; "fast stair" picks an arbitrary stair
+================================================================================
+Location: index.html:1882 (`G.loreHints.push(hint)`), index.html:1461 (`stairs[0]`).
+Explanation: `hintForFloor` always computes the same floor hint, and each NPC trade pushes a
+new copy; the journal then lists the same hint repeatedly. With multiple descending stairs,
+`stairs[0]` is whichever key comes first in object order — not necessarily the "fast" stair.
+Cosmetic/UX only.
+Fix approach: de-duplicate `G.loreHints` on push; label the stair name generically
+("a stair") or pick the stair nearest the entry/depth and say so.
+
+================================================================================
+[LOW] Companion adjacency is best-effort; can silently go unenforced
+================================================================================
+Location: index.html:704-710 (D3 companion loop).
+Explanation: If `host` has no free neighbouring tile, `attach(host,'shadow-hall')` returns null
+and the loop leaves `adj` null, so the spider-web/spiders adjacency is not established — and
+the check_template companion assertion would then fail on that seed. The 400-seed sweep never
+hit it (host is `shadowSlugs[0]` on a sparse floor), so it is an edge, not a live failure.
+Fix approach: if `attach` fails, retry from another free neighbour / attachAny, or document the
+fallback and verify with the checker in Phase 2.
+
+================================================================================
+[LOW] keyRoom fallback can select a trap-role room (placement invariant edge)
+================================================================================
+Location: index.html:664-671.
+Explanation: If a floor (pathologically) generates neither a candle-nook nor any scribe-alcove,
+`keyRoom` falls through to `Object.keys(rooms).filter(s !== entry && archetype !==
+'descending-stair')[0]`, which could be a `shadow-hall` (role `trap`). The floor-key and
+lore-fragment would then be pushed into a creature/trap room, violating the §6.1.1 placement
+invariant. Not observed (nP=2 and nT>=1 in all swept seeds), but the fallback does not exclude
+`shadow-hall`.
+Fix approach: exclude `archetype === 'shadow-hall'` (and any room with an
+`encounter`) from the fallback keyRoom filter.
+
+================================================================================
+FIXED BUGS (bugfix_agent run, same session)
+================================================================================
+- [HIGH] H1 — Spring on `pressure-plate`/`collapsing-floor` burned wax instead of snuffing.
+  RESOLVED via aligned data + code: both traps' `effect` changed `"wax-cost"` → `"snuff"` in
+  BOTH the embedded `<script id="world-template">` block and `world_template.json` (deep-equal
+  parity re-confirmed), and `resolveTrap` spring now unconditionally snuffs (`G.snuffed=true;
+  Audio.snuff()`) for EVERY trap — the `else { burnWax(2) }` branch is gone. Juice on spring now
+  always shows SNUFFED. Avoid still costs wax (burnWax(1)). Behavioral check: spring → snuffed
+  true; all six trap roster effects report `snuff`.
+
+- [HIGH] H2 — `snap-trap`, `light-glyph`, `cursed-ward` never spawned (prefix-ordered pool +
+  per-floor `trapIdx=0` + ≤2 trap slots). RESOLVED via per-depth rotation of the eligible pool:
+  `trapOffset = depth-2`, index `pool[(trapOffset+trapIdx)%pool.length]`. Tier entrance still
+  comes from `trapPool(d)=floor<=d`. 400-seed × 6-floor sweep: all six trap types now place
+  (pressure-plate 205, collapsing-floor 189, snap-trap 203, spider-web 790, light-glyph 602,
+  cursed-ward 201). Companion adjacency and the spatial gate remain green on all six floors.
+
+- [HIGH] H3 — D6 NPC-in-light drew nothing for roaming survivors (gated on the static `r.npc`).
+  RESOLVED by removing the `r.npc` gate and adding a position-gated pass over `G.npcs` on the
+  active floor: group survivors by their actual `n.room`, draw full-brightness when the room is
+  within `effRadius()`, alpha-0.4 silhouette in the spill ring (`<= rad+1`), invisible outside.
+  Behavioral check via injected `drawScene`: survivor in the player's room → drawn; survivor
+  beyond the light at radius 1 → not drawn. The only remaining `r.npc` token is the read-only
+  snapshot metadata field.
+
+- [MEDIUM] M1 — "Go around" wrongly marked the trap cleared and removed its telegraph.
+  RESOLVED: `G.cleared[depth:slug]` is now set ONLY in the `spring` branch, so `avoid` leaves the
+  trap `armed` and its telegraph visible; re-entering the room re-triggers the encounter.
+  Behavioral check: after avoid → cleared false, snuffed false; re-enter re-opens the encounter;
+  after spring → cleared true, snuffed true.
+
+- [MEDIUM] M2 — Traps had no audio voice (§12) and no AUDIO_SPEC scenario.
+  RESOLVED by adding `Audio.trap(id,pan,far)` — one distinct intrinsic cue per type
+  (collapsing-floor stone grind, snap-trap coiled click, spider-web chitinous rustle,
+  pressure-plate mechanism thunk, light-glyph low tone, cursed-ward cold ward hum) invoked from
+  the trap branch of `openEncounter`, plus an `offline` branch and a `{ id:'trap', kind:'cue' }`
+  entry in `AUDIO_SPEC`. Real-browser (Playwright/Firefox) check: `audioTest('trap',20261010)`
+  rms 0.02450 / bandRms 0.01673 ≥ cue floor 0.01 → PASS; scenarios now
+  [bed,tick,creature,trap,wax,guttering,victory].
+
+- [LOW] Floor hint read "the The X" (double article from generated room names).
+  RESOLVED via a local `bare()` helper in `hintForFloor` that strips a leading The/A/An before
+  interpolation ("the key rests in the cataloguer", etc.). Trivially safe, text-only.
+
+Unfixed bugs:
+- [UNFIXED] [LOW] Repeated lore trades can duplicate hints; "fast stair" picks an arbitrary stair.
+  Reason: cosmetic/UX only; de-duplication and stair-selection changes were out of scope for this
+  HIGH/MEDIUM pass and carry unnecessary regression risk.
+- [UNFIXED] [LOW] Companion adjacency is best-effort (attach failure leaves `adj` null).
+  Reason: edge never reached in the 400-seed × 6-floor sweep; the spatial/companion gate passes on
+  every checked floor (0 mismatches). Unchanged to avoid destabilising a green invariant.
+- [UNFIXED] [LOW] keyRoom fallback can select a trap-role room (shadow-hall) in a pathological floor.
+  Reason: not observed on any swept seed; altering the generation fallback risks changing the
+  spatial gate output for no demonstrated defect.
+
+VERIFICATION EVIDENCE (this run)
+- `node --check` on the extracted main script: exit 0.
+- Embedded `window.TEMPLATE` deep-equals `world_template.json`: TRUE.
+- check_template.mjs --fail-on spatial on exported pristine floors 1–6 (seed 20261010):
+  0 mismatches / 0 spatial / 0 systemic, PASS on all six, exit 0.
+- Headless browser (Playwright Firefox, http://localhost:8931/index.html?test=1):
+  0 console errors on load and after 37 moves + 60 social calls; all hooks present
+  (TEMPLATE/SEED/audioTest/AUDIO_SPEC/move/social); 0 pageerrors.
+- `index.update.diff` regenerated (`diff -u index.pre-update.html index.html`):
+  521 unified-diff lines; +229 / −84 changed lines (~12.5% of the 2,509-line pre-update file,
+  which already contained the prior D1–D7 conformance update; this bugfix's own delta is ~25 lines).

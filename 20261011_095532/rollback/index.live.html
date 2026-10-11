@@ -1,0 +1,2207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<title>Torre Nosferatu — Dread Weather</title>
+<style>
+  :root{
+    --void:#000000; --ink:#4C5A6B; --ink-dim:#2A333D;
+    --flame:#E8912B; --gold:#FFD27A; --ember:#8A3D12; --red:#C01A1A;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;width:100%;height:100%;background:var(--void);
+    color:var(--ink); font-family:"Palatino Linotype","Book Antiqua",Palatino,Georgia,serif;
+    overflow:hidden; user-select:none; -webkit-user-select:none; touch-action:manipulation;}
+  #game{position:fixed;inset:0;display:block;background:var(--void);z-index:1;}
+  #ui{position:fixed;inset:0;z-index:2;pointer-events:none;}
+  .screen{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;
+    justify-content:center;pointer-events:auto;padding:16px;overflow-y:auto;}
+  .screen.active{display:flex;}
+  .veil{position:absolute;inset:0;background:rgba(0,0,0,.82);z-index:-1;}
+  h1.logo{margin:0 0 4px 0;font-size:clamp(26px,8vw,58px);letter-spacing:.10em;color:var(--gold);
+    text-shadow:0 0 18px rgba(232,145,43,.55), 0 0 3px rgba(255,210,122,.8);
+    text-transform:uppercase;font-weight:700;text-align:center;line-height:1.05;}
+  h2{margin:6px 0 2px;color:var(--gold);font-weight:600;letter-spacing:.06em;font-size:clamp(18px,4.6vw,28px);text-align:center;}
+  .sub{color:var(--ink);font-size:clamp(12px,3.2vw,15px);letter-spacing:.14em;text-transform:uppercase;margin-bottom:14px;}
+  .panel{max-width:640px;width:100%;background:rgba(0,0,0,.72);border:1px solid var(--ink-dim);
+    border-radius:10px;padding:16px 18px;margin:8px 0;box-shadow:0 0 34px rgba(232,145,43,.06) inset;}
+  .panel p{margin:7px 0;font-size:clamp(13px,3.5vw,15.5px);line-height:1.5;color:#8394a5;}
+  .panel b{color:var(--gold);}
+  .panel .warm{color:var(--flame);} .panel .cold{color:var(--red);}
+  .btnrow{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:12px;width:100%;}
+  button.mbtn{min-height:48px;min-width:150px;padding:12px 20px;border-radius:8px;cursor:pointer;
+    background:rgba(0,0,0,.55);border:1px solid var(--ink);color:var(--flame);
+    font-family:inherit;font-size:clamp(14px,3.8vw,17px);letter-spacing:.08em;text-transform:uppercase;
+    transition:background .12s,border-color .12s,color .12s;}
+  button.mbtn:hover,button.mbtn:focus{background:rgba(232,145,43,.16);border-color:var(--flame);color:var(--gold);outline:none;}
+  button.mbtn:active{background:var(--flame);color:#1a0d04;}
+  button.mbtn.cold{color:var(--red);border-color:#5a1414;}
+  button.mbtn.cold:hover{background:rgba(192,26,26,.18);border-color:var(--red);color:#ff6b6b;}
+  button.mbtn.small{min-width:112px;font-size:14px;}
+  button.mbtn:disabled{opacity:.35;cursor:not-allowed;}
+  .seedline{position:absolute;bottom:10px;left:0;right:0;text-align:center;color:var(--ink-dim);font-size:11px;letter-spacing:.14em;}
+  /* HUD */
+  #hud{position:absolute;inset:0;display:none;pointer-events:none;}
+  #hud.active{display:block;}
+  .hud-top{position:absolute;top:0;left:0;right:0;display:flex;justify-content:space-between;
+    align-items:flex-start;padding:8px 10px;gap:8px;}
+  .hud-box{background:rgba(0,0,0,.55);border:1px solid var(--ink-dim);border-radius:8px;padding:6px 9px;
+    display:flex;flex-direction:column;gap:3px;min-width:96px;pointer-events:auto;}
+  .hud-label{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink);}
+  .hud-val{font-size:clamp(16px,4.6vw,22px);color:var(--gold);font-weight:700;letter-spacing:.04em;}
+  .meters{display:flex;gap:10px;align-items:flex-start;}
+  .candlewrap{display:flex;align-items:flex-end;gap:6px;}
+  .candle{width:12px;height:64px;border-radius:6px;background:rgba(42,51,61,.7);position:relative;overflow:hidden;
+    border:1px solid var(--ink-dim);}
+  .candlefill{position:absolute;left:0;right:0;bottom:0;background:linear-gradient(var(--gold),var(--flame),var(--ember));}
+  .pips{display:flex;gap:3px;margin-top:2px;}
+  .pip{width:9px;height:9px;border-radius:2px;background:var(--ink-dim);}
+  #dreadName{font-size:11px;letter-spacing:.12em;text-transform:uppercase;}
+  .hud-bottom{position:absolute;bottom:0;left:0;right:0;display:flex;justify-content:center;gap:8px;
+    padding:10px;flex-wrap:wrap;}
+  .hud-bottom .hud-box{pointer-events:auto;}
+  #talkBtn{display:none;}
+  /* generic overlay modals */
+  .modal{position:absolute;inset:0;display:none;align-items:center;justify-content:center;pointer-events:auto;padding:14px;}
+  .modal.active{display:flex;}
+  .modal .veil{position:absolute;inset:0;background:rgba(0,0,0,.86);}
+  .modal .panel{position:relative;max-width:560px;z-index:2;}
+  .actionlist{display:flex;flex-direction:column;gap:8px;margin-top:10px;}
+  .actionlist button.mbtn{width:100%;min-width:0;text-align:left;text-transform:none;letter-spacing:.02em;font-size:15px;
+    display:flex;justify-content:space-between;align-items:center;gap:8px;}
+  .tag{font-size:11px;letter-spacing:.14em;text-transform:uppercase;opacity:.85;}
+  .tag.warm{color:var(--flame);} .tag.cold{color:var(--red);}
+  #toast{position:absolute;top:74px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.78);
+    border:1px solid var(--flame);color:var(--gold);padding:8px 16px;border-radius:20px;font-size:14px;
+    letter-spacing:.12em;text-transform:uppercase;opacity:0;transition:opacity .25s;pointer-events:none;z-index:5;}
+  #toast.show{opacity:1;}
+  .toggleRow{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:8px 0;}
+  .toggleRow span{font-size:15px;color:#8394a5;}
+  .switch{min-height:48px;min-width:96px;border-radius:8px;border:1px solid var(--ink);background:rgba(0,0,0,.5);
+    color:var(--ink);font-family:inherit;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;font-size:13px;}
+  .switch.on{color:var(--gold);border-color:var(--flame);background:rgba(232,145,43,.14);}
+  .legend{font-size:12.5px;color:#7c8b9a;line-height:1.5;}
+  .scroll{max-height:60vh;overflow-y:auto;width:100%;}
+  .scorebreak{width:100%;font-size:14px;color:#9fb0c0;}
+  .scorebreak .r{display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px dashed rgba(76,90,107,.25);}
+  .scorebreak .tot{color:var(--gold);font-size:19px;font-weight:700;border-bottom:none;padding-top:8px;}
+  .flagrow{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:7px 0;font-size:13.5px;}
+  .flagrow span{color:#8394a5;}
+  /* juice: screen transition overlay (additive; pointer-transparent) */
+  #juice-transition{position:absolute;inset:0;pointer-events:none;z-index:6;opacity:0;
+    background:radial-gradient(ellipse at center, rgba(24,10,3,.94) 0%, rgba(0,0,0,.98) 72%);}
+</style>
+</head>
+<body>
+<canvas id="game"></canvas>
+<div id="ui">
+
+  <!-- TITLE -->
+  <div class="screen active" id="scr-title">
+    <div class="veil"></div>
+    <h1 class="logo">Torre<br>Nosferatu</h1>
+    <div class="sub">Dread Weather</div>
+    <div class="btnrow">
+      <button class="mbtn" id="btn-start">Start</button>
+      <button class="mbtn" id="btn-howto">How to Play</button>
+      <button class="mbtn small" id="btn-title-settings">Settings</button>
+    </div>
+    <div class="seedline" id="seedline">seeded run</div>
+  </div>
+
+  <!-- HOW TO PLAY -->
+  <div class="screen" id="scr-howto">
+    <div class="veil"></div>
+    <h2>How to Play</h2>
+    <div class="panel scroll">
+      <p><b>The candle is your clock, your health, and your map.</b> Every turn burns 1 wax. As wax falls your light radius closes in. At 0 wax the <span class="warm">guttering dark</span> begins.</p>
+      <p><b>Move:</b> tap/click an adjacent room tile, or use <b>WASD / arrow keys</b>. One move = one wax. <b>Space</b> waits (burns 1 wax).</p>
+      <p><b>Creatures:</b> choose <b>Run</b> (spills wax) or <b>Endure</b> (spills wax and snuffs the candle — you need a match to re-light). There is no HP and no battle.</p>
+      <p><b>Matches</b> re-light a snuffed candle (restores it to 8 wax). The <b>key</b> opens the ground-floor exit.</p>
+      <p><b>Survivors (floor 2 down):</b> six actions. <span class="warm">Warm</span> acts (share light, ally, bargain, trade) lower Dread but cost light. <span class="cold">Cold</span> acts (steal, threaten) buy light now but raise Dread.</p>
+      <p><b>Dread (0–8)</b> is weather: it starts strangers warier and speeds Orlok when your flame dies. Warm acts make it roll away.</p>
+      <p><b>Descend:</b> stand in a Descending Stair and press <b>Descend</b> (or move down). Reach the ground floor with the key to escape.</p>
+      <p><b>Lose:</b> the only death is Count Orlok after the grace turns run out while your candle is out.</p>
+      <p class="legend">Keyboard: WASD / arrows move · Space wait/confirm · Esc pause · 1–6 social actions.</p>
+    </div>
+    <div class="btnrow"><button class="mbtn" id="btn-howto-back">Back</button></div>
+  </div>
+
+  <!-- SETTINGS -->
+  <div class="screen" id="scr-settings">
+    <div class="veil"></div>
+    <h2>Settings</h2>
+    <div class="panel scroll">
+      <div class="toggleRow"><span>Music (Orlok's theme)</span><button class="switch" id="set-music">On</button></div>
+      <div class="toggleRow"><span>Sound FX</span><button class="switch" id="set-sfx">On</button></div>
+      <div class="toggleRow"><span>Hints</span><button class="switch" id="set-hints">On</button></div>
+      <p style="margin-top:12px;color:var(--gold);letter-spacing:.12em;text-transform:uppercase;font-size:12px;">Simulation flags (wave 3)</p>
+      <div class="flagrow"><span>NPCs take / use items</span><button class="switch" id="flag-npcItemUse">On</button></div>
+      <div class="flagrow"><span>Creatures attack NPCs</span><button class="switch" id="flag-creatureAttacksNpc">On</button></div>
+      <div class="flagrow"><span>NPCs trip traps</span><button class="switch" id="flag-npcTrapTrip">On</button></div>
+      <div class="flagrow"><span>Alliance widens radius</span><button class="switch" id="flag-allianceRadius">On</button></div>
+      <div class="flagrow"><span>Juice &amp; particles</span><button class="switch" id="flag-juiceEnabled">On</button></div>
+      <div class="btnrow" style="margin-top:14px;">
+        <button class="mbtn small" id="btn-reset">Reset Run</button>
+        <button class="mbtn small" id="btn-credits">Credits</button>
+      </div>
+      <p class="legend" id="creditsText" style="display:none;margin-top:10px;">Torre Nosferatu — Dread Weather. Single-file, vanilla JS, canvas-drawn, procedural Web Audio. Built for the Gameotron jam. No external assets.</p>
+    </div>
+    <div class="btnrow"><button class="mbtn" id="btn-settings-back">Back</button></div>
+  </div>
+
+  <!-- GAMEPLAY HUD -->
+  <div id="hud">
+    <div class="hud-top">
+      <div class="meters">
+        <div class="candlewrap">
+          <div class="candle"><div class="candlefill" id="candlefill"></div></div>
+          <div class="hud-box" style="min-width:84px;">
+            <div class="hud-label">Wax</div>
+            <div class="hud-val" id="waxVal">30</div>
+            <div class="hud-label" id="radiusVal">radius 3</div>
+          </div>
+        </div>
+        <div class="hud-box" style="min-width:78px;">
+          <div class="hud-label">Matches</div>
+          <div class="hud-val" id="matchVal">2</div>
+          <div class="hud-label" id="keyVal">no key</div>
+        </div>
+      </div>
+      <div class="hud-box" style="min-width:120px;align-items:flex-end;">
+        <div class="hud-label">Dread</div>
+        <div class="hud-val" id="dreadVal" style="font-size:16px;">Calm</div>
+        <div class="pips" id="dreadPips"></div>
+      </div>
+    </div>
+    <div class="hud-bottom">
+      <div class="hud-box"><div class="hud-label">Floor</div><div class="hud-val" id="floorVal" style="font-size:16px;">Spire</div></div>
+      <div class="hud-box"><div class="hud-label">Score</div><div class="hud-val" id="scoreVal" style="font-size:16px;">0</div></div>
+      <button class="mbtn small" id="btn-wait" style="pointer-events:auto;">Wait</button>
+      <button class="mbtn small" id="btn-usematch" style="pointer-events:auto;display:none;">Use Match</button>
+      <button class="mbtn small" id="btn-descend" style="pointer-events:auto;display:none;">Descend</button>
+      <button class="mbtn small" id="btn-talk" style="pointer-events:auto;display:none;">Talk</button>
+      <button class="mbtn small" id="btn-journal" style="pointer-events:auto;">Journal</button>
+      <button class="mbtn small" id="btn-pause" style="pointer-events:auto;">Pause</button>
+    </div>
+  </div>
+
+  <!-- PAUSE -->
+  <div class="screen" id="scr-pause">
+    <div class="veil"></div>
+    <h2>Paused</h2>
+    <div class="panel">
+      <div class="toggleRow"><span>Music (Orlok's theme)</span><button class="switch" id="pause-music">On</button></div>
+      <div class="toggleRow"><span>Sound FX</span><button class="switch" id="pause-sfx">On</button></div>
+    </div>
+    <div class="btnrow">
+      <button class="mbtn" id="btn-resume">Resume Game</button>
+      <button class="mbtn" id="btn-pause-howto">How to Play</button>
+      <button class="mbtn small" id="btn-pause-settings">Settings</button>
+      <button class="mbtn" id="btn-pause-title">Back to Start Menu</button>
+    </div>
+  </div>
+
+  <!-- GAME OVER -->
+  <div class="screen" id="scr-over">
+    <div class="veil"></div>
+    <h2 style="color:var(--red);">Count Orlok takes you.</h2>
+    <div class="panel">
+      <p>The candle is out, the grace is spent, and the dark has your light.</p>
+      <div id="overStats" class="legend"></div>
+      <div id="overScore" class="scorebreak"></div>
+    </div>
+    <div class="btnrow">
+      <button class="mbtn" id="btn-over-retry">Retry</button>
+      <button class="mbtn" id="btn-over-title">Back to Title</button>
+    </div>
+  </div>
+
+  <!-- VICTORY -->
+  <div class="screen" id="scr-victory">
+    <div class="veil"></div>
+    <h2 id="winTitle">You escaped on your own light.</h2>
+    <div class="panel">
+      <div id="winScore" class="scorebreak"></div>
+    </div>
+    <div class="btnrow">
+      <button class="mbtn" id="btn-win-again">Play again (new seed)</button>
+      <button class="mbtn" id="btn-win-title">Back to Title</button>
+    </div>
+  </div>
+
+  <!-- ENCOUNTER MODAL -->
+  <div class="modal" id="modal-encounter">
+    <div class="veil"></div>
+    <div class="panel">
+      <h2 id="encTitle">A shape in the dark</h2>
+      <p id="encDesc"></p>
+      <div class="btnrow" id="encBtns"></div>
+    </div>
+  </div>
+
+  <!-- SOCIAL MODAL -->
+  <div class="modal" id="modal-social">
+    <div class="veil"></div>
+    <div class="panel">
+      <h2 id="socTitle">A survivor</h2>
+      <p id="socDesc"></p>
+      <div class="actionlist" id="socActions"></div>
+      <div class="btnrow"><button class="mbtn small" id="btn-soc-close">Step away</button></div>
+    </div>
+  </div>
+
+  <!-- JOURNAL MODAL -->
+  <div class="modal" id="modal-journal">
+    <div class="veil"></div>
+    <div class="panel">
+      <h2>Journal</h2>
+      <p id="journalBody" class="legend"></p>
+      <div class="btnrow"><button class="mbtn small" id="btn-journal-close">Close</button></div>
+    </div>
+  </div>
+
+  <div id="toast"></div>
+  <div id="juice-transition"></div>
+</div>
+
+<!-- ===== WORLD TEMPLATE (verbatim; authored strings may contain markup) ===== -->
+<script id="world-template" type="application/json">
+{
+  "seed_default": null,
+  "test_seed": 20261010,
+  "archetypes": [
+    {
+      "id": "spire-entry",
+      "name": "Spire Entry",
+      "role": "entry",
+      "count": [1, 1],
+      "things": []
+    },
+    {
+      "id": "stair-corridor",
+      "name": "Stair Corridor",
+      "role": "corridor",
+      "count": [2, 4],
+      "things": []
+    },
+    {
+      "id": "candle-nook",
+      "name": "Candle Nook",
+      "role": "treasure",
+      "count": [1, 2],
+      "things": ["wax-cake", "matches"]
+    },
+    {
+      "id": "shadow-hall",
+      "name": "Shadow Hall",
+      "role": "hazard",
+      "count": [0, 3],
+      "things": []
+    },
+    {
+      "id": "scribe-alcove",
+      "name": "Scribe's Alcove",
+      "role": "puzzle",
+      "count": [0, 2],
+      "things": ["lore-fragment"]
+    },
+    {
+      "id": "survivor-camp",
+      "name": "Survivor Camp",
+      "role": "social",
+      "count": [0, 2],
+      "things": []
+    },
+    {
+      "id": "descending-stair",
+      "name": "Descending Stair",
+      "role": "exit",
+      "count": [1, 2],
+      "things": ["exit-key"]
+    }
+  ],
+  "connectivity": {
+    "rules": [
+      "entry -> corridor*",
+      "entry -> treasure",
+      "corridor -> corridor*",
+      "corridor -> treasure | hazard | puzzle | social",
+      "treasure | hazard | puzzle | social -> corridor*",
+      "corridor -> exit",
+      "exit -> down"
+    ]
+  },
+  "required_things": ["wax-cake", "matches", "lore-fragment"],
+  "required_encounters": [
+    { "id": "bats", "kind": "creature", "floor": 1, "reachable": true },
+    { "id": "vlask", "kind": "npc", "floor": 2, "reachable": true },
+    { "id": "rats", "kind": "creature", "floor": 2, "reachable": true }
+  ],
+  "resources": {
+    "wax": { "start": 30, "max": 30, "min": 0, "burn_per_turn": 1, "gutters_at": 0, "role": "candle fuel; clock, health and map at once" },
+    "matches": { "start": 2, "max": 6, "role": "re-light a snuffed candle" },
+    "key": { "start": 0, "win_condition": true, "role": "opens the ground-floor exit" },
+    "candle_radius": { "start": 3, "max": 7, "scales_with": "wax", "role": "reveal radius in tiles" }
+  },
+  "clocks": [
+    {
+      "id": "wax",
+      "name": "Wax",
+      "behavior": "decrement",
+      "direction": "decrement",
+      "min": 0,
+      "max": 30,
+      "badge_scope": "shared"
+    },
+    {
+      "id": "dread",
+      "name": "Dread Weather",
+      "behavior": "tug_of_war",
+      "direction": "increment",
+      "min": 0,
+      "max": 8,
+      "badge_scope": "shared",
+      "tiers": [
+        { "range": [0, 1], "state": "calm" },
+        { "range": [2, 3], "state": "watched" },
+        { "range": [4, 5], "state": "marked" },
+        { "range": [6, 7], "state": "hunted" },
+        { "range": [8, 8], "state": "hunted-full" }
+      ],
+      "effects": [
+        { "at": 8, "type": "orlok-lock" }
+      ]
+    }
+  ],
+  "npcs": [
+    {
+      "id": "vlask",
+      "name": "Vlask",
+      "disposition": "wary",
+      "numeric": -1,
+      "disposition_scale": ["hostile", "suspicious", "wary", "neutral", "friendly", "allied"],
+      "numeric_range": [-2, 2],
+      "goals": ["Guard the wax cache", "Hoard light", "Never spend a match on anyone else"],
+      "voice": "Low, clipped, transactional; counts everything out loud."
+    },
+    {
+      "id": "sister-marta",
+      "name": "Sister Marta",
+      "disposition": "neutral",
+      "numeric": 0,
+      "disposition_scale": ["hostile", "suspicious", "wary", "neutral", "friendly", "allied"],
+      "numeric_range": [-2, 2],
+      "goals": ["Preserve what knowledge survives", "Trade lore and information, never light", "Buy safe passage with hints"],
+      "voice": "Measured, archival, patient; speaks in fragments she has already catalogued."
+    },
+    {
+      "id": "ilona",
+      "name": "Ilona",
+      "disposition": "suspicious",
+      "numeric": -1,
+      "disposition_scale": ["hostile", "suspicious", "wary", "neutral", "friendly", "allied"],
+      "numeric_range": [-2, 2],
+      "goals": ["Reach the door before the dark finishes her", "Sell the dark's knowledge at a price"],
+      "voice": "A wheeze under every word; she knows the way and will not say what it costs."
+    },
+    {
+      "id": "petr",
+      "name": "Petr",
+      "disposition": "friendly",
+      "numeric": 1,
+      "disposition_scale": ["hostile", "suspicious", "wary", "neutral", "friendly", "allied"],
+      "numeric_range": [-2, 2],
+      "goals": ["Stay alive and stay kind", "Follow someone braver", "Share what little light he has"],
+      "voice": "Young, uneven, hopeful; a hum he cannot keep quiet."
+    },
+    {
+      "id": "nadja",
+      "name": "Nadja",
+      "disposition": "wary",
+      "numeric": -1,
+      "disposition_scale": ["hostile", "suspicious", "wary", "neutral", "friendly", "allied"],
+      "numeric_range": [-2, 2],
+      "goals": ["Reach the door first", "Strip the tower on the way", "Win every trade"],
+      "voice": "Bright, quick, transactional; always one landing ahead."
+    }
+  ],
+  "social_actions": [
+    { "id": "share-light", "polarity": "warm", "dread_delta": -1, "disposition_delta": [0, 2], "wax_delta": -2 },
+    { "id": "ally", "polarity": "warm", "dread_delta": -1, "disposition_delta": [0, 2], "wax_delta": -1 },
+    { "id": "bargain", "polarity": "warm", "dread_delta": 0, "disposition_delta": [-1, 1], "wax_delta": 0 },
+    { "id": "trade", "polarity": "warm", "dread_delta": 0, "disposition_delta": [0, 0], "wax_delta": 0 },
+    { "id": "steal", "polarity": "cold", "dread_delta": 1, "disposition_delta": [-2, 0], "wax_delta": 2 },
+    { "id": "threaten", "polarity": "cold", "dread_delta": 1, "disposition_delta": [-2, 0], "wax_delta": 1 }
+  ],
+  "encounter_roster": [
+    { "id": "bats", "kind": "creature", "threat": 1, "effect": "wax-spill", "floor": 1 },
+    { "id": "rats", "kind": "creature", "threat": 1, "effect": "match-destroy", "floor": 2 },
+    { "id": "spiders", "kind": "creature", "threat": 2, "effect": "turn-cost", "floor": 3 },
+    { "id": "wolves", "kind": "creature", "threat": 3, "effect": "run-wax-spill", "floor": 4 },
+    { "id": "shades", "kind": "creature", "threat": 3, "effect": "wax-drain", "floor": 5 },
+    { "id": "light-eater", "kind": "creature", "threat": 4, "effect": "snuff", "floor": 6 },
+    { "id": "locked-door", "kind": "puzzle", "threat": 1, "effect": "wax-cost", "floor": 2 },
+    { "id": "collapsing-floor", "kind": "puzzle", "threat": 2, "effect": "wax-cost", "floor": 3 },
+    { "id": "light-trap", "kind": "puzzle", "threat": 2, "effect": "snuff", "floor": 4 },
+    { "id": "dark-leap", "kind": "puzzle", "threat": 1, "effect": "wax-cost", "floor": 5 },
+    { "id": "vlask", "kind": "npc", "threat": 0, "effect": "social", "floor": 2 },
+    { "id": "sister-marta", "kind": "npc", "threat": 0, "effect": "social", "floor": 2 },
+    { "id": "ilona", "kind": "npc", "threat": 0, "effect": "social", "floor": 3 },
+    { "id": "petr", "kind": "npc", "threat": 0, "effect": "social", "floor": 2 },
+    { "id": "nadja", "kind": "npc", "threat": 0, "effect": "social", "floor": 3 }
+  ]
+}
+</script>
+
+<script>
+(function(){
+'use strict';
+
+/* =========================================================
+   0. TEMPLATE LOAD (verbatim data block; safe fallback)
+   ========================================================= */
+var MINIMAL_FALLBACK = {
+  seed_default:null, test_seed:20261010,
+  archetypes:[{id:'spire-entry',name:'Spire Entry',role:'entry',count:[1,1],things:[]}],
+  connectivity:{rules:[]},
+  required_things:['wax-cake','matches','lore-fragment'],
+  required_encounters:[],
+  resources:{wax:{start:30,max:30,min:0,burn_per_turn:1,gutters_at:0},
+    matches:{start:2,max:6},key:{start:0},
+    candle_radius:{start:3,max:7}},
+  clocks:[{id:'wax',behavior:'decrement',min:0,max:30},
+    {id:'dread',behavior:'tug_of_war',min:0,max:8,tiers:[{range:[0,8],state:'calm'}]}],
+  npcs:[], social_actions:[], encounter_roster:[]
+};
+var TEMPLATE;
+try { TEMPLATE = JSON.parse(document.getElementById('world-template').textContent); }
+catch (e){ console.warn('world template failed to parse', e); TEMPLATE = MINIMAL_FALLBACK; }
+window.TEMPLATE = TEMPLATE;
+
+/* =========================================================
+   1. TEMPLATE-DERIVED SYSTEM TABLES (nothing hard-coded)
+   ========================================================= */
+var ARCH_BY_ID = {}, ARCH_LIST = TEMPLATE.archetypes || [];
+ARCH_LIST.forEach(function(a){ ARCH_BY_ID[a.id] = a; });
+var RES = TEMPLATE.resources || {};
+var WAXR = RES.wax || {start:30,max:30,min:0,burn_per_turn:1,gutters_at:0};
+var MATR = RES.matches || {start:2,max:6};
+var RADR = RES.candle_radius || {start:3,max:7};
+var CLOCKS = TEMPLATE.clocks || [];
+var DREADCLK = CLOCKS.filter(function(c){return c.behavior==='tug_of_war';})[0]
+            || CLOCKS.filter(function(c){return c.id==='dread';})[0]
+            || {min:0,max:8,tiers:[{range:[0,8],state:'calm'}]};
+var WAXCLK = CLOCKS.filter(function(c){return c.id==='wax';})[0] || {min:0,max:30};
+var NPCS_TPL = TEMPLATE.npcs || [];
+var SOCIAL = TEMPLATE.social_actions || [];
+var ROSTER = TEMPLATE.encounter_roster || [];
+var REQ_ENC = TEMPLATE.required_encounters || [];
+var REQ_THINGS = TEMPLATE.required_things || [];
+var DISPO_SCALE = (NPCS_TPL[0] && NPCS_TPL[0].disposition_scale && NPCS_TPL[0].disposition_scale.length)
+  ? NPCS_TPL[0].disposition_scale : ['hostile','suspicious','wary','neutral','friendly','allied'];
+
+/* =========================================================
+   2. UTILITIES
+   ========================================================= */
+function clamp(v,a,b){ return v<a?a:(v>b?b:v); }
+function pick(rng,arr){ return arr[Math.floor(rng()*arr.length)]; }
+function shuffle(rng,a){ for(var i=a.length-1;i>0;i--){ var j=Math.floor(rng()*(i+1)); var t=a[i];a[i]=a[j];a[j]=t; } return a; }
+function deepClone(o){ return JSON.parse(JSON.stringify(o)); }
+
+function mulberry32(a){
+  return function(){
+    a|=0; a=(a+0x6D2B79F5)|0;
+    var t=Math.imul(a^(a>>>15),1|a);
+    t=(t+Math.imul(t^(t>>>7),61|t))^t;
+    return ((t^(t>>>14))>>>0)/4294967296;
+  };
+}
+function hashDepth(seed,depth){
+  var h=(seed>>>0)^0x9e3779b9;
+  h=Math.imul(h^((depth+0x85ebca6b)|0),0xc2b2ae35);
+  h^=h>>>16; h=Math.imul(h,0x27d4eb2d); h^=h>>>15;
+  return h>>>0;
+}
+function urlSeed(){
+  try{ var p=new URLSearchParams(location.search).get('seed');
+    if(p!=null && p!==''){ var n=parseInt(p,10); if(isFinite(n)) return n>>>0; } }catch(e){}
+  return null;
+}
+
+/* =========================================================
+   3. SEED  — default random; honor pinned override
+   ========================================================= */
+var SEED = (typeof window.SEED==='number' && isFinite(window.SEED)) ? (window.SEED>>>0)
+         : (urlSeed()!=null ? urlSeed()
+         : (typeof TEMPLATE.test_seed==='number' && isFinite(TEMPLATE.test_seed) ? (TEMPLATE.test_seed>>>0)
+         : (Math.floor(Math.random()*4294967296)>>>0)));
+window.SEED = SEED;
+
+/* =========================================================
+   4. FLOOR GENERATION  (seeded, per-depth, cached, mutated)
+   ========================================================= */
+var MAX_DEPTH = 6;
+var ROLE_ENTRY = 'entry';
+
+var NAMES = {
+  'spire-entry':['Spire Landing','Wind-Scoured Landing','The Spire Mouth'],
+  'stair-corridor':['Long Gallery','Broken Stair','Cold Hearth Hall','Wainscot Walk','Crooked Passage','Stone Throat','The Narrow Turn'],
+  'candle-nook':['Candle Nook','Wax Coffer Room','Tallow Recess','The Guttering Shelf'],
+  'shadow-hall':['Shadow Hall','Hall of Hanging Cloth','Black Arcade','The Draped Room'],
+  "scribe-alcove":["Scribe's Alcove",'Paper Hollow','Ink-Stained Cell','The Cataloguer'],
+  'survivor-camp':['Survivor Camp','Ember Camp','The Resting Place','Huddle of Coats'],
+  'descending-stair':['Down Stair','Descending Stair','The Long Drop','Caged Stair']
+};
+var TINT = {
+  'spire-entry':  [10,12,16],
+  'stair-corridor':[42,51,61],
+  'candle-nook':  [138,61,18],
+  'shadow-hall':  [8,8,12],
+  "scribe-alcove":[46,54,64],
+  'survivor-camp':[146,90,32],
+  'descending-stair':[120,58,20]
+};
+
+function genFloor(seed, depth){
+  var rng = mulberry32(hashDepth(seed,depth));
+  var rooms = {}, coords = {}, occupied = {}, counters = {};
+  function k(x,y){ return x+','+y; }
+  function slugFor(arch){ counters[arch]=(counters[arch]||0)+1; return 'd'+depth+'-'+arch+'-'+counters[arch]; }
+  function nameFor(arch){ var pool=NAMES[arch]||[(ARCH_BY_ID[arch]&&ARCH_BY_ID[arch].name)||arch]; return pick(rng,pool); }
+  function place(arch,x,y){
+    var slug=slugFor(arch);
+    rooms[slug]={name:nameFor(arch),archetype:arch,exits:{},things:[],items:[],encounter:null,npc:null,x:x,y:y};
+    coords[slug]=[x,y]; occupied[k(x,y)]=slug; return slug;
+  }
+  var DIRS=[['north',0,-1],['south',0,1],['east',1,0],['west',-1,0]];
+  var OPP={north:'south',south:'north',east:'west',west:'east'};
+  function freeNeighbor(slug){
+    var p=coords[slug], x=p[0], y=p[1], ds=shuffle(rng,DIRS.slice());
+    for(var i=0;i<ds.length;i++){ var d=ds[i], nx=x+d[1], ny=y+d[2];
+      if(!occupied[k(nx,ny)]) return [d[0],nx,ny]; }
+    return null;
+  }
+  function attach(parent,arch){
+    var n=freeNeighbor(parent); if(!n) return null;
+    var slug=place(arch,n[1],n[2]);
+    rooms[parent].exits[n[0]]=slug;
+    rooms[slug].exits[OPP[n[0]]]=parent;
+    return slug;
+  }
+  function attachAny(arch){
+    var slugs=shuffle(rng,Object.keys(rooms));
+    for(var i=0;i<slugs.length;i++){ var s=attach(slugs[i],arch); if(s) return s; }
+    return null;
+  }
+
+  var entry = place('spire-entry',0,0);
+  var corridors = [];
+  var nCorr = 3 + Math.floor(rng()*2); // 3..4 (within [2,4])
+  var cur = entry;
+  for(var i=0;i<nCorr;i++){
+    var c = attach(cur,'stair-corridor');
+    if(!c) c = attachAny('stair-corridor');
+    if(!c) break;
+    corridors.push(c); cur = c;
+  }
+  while(corridors.length<2){ var c2=attachAny('stair-corridor'); if(!c2) break; corridors.push(c2); }
+  function corridorPool(){ return corridors.length ? corridors : Object.keys(rooms); }
+
+  // treasure (1..2); floor 1: first is adjacent to entry (>= within 2 moves)
+  var nT = 1 + (rng()<0.5?1:0);
+  for(var t=0;t<nT;t++){
+    var parent = (depth===1 && t===0) ? entry : pick(rng,corridorPool());
+    var s = attach(parent,'candle-nook'); if(!s) s=attachAny('candle-nook');
+  }
+  // puzzle (1..2) -> guarantees lore-fragment
+  var nP = 1 + (rng()<0.5?1:0);
+  for(var p=0;p<nP;p++){ var ps=attach(pick(rng,corridorPool()),'scribe-alcove'); if(!ps) attachAny('scribe-alcove'); }
+  // hazard (floor1: 2 ; else 0..3)
+  var nH = (depth===1) ? 2 : Math.min(3, Math.floor(rng()*3) + (rng()<0.55?0:1));
+  if(depth===2 && nH<1) nH=1;
+  for(var h=0;h<nH;h++){ var hs=attach(pick(rng,corridorPool()),'shadow-hall'); if(!hs) attachAny('shadow-hall'); }
+  // social (floor1: 0 ; else 0..2) — floor2 forces >=1 for vlask via required pass
+  var nS = (depth===1) ? 0 : Math.floor(rng()*3);
+  if(depth===2 && nS<1) nS=1;
+  for(var q=0;q<nS;q++){ var ss=attach(pick(rng,corridorPool()),'survivor-camp'); if(!ss) attachAny('survivor-camp'); }
+  // exit (1..2)
+  var exitRooms = [];
+  var nE = 1 + (rng()<0.35?1:0);
+  for(var e=0;e<nE;e++){ var es=attach(pick(rng,corridorPool()),'descending-stair'); if(!es) es=attachAny('descending-stair'); if(es) exitRooms.push(es); }
+
+  // things + items
+  Object.keys(rooms).forEach(function(slug){
+    var a=rooms[slug].archetype, things=[];
+    if(a==='candle-nook') things=['wax-cake','matches'];
+    else if(a==='scribe-alcove') things=['lore-fragment'];
+    else if(a==='descending-stair') things=['exit-key'];
+    rooms[slug].things=things; rooms[slug].items=things.slice();
+  });
+
+  // encounters
+  var creatures = ROSTER.filter(function(x){return x.kind==='creature';});
+  var puzzles = ROSTER.filter(function(x){return x.kind==='puzzle';});
+  function byFloor(list,d){ return list.filter(function(x){return x.floor===d;})[0]; }
+  function atOrBelow(list,d){ var l=list.filter(function(x){return x.floor<=d;}); return l.length?l[l.length-1]:list[0]; }
+  function creatureFor(d){ return byFloor(creatures,d) || atOrBelow(creatures,d); }
+  function puzzleFor(d){ return byFloor(puzzles,d) || atOrBelow(puzzles,d); }
+
+  Object.keys(rooms).forEach(function(slug){
+    var a=rooms[slug].archetype;
+    if(a==='shadow-hall'){ var c=creatureFor(depth); rooms[slug].encounter=c?c.id:null; }
+    else if(a==='scribe-alcove'){ var pz=puzzleFor(depth); rooms[slug].encounter=pz?pz.id:null; }
+  });
+
+  // npc pool by depth
+  var npcFloorMap={}; ROSTER.forEach(function(x){ if(x.kind==='npc') npcFloorMap[x.id]=x.floor; });
+  var availNpcs = NPCS_TPL.filter(function(n){ return (npcFloorMap[n.id]||2) <= depth; }).map(function(n){return n.id;});
+  var socialRooms = Object.keys(rooms).filter(function(s){return rooms[s].archetype==='survivor-camp';});
+  shuffle(rng,socialRooms);
+  socialRooms.forEach(function(s,i){ rooms[s].npc = availNpcs[i % Math.max(1,availNpcs.length)] || null; });
+
+  // required encounters for this depth: guarantee placement
+  REQ_ENC.forEach(function(re){
+    if(re.floor!==depth) return;
+    if(re.kind==='creature'){
+      var placed=Object.keys(rooms).some(function(s){return rooms[s].archetype==='shadow-hall' && rooms[s].encounter===re.id;});
+      if(!placed){
+        var h=Object.keys(rooms).filter(function(s){return rooms[s].archetype==='shadow-hall';})[0];
+        if(!h) h=attachAny('shadow-hall');
+        if(h) rooms[h].encounter=re.id;
+      }
+    } else if(re.kind==='npc'){
+      var placedN=Object.keys(rooms).some(function(s){return rooms[s].npc===re.id;});
+      if(!placedN && depth>=2){
+        var soc=Object.keys(rooms).filter(function(s){return rooms[s].archetype==='survivor-camp';})[0];
+        if(!soc) soc=attachAny('survivor-camp');
+        if(soc) rooms[soc].npc=re.id;
+      }
+    }
+  });
+
+  // vertical exits (cross-floor slugs; filtered out of worldState)
+  var exitSlug = exitRooms[0] || Object.keys(rooms).filter(function(s){return rooms[s].archetype==='descending-stair';})[0] || null;
+  if(depth>1) rooms[entry].exits.up = 'd'+(depth-1)+'-descending-stair-1';
+  if(depth<MAX_DEPTH && exitSlug) rooms[exitSlug].exits.down = 'd'+(depth+1)+'-spire-entry-1';
+
+  return { rooms:rooms, start:entry, entrySlug:entry, exitSlug:exitSlug, depth:depth };
+}
+
+function buildWorld(seed){
+  var floors={};
+  for(var d=1; d<=MAX_DEPTH; d++) floors[d]=genFloor(seed,d);
+  return floors;
+}
+
+/* =========================================================
+   5. GAME STATE
+   ========================================================= */
+var G = null;
+var NPCRng = mulberry32(0);
+
+function snapshotRooms(fl){
+  var out={};
+  Object.keys(fl.rooms).forEach(function(slug){
+    var r=fl.rooms[slug], exits={};
+    Object.keys(r.exits).forEach(function(d){ if(fl.rooms[r.exits[d]]) exits[d]=r.exits[d]; });
+    out[slug]={name:r.name,archetype:r.archetype,exits:exits,things:(r.items||r.things||[]).slice(),
+      npc:r.npc||null, encounter:r.encounter||null};
+  });
+  return out;
+}
+
+function makeState(seed){
+  var floors = buildWorld(seed);
+  var st = {
+    seed:seed, depth:1, pos:floors[1].start,
+    floors:floors,
+    wax:clamp(WAXR.start||30, WAXCLK.min||0, WAXCLK.max||30),
+    waxStart:WAXR.start||30,
+    matches:MATR.start||2,
+    baseRadius:RADR.start||3,
+    key:false, lore:0, loreSet:{}, loreFragments:[],
+    dread:0, turn:0,
+    guttering:false, grace:0, snuffed:false, dead:false, won:false, wonType:null,
+    inGame:false, _dreadTier:0,
+    socialWaxSpent:0, warmActs:0, coldActs:0, nearMiss:0, nearMissSet:{},
+    zones:{}, visited:{}, cleared:{}, revealed:{},
+    socialLog:[], socialTarget:null, pendingSocial:null,
+    activeEncounter:null, encounterRoom:null, descendedFrom:{},
+    borrowedOpen:false, borrowedTurns:0, borrowedFrom:null, borrowedJustOpened:false,
+    npcs:{}, toastFlag:false,
+    rng: mulberry32(hashDepth(seed,999)),
+    flags:{ npcItemUse:true, creatureAttacksNpc:true, npcTrapTrip:true, allianceRadius:true, juiceEnabled:true },
+    hints:true
+  };
+  // tower-wide NPC roster (all 5, regardless of floor)
+  NPCS_TPL.forEach(function(n){
+    st.npcs[n.id]={id:n.id,name:n.name,disposition:n.disposition,numeric:typeof n.numeric==='number'?n.numeric:0,floor:0,room:null,escaped:false,carried:[]};
+  });
+  // place NPCs on depth>=2 (Spire is wax/exploration only)
+  var npcFloorMap={}; ROSTER.forEach(function(x){ if(x.kind==='npc') npcFloorMap[x.id]=x.floor; });
+  var prng = mulberry32(hashDepth(seed,555));
+  NPCS_TPL.forEach(function(n){
+    var f = clamp(npcFloorMap[n.id]||2, 2, MAX_DEPTH);
+    var fl = floors[f];
+    var camps = Object.keys(fl.rooms).filter(function(s){return fl.rooms[s].archetype==='survivor-camp';});
+    var room = camps.length ? pick(prng,camps) : pick(prng,Object.keys(fl.rooms));
+    st.npcs[n.id].floor=f; st.npcs[n.id].room=room;
+  });
+  G = st;
+  NPCRng = mulberry32(hashDepth(seed,777));
+  return st;
+}
+
+/* =========================================================
+   6. DERIVED VALUES
+   ========================================================= */
+function effectiveWax(){ return clamp(G.wax, WAXCLK.min||0, WAXCLK.max||30); }
+function radiusPenalty(w){
+  if(w>=24) return 0; if(w>=18) return 1; if(w>=12) return 2; if(w>=6) return 3; if(w>=1) return 4;
+  return 99;
+}
+function baseRadius(){
+  var b = clamp(G.baseRadius - (G.depth>=5?1:0), 1, RADR.max||7);
+  if(G.flags.allianceRadius){
+    var alliedHere=false;
+    Object.keys(G.npcs).forEach(function(id){ var n=G.npcs[id];
+      if(n.floor===G.depth && n.room===G.pos && n.numeric>=2) alliedHere=true; });
+    if(alliedHere) b = clamp(b+1, 1, RADR.max||7);
+  }
+  return b;
+}
+function effRadius(){
+  if(G.dead||G.won) return 1;
+  if(G.snuffed||G.guttering) return 1;
+  var b=baseRadius();
+  return clamp(b - radiusPenalty(G.wax), 1, b);
+}
+function dreadTierIndex(v){
+  var tiers=DREADCLK.tiers||[];
+  for(var i=0;i<tiers.length;i++){ var t=tiers[i];
+    if(t.range && v>=t.range[0] && v<=t.range[1]) return i; }
+  return 0;
+}
+function dreadTier(v){ var tiers=DREADCLK.tiers||[]; return tiers[dreadTierIndex(v)] || {state:'calm'}; }
+var TIER_LABELS={calm:'Calm',watched:'Watched',marked:'Marked',hunted:'Hunted','hunted-full':'Hunted (full)'};
+function dreadLabel(v){ var t=dreadTier(v); return TIER_LABELS[t.state] || (t.state||'Calm'); }
+function graceForTier(){ return clamp(5 - dreadTierIndex(G.dread),1,5); }
+function dispoName(num){ var i=clamp(num+2,0,DISPO_SCALE.length-1); return DISPO_SCALE[i]; }
+function seedDispoForFloor(base){
+  // Dread sets survivors' starting disposition per floor (floor 2+)
+  if(G.depth<2) return base;
+  var ti=dreadTierIndex(G.dread);
+  if(ti>=4) return -2;           // hunted-full: all hostile
+  if(ti>=1) return clamp(base-1,-2,2); // watched+: one step warier
+  return base;
+}
+
+/* =========================================================
+   7. AUDIO (procedural Web Audio; no assets)
+   ========================================================= */
+var Audio = (function(){
+  var ctx=null, master=null, musicGain=null, sfxGain=null;
+  var droneGain=null, fireGain=null, windGain=null, dreadGain=null;
+  var state={music:true, sfx:true};
+  // single source of truth for mix levels (audible-on-small-speakers)
+  var MIX={ master:0.9, bus:0.9, drone:0.10, fire:0.05, wind:0.045, droneCut:450, off:0.0001 };
+  var DREAD_BASE=0.004, DREAD_MAX=0.05;
+
+  function makeRng(seed){
+    if(seed==null) return Math.random;
+    var s=(seed>>>0)||1;
+    return function(){ s=(s*1664525+1013904223)>>>0; return s/4294967296; };
+  }
+  function clampPan(p){ return Math.max(-1,Math.min(1,p||0)); }
+  function noiseBuf(c,rng){
+    if(!c) return null;
+    var len=Math.floor(c.sampleRate*1.5);
+    var b=c.createBuffer(1,len,c.sampleRate);
+    var d=b.getChannelData(0);
+    for(var i=0;i<len;i++) d[i]=rng()*2-1;
+    return b;
+  }
+  function envAt(g,t0,a,dec,peak){
+    try{ g.gain.cancelScheduledValues(t0); g.gain.setValueAtTime(0.0001,t0);
+      g.gain.linearRampToValueAtTime(peak,t0+a);
+      g.gain.exponentialRampToValueAtTime(0.0001,t0+a+dec); }catch(e){}
+  }
+  function panNode(c,t0,pan){
+    if(pan!=null && typeof c.createStereoPanner==='function'){
+      var p=c.createStereoPanner(); try{ p.pan.setValueAtTime(clampPan(pan),t0); }catch(e){} return p;
+    }
+    return null;
+  }
+  function toneAt(c,dest,rng,freq,dur,type,peak,slideTo,pan,at){
+    if(!c||!dest) return;
+    try{
+      var t0=c.currentTime+(at||0);
+      var o=c.createOscillator(); o.type=type||'sine';
+      o.frequency.setValueAtTime(freq,t0);
+      if(slideTo) o.frequency.exponentialRampToValueAtTime(slideTo,t0+dur);
+      var g=c.createGain(); envAt(g,t0,0.004,dur,peak||0.05);
+      o.connect(g);
+      var p=panNode(c,t0,pan);
+      if(p){ g.connect(p); p.connect(dest); } else g.connect(dest);
+      o.start(t0); o.stop(t0+dur+0.08);
+    }catch(e){}
+  }
+  function noiseAt(c,dest,rng,band,dur,peak,pan,at){
+    if(!c||!dest) return;
+    try{
+      var t0=c.currentTime+(at||0);
+      var s=c.createBufferSource(); s.buffer=noiseBuf(c,rng);
+      var f=c.createBiquadFilter(); f.type='bandpass'; f.frequency.value=band||2000;
+      var g=c.createGain(); envAt(g,t0,0.003,dur,peak||0.05);
+      s.connect(f);
+      var p=panNode(c,t0,pan);
+      if(p){ f.connect(g); g.connect(p); p.connect(dest); } else { f.connect(g); g.connect(dest); }
+      s.start(t0); s.stop(t0+dur+0.05);
+    }catch(e){}
+  }
+  // builds a full graph on any context and returns its nodes WITHOUT touching module state
+  function buildInto(c,rng,st){
+    var g={};
+    g.master=c.createGain(); g.master.gain.value=MIX.master; g.master.connect(c.destination);
+    g.music=c.createGain(); g.music.gain.value=st.music?MIX.bus:0; g.music.connect(g.master);
+    g.sfx=c.createGain(); g.sfx.gain.value=st.sfx?MIX.bus:0; g.sfx.connect(g.master);
+    if(st.bed!==false){
+      // drone bed on the MUSIC bus — sub + detune + harmonics up to ~304 Hz (small-speaker audible)
+      var flt=c.createBiquadFilter(); flt.type='lowpass'; flt.frequency.value=MIX.droneCut; flt.Q.value=0.7;
+      g.drone=c.createGain(); g.drone.gain.value=MIX.drone;
+      flt.connect(g.drone); g.drone.connect(g.music);
+      [[38,1.0,'sine'],[38*1.01,1.0,'sine'],[76,0.5,'triangle'],[114,0.30,'sine'],[152,0.35,'sine'],[228,0.22,'sine'],[304,0.18,'sine']].forEach(function(sp){
+        var o=c.createOscillator(); o.type=sp[2]; o.frequency.value=sp[0];
+        var hg=c.createGain(); hg.gain.value=sp[1];
+        o.connect(hg); hg.connect(flt); o.start(0);
+      });
+      // ambient fire + wind on the MUSIC bus
+      var nb=noiseBuf(c,rng);
+      var src=c.createBufferSource(); src.buffer=nb; src.loop=true;
+      var ff=c.createBiquadFilter(); ff.type='bandpass'; ff.frequency.value=1500; ff.Q.value=0.7;
+      g.fire=c.createGain(); g.fire.gain.value=MIX.fire;
+      src.connect(ff); ff.connect(g.fire); g.fire.connect(g.music); src.start(0);
+      var src2=c.createBufferSource(); src2.buffer=nb; src2.loop=true;
+      var fw=c.createBiquadFilter(); fw.type='bandpass'; fw.frequency.value=750; fw.Q.value=0.5;
+      g.wind=c.createGain(); g.wind.gain.value=MIX.wind;
+      src2.connect(fw); fw.connect(g.wind); g.wind.connect(g.music); src2.start(0);
+      // dread-tier melodic layer on the MUSIC bus
+      g.dread=c.createGain(); g.dread.gain.value=DREAD_BASE; g.dread.connect(g.music);
+      [[220,1.0],[233,0.8]].forEach(function(sp){
+        var o=c.createOscillator(); o.type='sine'; o.frequency.value=sp[0];
+        var hg=c.createGain(); hg.gain.value=sp[1]*0.5;
+        o.connect(hg); hg.connect(g.dread); o.start(0);
+      });
+    }
+    return g;
+  }
+  function build(){
+    var g=buildInto(ctx, Math.random, state);
+    master=g.master; musicGain=g.music; sfxGain=g.sfx;
+    droneGain=g.drone; fireGain=g.fire; windGain=g.wind; dreadGain=g.dread;
+  }
+  function unlock(){
+    if(ctx){ if(ctx.state==='suspended'){ try{ctx.resume();}catch(e){} } return; }
+    try{ ctx=new (window.AudioContext||window.webkitAudioContext)(); }
+    catch(e){ ctx=null; return; }
+    if(!ctx) return;
+    try{ ctx.resume(); }catch(e){}
+    build();
+  }
+  function now(){ return ctx?ctx.currentTime:0; }
+  // Orlok's theme cell (organ sine + detuned saw + heartbeat) — MUSIC bus; deterministic, no setTimeout
+  function orlokInto(c,dest,rng){
+    toneAt(c,dest,rng,110,2.2,'sine',0.05);
+    toneAt(c,dest,rng,110*1.006,2.2,'sawtooth',0.028);
+    toneAt(c,dest,rng,55,2.2,'sine',0.04);
+    toneAt(c,dest,rng,60,0.12,'sine',0.10);
+    toneAt(c,dest,rng,60,0.12,'sine',0.08,null,0,0.26);
+  }
+  function measure(buf){
+    var ch=buf.getChannelData(0), n=ch.length;
+    var sum=0, hsum=0, peak=0, alpha=0.96, px=0, py=0;
+    for(var i=0;i<n;i++){
+      var x=ch[i]; sum+=x*x;
+      var av=x<0?-x:x; if(av>peak) peak=av;
+      var y=alpha*(py+x-px); px=x; py=y; hsum+=y*y;   // one-pole HP, fc ~= 292 Hz
+    }
+    return { rms:Math.sqrt(sum/n), peak:peak, bandRms:Math.sqrt(hsum/n) };
+  }
+  return {
+    unlock:unlock,
+    state:state,
+    now:now,
+    setMusic:function(on){ state.music=on; if(musicGain){ try{musicGain.gain.setValueAtTime(on?MIX.bus:0,now());}catch(e){} } },
+    setSfx:function(on){ state.sfx=on; if(sfxGain){ try{sfxGain.gain.setValueAtTime(on?MIX.bus:0,now());}catch(e){} } },
+    resetMix:function(){
+      if(!ctx) return;
+      try{ master.gain.cancelScheduledValues(now()); master.gain.setValueAtTime(MIX.master,now()); }catch(e){}
+      try{ musicGain.gain.setValueAtTime(state.music?MIX.bus:0,now()); }catch(e){}
+      try{ sfxGain.gain.setValueAtTime(state.sfx?MIX.bus:0,now()); }catch(e){}
+      try{ droneGain.gain.cancelScheduledValues(now()); droneGain.gain.setValueAtTime(MIX.drone,now()); }catch(e){}
+      try{ fireGain.gain.cancelScheduledValues(now()); fireGain.gain.setValueAtTime(MIX.fire,now()); }catch(e){}
+      try{ windGain.gain.cancelScheduledValues(now()); windGain.gain.setValueAtTime(MIX.wind,now()); }catch(e){}
+    },
+    setDread:function(tier){
+      if(!dreadGain) return;
+      var t=Math.max(0,Math.min(4,tier||0));
+      try{ dreadGain.gain.linearRampToValueAtTime(DREAD_BASE + DREAD_MAX*t/4, now()+0.8); }catch(e){}
+    },
+    tick:function(wax){ var f = 0.5 + 0.5*((wax||0)/((WAXR.start||30))); toneAt(ctx,sfxGain,Math.random,110*(1+0.02*Math.random()),0.04,'sine',0.03); noiseAt(ctx,sfxGain,Math.random,2200*(1+0.15*(1-f)),0.025,0.028); },
+    waxFound:function(){ toneAt(ctx,sfxGain,Math.random,392,0.16,'sine',0.06); setTimeout(function(){toneAt(ctx,sfxGain,Math.random,523,0.20,'sine',0.06);},90); },
+    matchPickup:function(){ toneAt(ctx,sfxGain,Math.random,1200,0.08,'triangle',0.04); noiseAt(ctx,sfxGain,Math.random,3000,0.03,0.02); },
+    keyFound:function(){ toneAt(ctx,sfxGain,Math.random,220,0.5,'sine',0.06); toneAt(ctx,sfxGain,Math.random,330,0.5,'sine',0.04); toneAt(ctx,sfxGain,Math.random,440,0.5,'sine',0.03); },
+    loreFound:function(){ noiseAt(ctx,sfxGain,Math.random,1800,0.5,0.03); toneAt(ctx,sfxGain,Math.random,900,0.5,'sine',0.02); },
+    orlok:function(){ orlokInto(ctx,musicGain,Math.random); },
+    snuff:function(){ if(droneGain){ try{droneGain.gain.setValueAtTime(MIX.off,now());}catch(e){} } if(fireGain){ try{fireGain.gain.setValueAtTime(MIX.off,now());}catch(e){} } toneAt(ctx,sfxGain,Math.random,48,0.35,'sine',0.14); },
+    matchStrike:function(){ noiseAt(ctx,sfxGain,Math.random,1800,0.18,0.07); toneAt(ctx,sfxGain,Math.random,700,0.25,'sine',0.03);
+      if(droneGain){ try{droneGain.gain.setValueAtTime(MIX.drone,now());}catch(e){} }
+      if(fireGain){ try{fireGain.gain.setValueAtTime(MIX.fire,now());}catch(e){} }
+      if(windGain){ try{windGain.gain.setValueAtTime(MIX.wind,now());}catch(e){} } },
+    guttering:function(){ if(droneGain){ try{droneGain.gain.linearRampToValueAtTime(MIX.drone*1.6,now()+1.6);}catch(e){} } toneAt(ctx,sfxGain,Math.random,65,2.0,'sine',0.05); toneAt(ctx,sfxGain,Math.random,69,2.0,'sine',0.04); },
+    gutterStep:function(grace){ toneAt(ctx,sfxGain,Math.random,55,0.16,'sine',0.05); noiseAt(ctx,sfxGain,Math.random,400,0.14,0.03); },
+    death:function(){ if(master){ try{master.gain.linearRampToValueAtTime(MIX.off,now()+0.03);}catch(e){} } },
+    victory:function(borrowed){ toneAt(ctx,sfxGain,Math.random,392,0.5,'sine',0.06); setTimeout(function(){toneAt(ctx,sfxGain,Math.random,523,0.6,'sine',0.06);},220); if(!borrowed) setTimeout(function(){toneAt(ctx,sfxGain,Math.random,659,0.8,'sine',0.05);},460); },
+    dreadShift:function(){ noiseAt(ctx,sfxGain,Math.random,600,0.6,0.028); toneAt(ctx,sfxGain,Math.random,70,0.7,'sine',0.03); },
+    creature:function(id,pan,far){
+      var g=far?0.55:1, p=clampPan(pan||0);
+      if(id==='bats'){ toneAt(ctx,sfxGain,Math.random,4200,0.06,'sine',0.045*g,null,p); setTimeout(function(){toneAt(ctx,sfxGain,Math.random,3600,0.05,'sine',0.04*g,null,p);},70); }
+      else if(id==='rats'){ noiseAt(ctx,sfxGain,Math.random,2500,0.12,0.05*g,p); }
+      else if(id==='spiders'){ noiseAt(ctx,sfxGain,Math.random,5000,0.04,0.035*g,p); }
+      else if(id==='wolves'){ toneAt(ctx,sfxGain,Math.random,300,0.8,'sawtooth',0.05*g,180,p); }
+      else if(id==='shades'){ noiseAt(ctx,sfxGain,Math.random,900,0.9,0.035*g,p); }
+      else if(id==='light-eater'){ toneAt(ctx,sfxGain,Math.random,180,0.7,'sine',0.05*g,90,p); }
+      else { toneAt(ctx,sfxGain,Math.random,400,0.1,'sine',0.03*g,null,p); }
+    },
+    voice:function(id){
+      if(id==='vlask') toneAt(ctx,sfxGain,Math.random,180,0.25,'square',0.03);
+      else if(id==='sister-marta') toneAt(ctx,sfxGain,Math.random,220,0.35,'sine',0.03);
+      else if(id==='ilona'){ toneAt(ctx,sfxGain,Math.random,200,0.3,'sine',0.03); noiseAt(ctx,sfxGain,Math.random,800,0.3,0.02); }
+      else if(id==='petr') toneAt(ctx,sfxGain,Math.random,330,0.3,'triangle',0.03);
+      else toneAt(ctx,sfxGain,Math.random,500,0.12,'triangle',0.03);
+    },
+    social:function(polarity){ if(polarity==='warm'){ toneAt(ctx,sfxGain,Math.random,392,0.18,'sine',0.045); setTimeout(function(){toneAt(ctx,sfxGain,Math.random,494,0.2,'sine',0.045);},110); } else { noiseAt(ctx,sfxGain,Math.random,900,0.2,0.05); toneAt(ctx,sfxGain,Math.random,90,0.25,'sine',0.05); } },
+    ui:function(){ toneAt(ctx,sfxGain,Math.random,520,0.05,'sine',0.02); noiseAt(ctx,sfxGain,Math.random,1600,0.02,0.012); },
+    zone:function(){ toneAt(ctx,sfxGain,Math.random,260,0.5,'sine',0.05); setTimeout(function(){toneAt(ctx,sfxGain,Math.random,520,0.6,'sine',0.04);},160); },
+    nearMiss:function(){ noiseAt(ctx,sfxGain,Math.random,3200,0.1,0.05); toneAt(ctx,sfxGain,Math.random,2400,0.08,'sine',0.03); },
+    // deterministic offline render for verification (seeded RNG; no timers)
+    offline:function(scenario,seed,opts){
+      var OAC=window.OfflineAudioContext||window.webkitOfflineAudioContext;
+      if(!OAC) return Promise.resolve(null);
+      var sr=44100, dur=3.0;
+      var c=new OAC(2, Math.floor(sr*dur), sr);
+      var rng=makeRng(seed);
+      var st={ music:!(opts&&opts.music===false), sfx:!(opts&&opts.sfx===false), bed:!(opts&&opts.bed===false) };
+      var g=buildInto(c,rng,st);
+      var S=g.sfx, M=g.music;
+      if(scenario==='tick'){ toneAt(c,S,rng,110,0.04,'sine',0.03); noiseAt(c,S,rng,2200,0.025,0.028); }
+      else if(scenario==='creature'){ noiseAt(c,S,rng,2500,0.12,0.05); }
+      else if(scenario==='wax'){ toneAt(c,S,rng,392,0.16,'sine',0.06); toneAt(c,S,rng,523,0.20,'sine',0.06); }
+      else if(scenario==='guttering'){ orlokInto(c,M,rng); }
+      else if(scenario==='victory'){ toneAt(c,S,rng,392,0.5,'sine',0.06); toneAt(c,S,rng,523,0.6,'sine',0.06); toneAt(c,S,rng,659,0.8,'sine',0.05); }
+      // 'bed' schedules nothing extra: the ambient bed is already running
+      return c.startRendering().then(function(buf){ return measure(buf); });
+    }
+  };
+})();
+
+/* =========================================================
+   8. TOAST
+   ========================================================= */
+var toastEl = document.getElementById('toast');
+var toastTimer=null;
+function toast(msg){
+  toastEl.textContent=msg; toastEl.classList.add('show');
+  if(toastTimer) clearTimeout(toastTimer);
+  toastTimer=setTimeout(function(){ toastEl.classList.remove('show'); },1500);
+}
+
+/* =========================================================
+   9. SCREEN / UI MANAGER
+   ========================================================= */
+var screens = {
+  title:document.getElementById('scr-title'),
+  howto:document.getElementById('scr-howto'),
+  settings:document.getElementById('scr-settings'),
+  pause:document.getElementById('scr-pause'),
+  over:document.getElementById('scr-over'),
+  victory:document.getElementById('scr-victory')
+};
+var hudEl=document.getElementById('hud');
+var currentScreen='title';
+var howtoReturn='title';
+var settingsReturn='title';
+function showScreen(name){
+  Object.keys(screens).forEach(function(k){ screens[k].classList.toggle('active', k===name); });
+  hudEl.classList.toggle('active', name==='gameplay');
+  currentScreen=name;
+  if(name==='gameplay'){ hudEl.style.display='block'; } else { hudEl.style.display=''; }
+}
+function refreshToggles(){
+  var m=Audio.state.music, s=Audio.state.sfx;
+  ['set-music','pause-music'].forEach(function(id){ var b=document.getElementById(id); b.textContent=m?'On':'Off'; b.classList.toggle('on',m); });
+  ['set-sfx','pause-sfx'].forEach(function(id){ var b=document.getElementById(id); b.textContent=s?'On':'Off'; b.classList.toggle('on',s); });
+  var h=document.getElementById('set-hints'); h.textContent=G.hints?'On':'Off'; h.classList.toggle('on',G.hints);
+  ['npcItemUse','creatureAttacksNpc','npcTrapTrip','allianceRadius','juiceEnabled'].forEach(function(f){
+    var b=document.getElementById('flag-'+f); var on=!!G.flags[f];
+    b.textContent=on?'On':'Off'; b.classList.toggle('on',on);
+  });
+}
+function bindToggle(id,cb){
+  document.getElementById(id).addEventListener('click',function(){
+    Audio.unlock(); cb(); Audio.ui(); refreshToggles(); saveToggles();
+  });
+}
+function saveToggles(){ /* session-only */ }
+
+/* =========================================================
+   10. HUD RENDER
+   ========================================================= */
+function renderHUD(){
+  if(!G) return;
+  document.getElementById('waxVal').textContent = Math.round(G.wax);
+  document.getElementById('matchVal').textContent = G.matches;
+  document.getElementById('keyVal').textContent = G.key ? 'KEY HELD' : 'no key';
+  document.getElementById('keyVal').style.color = G.key ? '#FFD27A' : '';
+  var r=effRadius();
+  document.getElementById('radiusVal').textContent = 'radius '+r;
+  document.getElementById('candlefill').style.height = clamp(G.wax/(WAXCLK.max||30)*100,0,100)+'%';
+  document.getElementById('dreadVal').textContent = dreadLabel(G.dread) + (G.dread>0?(' '+G.dread):'');
+  var _ti=dreadTierIndex(G.dread);
+  if(G._dreadTier==null) G._dreadTier=_ti;
+  else if(G._dreadTier!==_ti){ G._dreadTier=_ti; Audio.dreadShift(); Audio.setDread(_ti); }
+  var pips=document.getElementById('dreadPips');
+  if(pips.children.length!==(DREADCLK.max||8)){
+    pips.innerHTML=''; for(var i=0;i<(DREADCLK.max||8);i++){ var d=document.createElement('div'); d.className='pip'; pips.appendChild(d); }
+  }
+  for(var i=0;i<(DREADCLK.max||8);i++){
+    var pip=pips.children[i], on=i<G.dread;
+    pip.style.background = on ? (G.dread>=6?'#C01A1A':(G.dread>=4?'#d97a1e':'#E8912B')) : '#2A333D';
+  }
+  document.getElementById('dreadVal').style.color = G.dread>=6?'#C01A1A':(G.dread>=4?'#d97a1e':'#FFD27A');
+  var fl=G.floors[G.depth];
+  var flName = G.depth===1?'Spire':(G.depth===MAX_DEPTH?'Ground floor':('Descent '+String.fromCharCode(64+G.depth)));
+  document.getElementById('floorVal').textContent = flName;
+  document.getElementById('scoreVal').textContent = computeScore().total;
+  var here = coLocatedNpc();
+  document.getElementById('btn-talk').style.display = here?'inline-block':'none';
+  var canRelight = (G.snuffed||G.guttering) && G.matches>0;
+  document.getElementById('btn-usematch').style.display = canRelight?'inline-block':'none';
+  var inExit = fl && fl.rooms[G.pos] && fl.rooms[G.pos].archetype==='descending-stair';
+  var db=document.getElementById('btn-descend');
+  if(inExit){ db.style.display='inline-block'; db.textContent = (G.depth<MAX_DEPTH)?'Descend':'Escape'; }
+  else { db.style.display='none'; }
+}
+
+/* =========================================================
+   11. INPUT / CANVAS GEOMETRY
+   ========================================================= */
+var canvas=document.getElementById('game');
+var ctx=canvas.getContext('2d');
+var scene=document.createElement('canvas'), sctx=scene.getContext('2d');
+var masked=document.createElement('canvas'), mctx=masked.getContext('2d');
+var spill=document.createElement('canvas'), pctx=spill.getContext('2d');
+var cssW=window.innerWidth, cssH=window.innerHeight, DPR=1;
+var tile=48, camX=0, camY=0, camTargetX=0, camTargetY=0, maskR=48*3, maskRTarget=48*3;
+var reducedMotion = false;
+try{ reducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches; }catch(e){}
+
+function resize(){
+  DPR=Math.min(2, window.devicePixelRatio||1);
+  cssW=window.innerWidth; cssH=window.innerHeight;
+  canvas.width=Math.floor(cssW*DPR); canvas.height=Math.floor(cssH*DPR);
+  canvas.style.width=cssW+'px'; canvas.style.height=cssH+'px';
+  scene.width=canvas.width; scene.height=canvas.height;
+  masked.width=canvas.width; masked.height=canvas.height;
+  spill.width=canvas.width; spill.height=canvas.height;
+  tile=Math.max(48, Math.floor(Math.min(cssW,cssH)/12));
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+  sctx.setTransform(DPR,0,0,DPR,0,0);
+  mctx.setTransform(DPR,0,0,DPR,0,0);
+  pctx.setTransform(DPR,0,0,DPR,0,0);
+}
+window.addEventListener('resize',resize);
+
+function playerScreen(){ return { x: cssW/2, y: cssH/2 }; }
+function roomScreen(rx,ry){
+  var p=playerScreen();
+  var pfl=G?G.floors[G.depth]:null;
+  var pr=pfl?pfl.rooms[G.pos]:null;
+  var px=pr?pr.x:0, py=pr?pr.y:0;
+  return { x: p.x + (rx-px)*tile - camX, y: p.y + (ry-py)*tile - camY };
+}
+function canvasPoint(e){
+  var rect=canvas.getBoundingClientRect();
+  var cx = (e.touches&&e.touches[0]?e.touches[0].clientX:(e.changedTouches&&e.changedTouches[0]?e.changedTouches[0].clientX:e.clientX));
+  var cy = (e.touches&&e.touches[0]?e.touches[0].clientY:(e.changedTouches&&e.changedTouches[0]?e.changedTouches[0].clientY:e.clientY));
+  return { x: cx-rect.left, y: cy-rect.top };
+}
+var hoverTile=null;
+function tileAtPoint(pt){
+  if(!G||!G.inGame) return null;
+  var fl=G.floors[G.depth]; var pr=fl.rooms[G.pos]; if(!pr) return null;
+  var p=playerScreen();
+  var worldX = pr.x + (pt.x - p.x + camX)/tile;
+  var worldY = pr.y + (pt.y - p.y + camY)/tile;
+  return { x: Math.round(worldX), y: Math.round(worldY) };
+}
+function roomAtCoord(x,y){
+  var fl=G.floors[G.depth];
+  var found=null;
+  Object.keys(fl.rooms).forEach(function(s){ if(fl.rooms[s].x===x && fl.rooms[s].y===y) found=s; });
+  return found;
+}
+function dirBetween(a,b){ // from room a coord to room b coord
+  var dx=b.x-a.x, dy=b.y-a.y;
+  if(dx===1&&dy===0) return 'east'; if(dx===-1&&dy===0) return 'west';
+  if(dx===0&&dy===1) return 'south'; if(dx===0&&dy===-1) return 'north';
+  return null;
+}
+function tapAt(pt){
+  if(!G.inGame||G.dead||G.won||isModalOpen()) return;
+  var t=tileAtPoint(pt); if(!t) return;
+  var fl=G.floors[G.depth]; var pr=fl.rooms[G.pos];
+  var targetSlug=roomAtCoord(t.x,t.y);
+  if(targetSlug){
+    if(targetSlug===G.pos){ takeTurn('wait'); return; }
+    var dir=dirBetween(pr,fl.rooms[targetSlug]);
+    if(dir && pr.exits[dir]===targetSlug){ tryMove(dir); return; }
+  }
+  // Descent/escape requires the explicit Descend affordance (button or Q key)
+}
+
+function bindCanvasInput(){
+  // mouse
+  canvas.addEventListener('mousedown',function(e){ Audio.unlock(); tapAt(canvasPoint(e)); });
+  canvas.addEventListener('mousemove',function(e){ var t=tileAtPoint(canvasPoint(e)); hoverTile=t; });
+  canvas.addEventListener('mouseup',function(){});
+  canvas.addEventListener('mouseleave',function(){ hoverTile=null; });
+  // touch
+  canvas.addEventListener('touchstart',function(e){ Audio.unlock(); e.preventDefault(); tapAt(canvasPoint(e)); },{passive:false});
+  canvas.addEventListener('touchmove',function(e){ e.preventDefault(); },{passive:false});
+  canvas.addEventListener('touchend',function(e){ e.preventDefault(); },{passive:false});
+}
+
+/* =========================================================
+   12. TURNS / MOVEMENT
+   ========================================================= */
+function isModalOpen(){
+  return document.getElementById('modal-encounter').classList.contains('active')
+      || document.getElementById('modal-social').classList.contains('active')
+      || document.getElementById('modal-journal').classList.contains('active');
+}
+function openModal(id){ document.getElementById(id).classList.add('active'); }
+function closeModal(id){ document.getElementById(id).classList.remove('active'); }
+function closeOpenModal(){
+  ['modal-encounter','modal-social','modal-journal'].forEach(function(id){
+    var el=document.getElementById(id); if(el.classList.contains('active')) closeModal(id);
+  });
+}
+
+function burnWax(n){
+  n=n||0; var before=G.wax;
+  G.wax=clamp(G.wax-n, WAXCLK.min||0, WAXCLK.max||30);
+  if(before!==G.wax) renderHUD();
+}
+function enterGuttering(){
+  if(G.guttering) return;
+  G.guttering=true; G.grace=graceForTier();
+  Audio.guttering();
+  Audio.orlok();
+  toast('THE FLAME GUTTERS — grace '+G.grace);
+  var pg=playerScreen(); Juice.shake(5); Juice.stop(3); Juice.flashRed();
+  Juice.burst(pg.x,pg.y,14,'#8A3D12',2.4,2.2,750,0.02); Juice.pop('THE FLAME GUTTERS',pg.x,pg.y-42,'#C01A1A',16);
+}
+function takeTurn(kind){
+  if(!G.inGame||G.dead||G.won) return;
+  G.turn++;
+  if(G.guttering){
+    G.grace--;
+    Audio.gutterStep(G.grace);
+    if(G.grace<=0){ endGame(false); return; }
+  } else {
+    burnWax(WAXR.burn_per_turn||1);
+    Audio.tick(G.wax);
+    if(G.depth>=MAX_DEPTH && G.turn%6===0){ burnWax(1); toast('THE WAX DRAINS'); }
+    if(G.wax<=0){ enterGuttering(); }
+  }
+  simNpcs();
+  checkCoLocation();
+  renderHUD();
+}
+
+function reveal(){
+  var fl=G.floors[G.depth]; var pr=fl.rooms[G.pos]; if(!pr) return;
+  var set=G.revealed[G.depth]||(G.revealed[G.depth]=new Set());
+  var r=effRadius()+1;
+  Object.keys(fl.rooms).forEach(function(s){
+    var rr=fl.rooms[s];
+    if(Math.hypot(rr.x-pr.x, rr.y-pr.y)<=r) set.add(rr.x+','+rr.y);
+  });
+}
+
+var LORE_TEXT = [
+  'Scrap: "...the tower drinks the light and remembers everyone it drank..."',
+  'Scrap: "Vlask hoards wax like a miser hoards coin. Do not trust his ledger."',
+  'Scrap: "The door only opens for a light that is still burning — or for a hand already leaving."',
+  'Scrap: "Dread is weather. It rises when we feed it, and settles when we share what little flame remains."',
+  'Scrap: "Count Orlok is not a wolf. He is the dark the candle was never enough to hold back."'
+];
+
+function pickup(room){
+  var items=room.items||[];
+  var pp=playerScreen();
+  for(var i=items.length-1;i>=0;i--){
+    var t=items[i];
+    if(t==='wax-cake'){ G.wax=clamp(G.wax+12,0,WAXCLK.max||30); Audio.waxFound(); toast('WAX FOUND  +12'); items.splice(i,1);
+      Juice.burst(pp.x,pp.y,14,'#FFD27A',2.2,2.4,700); Juice.pop('+12 WAX',pp.x,pp.y-34,'#FFD27A'); Juice.punchTo(0.5); Juice.flashWarm(); }
+    else if(t==='matches'){ G.matches=clamp(G.matches+1,0,MATR.max||6); Audio.matchPickup(); toast('MATCH  +1'); items.splice(i,1);
+      Juice.burst(pp.x,pp.y,8,'#E8912B',2.4,1.8,480); Juice.pop('+1 MATCH',pp.x,pp.y-34,'#E8912B'); }
+    else if(t==='lore-fragment'){
+      var key=G.depth+':'+(room.name||'fragment');
+      if(!G.loreSet[key]){
+        G.loreSet[key]=true; G.lore++;
+        G.loreFragments.push(LORE_TEXT[G.loreFragments.length % LORE_TEXT.length]);
+        Audio.loreFound(); toast('LORE FRAGMENT');
+        Juice.burst(pp.x,pp.y,10,'#C8BEA8',1.9,2.0,650); Juice.pop('LORE +75',pp.x,pp.y-34,'#C8BEA8');
+      }
+      items.splice(i,1);
+    }
+    else if(t==='exit-key'){ G.key=true; Audio.keyFound(); toast('THE KEY'); items.splice(i,1);
+      Juice.burst(pp.x,pp.y,18,'#FFD27A',2.6,2.6,800,0.02); Juice.pop('THE KEY',pp.x,pp.y-38,'#FFD27A',17); Juice.flashWarm(); Juice.punchTo(0.8); }
+  }
+}
+
+function enterRoom(slug){
+  var fl=G.floors[G.depth]; var room=fl.rooms[slug]; if(!room) return;
+  reveal();
+  // zone bonus on first entry to a floor
+  if(!G.zones[G.depth]){ G.zones[G.depth]=true; Audio.zone();
+    var pz=playerScreen(); Juice.burst(pz.x,pz.y,10,'#E8912B',2.0,2.0,700); Juice.pop('ZONE +100',pz.x,pz.y-46,'#E8912B'); }
+  // pickup
+  pickup(room);
+  // near-miss when entering a creature room on low wax
+  if(room.encounter && !G.cleared[G.depth+':'+slug]){
+    var enc=ROSTER.filter(function(x){return x.id===room.encounter;})[0];
+    var nmKey='nm:'+G.depth+':'+slug;
+    if(enc && enc.kind==='creature' && G.wax<=3 && !G.nearMissSet[nmKey]){ G.nearMiss++; G.nearMissSet[nmKey]=true; Audio.nearMiss(); toast('NEAR MISS  +50');
+      var pn=playerScreen(); Juice.burst(pn.x,pn.y,12,'#C01A1A',2.6,2.2,650); Juice.pop('NEAR MISS +50',pn.x,pn.y-40,'#ff6b6b',16); Juice.flashRed(); Juice.shake(4); }
+  }
+  // encounter trigger
+  if(!G.cleared[G.depth+':'+slug] && room.encounter){
+    var e=ROSTER.filter(function(x){return x.id===room.encounter;})[0];
+    if(e && e.kind!=='npc'){ openEncounter(room,slug,e); }
+  } else if(room.npc){
+    G.pendingSocial=room.npc;
+  }
+  // npc item use (flag-gated simulation detail)
+  if(G.flags.npcItemUse){ npcItemSweep(room,slug); }
+}
+
+function tryMove(dir){
+  if(!G||!G.inGame||G.dead||G.won||isModalOpen()) return false;
+  var fl=G.floors[G.depth]; var room=fl.rooms[G.pos]; if(!room) return false;
+  if(dir==='down'){
+    if(room.archetype==='descending-stair'){
+      if(G.depth<MAX_DEPTH){ descend(); return true; }
+      attemptExit(); return true;
+    }
+    return false;
+  }
+  if(dir==='up'){ if(room.exits.up && G.depth>1){ ascend(); return true; } return false; }
+  var to=room.exits[dir];
+  if(!to || !fl.rooms[to]) return false;
+  G.pos=to; camX+=0; camY+=0;
+  Juice.burst(playerScreen().x, playerScreen().y, 4, '#4C5A6B', 1.1, 1.6, 480, 0.02);
+  enterRoom(to);
+  takeTurn('move');
+  return true;
+}
+
+function descend(){
+  var here=G.floors[G.depth] && G.floors[G.depth].rooms[G.pos];
+  if(!here || here.archetype!=='descending-stair') return;
+  if(G.depth>=MAX_DEPTH){ attemptExit(); return; }
+  if(!G.descendedFrom) G.descendedFrom={};
+  G.descendedFrom[G.depth]=G.pos;
+  G.depth++; G.pos=G.floors[G.depth].start;
+  Audio.zone(); toast('DESCENT — '+(G.depth===MAX_DEPTH?'GROUND FLOOR':'FLOOR '+G.depth));
+  Juice.transition(); Juice.shake(3);
+  var pd=playerScreen(); Juice.burst(pd.x,pd.y,12,'#4C5A6B',2.0,2.2,760,0.02);
+  Juice.pop((G.depth===MAX_DEPTH?'GROUND FLOOR':'FLOOR '+G.depth),pd.x,pd.y-44,'#E8912B',16);
+  enterRoom(G.pos);
+  takeTurn('move');
+}
+function ascend(){
+  if(G.depth<=1) return;
+  var prev=G.floors[G.depth-1];
+  G.depth--;
+  G.pos=(G.descendedFrom && G.descendedFrom[G.depth]) || prev.exitSlug || prev.start;
+  Juice.transition(); Juice.shake(3);
+  var pa=playerScreen(); Juice.burst(pa.x,pa.y,12,'#4C5A6B',2.0,2.2,760,0.02);
+  Juice.pop('FLOOR '+G.depth,pa.x,pa.y-44,'#E8912B',16);
+  enterRoom(G.pos);
+  takeTurn('move');
+}
+
+function attemptExit(){
+  if(G.depth<MAX_DEPTH) return;
+  var canBorrow = G.borrowedOpen && G.borrowedTurns>0;
+  // Door ajar AND you hold the key: a real choice at the door (GDD §2.9).
+  if(canBorrow && G.key){ openExitChoice(); return; }
+  if(canBorrow){ win('borrowed'); return; }
+  if(G.key){ win('full'); return; }
+  toast('THE DOOR IS LOCKED — FIND THE KEY');
+}
+function openExitChoice(){
+  var t=document.getElementById('encTitle'), d=document.getElementById('encDesc'), b=document.getElementById('encBtns');
+  t.textContent='The ground-floor door';
+  d.innerHTML='A survivor left the door ajar. You hold the key. Leave on <b>your own light</b>, or <span class="cold">slip out in their wake</span> — a lesser escape.';
+  b.innerHTML='';
+  b.appendChild(mkBtn('Use your key','',function(){ closeModal('modal-encounter'); win('full'); }));
+  b.appendChild(mkBtn('Slip out in their wake','cold',function(){ closeModal('modal-encounter'); win('borrowed'); }));
+  openModal('modal-encounter');
+}
+
+function npcList(){
+  return Object.keys(G.npcs).map(function(id){ var n=G.npcs[id];
+    return { id:n.id, name:n.name, disposition:n.disposition, numeric:n.numeric, floor:n.floor, room:n.room }; });
+}
+function coLocatedNpc(){
+  if(!G||G.depth<2) return null;
+  var id=Object.keys(G.npcs).filter(function(k){ var n=G.npcs[k]; return n.floor===G.depth && n.room===G.pos; })[0];
+  return id||null;
+}
+
+/* =========================================================
+   13. NPC SIMULATION (active-floor-only; tower-wide state)
+   ========================================================= */
+function npcItemSweep(room,slug){
+  // flag-gated detail: NPCs standing in this room may take an item
+  var npcs=Object.keys(G.npcs).filter(function(k){ var n=G.npcs[k]; return n.floor===G.depth && n.room===slug; });
+  if(!npcs.length) return;
+  var items=room.items||[];
+  if(items.length<2) return; // never strip a room's last item
+  var idx=-1;
+  for(var i=items.length-1;i>=0;i--){
+    // never remove required things (REQ_THINGS) or the exit-key
+    if(items[i]==='exit-key' || REQ_THINGS.indexOf(items[i])>=0) continue;
+    idx=i; break;
+  }
+  if(idx>=0 && NPCRng()<0.5){
+    var it=items.splice(idx,1)[0];
+    var n=G.npcs[npcs[0]];
+    n.carried.push(it);
+  }
+}
+function simNpcs(){
+  if(G.depth<2) return;
+  // tower-wide: survivors trail the player downward through the stairs
+  Object.keys(G.npcs).forEach(function(id){
+    var n=G.npcs[id]; if(n.escaped) return;
+    if(n.floor>0 && n.floor<MAX_DEPTH && n.floor<=G.depth && NPCRng()<0.12){
+      n.floor++;
+      var dest=G.floors[n.floor]; if(!dest) return;
+      var stairs=Object.keys(dest.rooms).filter(function(s){return dest.rooms[s].archetype==='descending-stair';});
+      n.room = stairs.length ? pick(NPCRng,stairs) : dest.start;
+    }
+  });
+  var fl=G.floors[G.depth];
+  Object.keys(G.npcs).forEach(function(id){
+    var n=G.npcs[id]; if(n.floor!==G.depth||!n.room) return;
+    var r=fl.rooms[n.room]; if(!r) return;
+    if(NPCRng()<0.5){
+      var dirs=Object.keys(r.exits).filter(function(d){ return ['north','south','east','west'].indexOf(d)>=0 && fl.rooms[r.exits[d]]; });
+      if(dirs.length){ n.room=r.exits[pick(NPCRng,dirs)]; }
+    }
+    // NPC trips traps (flag-gated detail)
+    var rr=fl.rooms[n.room];
+    if(G.flags.npcTrapTrip && rr && rr.encounter){
+      var e=ROSTER.filter(function(x){return x.id===rr.encounter;})[0];
+      if(e && e.kind==='puzzle'){ n.tripped=true; }
+    }
+    // allies split wax drain (flag-gated detail)
+    if(G.flags.allianceRadius && n.numeric>=2 && n.room===G.pos){ /* radius handled in baseRadius() */ }
+  });
+  // NPC escape -> borrowed door (on ground floor)
+  Object.keys(G.npcs).forEach(function(id){
+    var n=G.npcs[id]; if(n.floor!==MAX_DEPTH||!n.room) return;
+    var room=G.floors[MAX_DEPTH].rooms[n.room];
+    if(room && room.archetype==='descending-stair' && !n.escaped && NPCRng()<0.25){
+      n.escaped=true; openBorrowedDoor(n);
+    }
+  });
+  // borrowed door decay
+  if(G.borrowedOpen){
+    if(G.borrowedJustOpened){ G.borrowedJustOpened=false; }
+    else {
+      G.borrowedTurns--;
+      if(G.borrowedTurns%2===0) G.dread=clamp(G.dread+1,DREADCLK.min,DREADCLK.max);
+      if(G.borrowedTurns<=0){ G.borrowedOpen=false; toast('THE BORROWED DOOR CLOSES'); }
+    }
+  }
+}
+function dispoTurns(numeric){
+  if(numeric>=2) return 5; if(numeric===1) return 4; if(numeric===0) return 3;
+  if(numeric===-1) return 2; return 1;
+}
+function openBorrowedDoor(npc){
+  if(npc && npc.carried && npc.carried.length){
+    var src=G.floors[npc.floor] && G.floors[npc.floor].rooms[npc.room];
+    if(src){ src.items=(src.items||[]).concat(npc.carried); npc.carried=[]; }
+  }
+  var win = clamp(dispoTurns(npc.numeric) - Math.floor(G.dread/2), 1, 6);
+  G.borrowedOpen=true; G.borrowedTurns=win; G.borrowedFrom=npc.id; G.borrowedJustOpened=true;
+  G.dread=clamp(G.dread+1,DREADCLK.min,DREADCLK.max);
+  toast(npc.name.toUpperCase()+' LEAVES THE DOOR AJAR ('+win+')');
+  Audio.creature('shades',0,true);
+}
+function checkCoLocation(){
+  if(isModalOpen()) return;
+  var id=coLocatedNpc();
+  if(id){
+    var cn=G.npcs[id];
+    if(cn && !cn.seeded){ cn.numeric=seedDispoForFloor(cn.numeric); cn.disposition=dispoName(cn.numeric); cn.seeded=true; }
+    G.socialTarget=id;
+    if(!G.cleared['social:'+G.depth+':'+id]){ openSocial(id); G.cleared['social:'+G.depth+':'+id]=true; }
+    else { G.pendingSocial=id; }
+  } else { G.pendingSocial=null; }
+}
+
+/* =========================================================
+   14. ENCOUNTER MODAL
+   ========================================================= */
+function openEncounter(room,slug,enc){
+  G.activeEncounter={slug:slug,enc:enc}; G.encounterRoom=room;
+  var t=document.getElementById('encTitle'), d=document.getElementById('encDesc'), b=document.getElementById('encBtns');
+  if(enc.kind==='creature'){
+    t.textContent = encTitle(enc.id);
+    d.innerHTML = 'A creature blocks the way. <b>Threat '+enc.threat+'</b>, effect: <span class="cold">'+enc.effect+'</span>. There is no fight — only how you take the dark.';
+    b.innerHTML='';
+    b.appendChild(mkBtn('Run','',function(){ resolveCreature('run'); }));
+    b.appendChild(mkBtn('Endure','cold',function(){ resolveCreature('endure'); }));
+    Audio.creature(enc.id,0,false);
+  } else {
+    t.textContent = puzzleTitle(enc.id);
+    d.innerHTML = puzzleDesc(enc.id);
+    b.innerHTML='';
+    b.appendChild(mkBtn('Press on','',function(){ resolvePuzzle('risk'); }));
+    b.appendChild(mkBtn('Turn back','cold',function(){ resolvePuzzle('safe'); }));
+  }
+  openModal('modal-encounter');
+}
+function mkBtn(label,cls,fn){ var el=document.createElement('button'); el.className='mbtn'+(cls?(' '+cls):''); el.textContent=label; el.addEventListener('click',function(){ Audio.unlock(); Audio.ui(); fn(); }); return el; }
+function encTitle(id){
+  return {bats:'Bats pour from the rafters',rats:'Rats gnaw at your kit',spiders:'Spiders drop on threads',
+    wolves:'A wolf watches from the stair',shades:'A shade unfolds', 'light-eater':'Something that eats the flame'}[id] || 'A shape in the dark';
+}
+function puzzleTitle(id){
+  return {'locked-door':'A locked door','collapsing-floor':'The floor gives way','light-trap':'A light-trap waits','dark-leap':'The dark leap'}[id] || 'A problem in the dark';
+}
+function puzzleDesc(id){
+  return {'locked-door':'The iron is cold and barred. Force it and burn wax, or waste a turn finding the catch.',
+    'collapsing-floor':'Beams sag. The long way is safe but slow; the short way costs light.',
+    'light-trap':'A snare for flame. Cross blind and spend a match, or go around.',
+    'dark-leap':'A black gap. Leap and spend wax, or feel your way and lose a turn.'}[id] || 'A choice costs light either way.';
+}
+function resolveCreature(kind){
+  var enc=G.activeEncounter.enc; var eff=enc.effect;
+  var spill = eff==='wax-spill'?2 : eff==='run-wax-spill'?2 : eff==='wax-drain'?3 : (eff==='turn-cost'||eff==='snuff')?0 : 1;
+  if(eff==='match-destroy'){ G.matches=clamp(G.matches-1,0,MATR.max||6); toast('A MATCH IS DESTROYED'); }
+  if(eff==='turn-cost'){ burnWax(2); }
+  if(kind==='run'){ burnWax(spill); toast('YOU RUN — WAX SPILLS'); }
+  else {
+    burnWax(spill);
+    G.snuffed=true; Audio.snuff(); toast('THE CANDLE IS SNUFFED');
+    if(G.matches>0) toast('ENDURED — SPEND A MATCH (JOURNAL/WAIT to re-light)');
+  }
+  if(eff==='snuff'){ G.snuffed=true; Audio.snuff(); }
+  if(G.wax<=0) enterGuttering();
+  // juice: impact shake + hit-stop + burst + popup (additive)
+  var pc=playerScreen();
+  Juice.shake(kind==='endure'?6:4); Juice.stop(kind==='endure'?4:3); Juice.punchTo(0.9);
+  Juice.burst(pc.x,pc.y,16,kind==='endure'?'#8A3D12':'#E8912B',3,2.4,720);
+  if(kind==='endure'){ Juice.flashRed(); Juice.pop('ENDURED',pc.x,pc.y-40,'#ff6b6b',16); }
+  else { Juice.pop('WAX SPILLS',pc.x,pc.y-40,'#E8912B'); }
+  if(G.snuffed){ Juice.burst(pc.x,pc.y,10,'#4C5A6B',2.2,2.0,700,0.02); Juice.pop('SNUFFED',pc.x,pc.y-56,'#8394a5'); }
+  // flag-gated: creatures attack co-located NPCs
+  if(G.flags.creatureAttacksNpc){
+    var id=coLocatedNpc();
+    if(id){ var n=G.npcs[id]; n.numeric=clamp(n.numeric-1,-2,2); n.disposition=dispoName(n.numeric); toast(n.name+' IS HARMED'); }
+  }
+  G.cleared[G.depth+':'+G.activeEncounter.slug]=true;
+  G.activeEncounter=null;
+  closeModal('modal-encounter');
+  sfxMaybeSnuffRecover();
+  renderHUD();
+  takeTurn('encounter');
+}
+function resolvePuzzle(kind){
+  var enc=G.activeEncounter.enc; var eff=enc.effect;
+  if(kind==='risk'){
+    if(eff==='snuff'){ G.snuffed=true; Audio.snuff(); toast('THE TRAP SNUFFS THE FLAME'); }
+    else { burnWax(2); toast('YOU PRESS ON — WAX COSTS'); }
+    if(G.wax<=0) enterGuttering();
+  } else {
+    burnWax(1); toast('YOU TURN BACK — A TURN LOST');
+  }
+  // juice: light impact on the choice (additive)
+  var ppz=playerScreen();
+  Juice.shake(3); Juice.stop(2); Juice.punchTo(0.5);
+  if(kind==='risk' && enc.effect==='snuff'){ Juice.flashRed(); Juice.burst(ppz.x,ppz.y,12,'#4C5A6B',2.4,2.2,650,0.02); Juice.pop('SNUFFED',ppz.x,ppz.y-40,'#8394a5'); }
+  else if(kind==='risk'){ Juice.burst(ppz.x,ppz.y,8,'#8A3D12',2.0,1.8,520); Juice.pop('WAX COSTS',ppz.x,ppz.y-40,'#E8912B'); }
+  else { Juice.pop('TURN LOST',ppz.x,ppz.y-40,'#8394a5'); }
+  G.cleared[G.depth+':'+G.activeEncounter.slug]=true;
+  G.activeEncounter=null;
+  closeModal('modal-encounter');
+  renderHUD();
+  takeTurn('encounter');
+}
+function sfxMaybeSnuffRecover(){ /* no-op placeholder for parity */ }
+
+function tryRelight(){
+  if(!G.snuffed && !G.guttering) return false;
+  if(G.matches<=0) return false;
+  G.matches--; G.wax=Math.max(G.wax,8); G.snuffed=false; G.guttering=false;
+  Audio.matchStrike(); toast('THE MATCH CATCHES — LIGHT RETURNS');
+  var pr=playerScreen(); Juice.shake(2); Juice.punchTo(0.5); Juice.flashWarm();
+  Juice.burst(pr.x,pr.y,16,'#FFD27A',2.4,2.2,650,0.02); Juice.pop('LIGHT RETURNS',pr.x,pr.y-40,'#FFD27A');
+  renderHUD(); return true;
+}
+
+/* =========================================================
+   15. SOCIAL MODAL + ACTIONS (shared handler for hook + UI)
+   ========================================================= */
+function socialActionUsable(act){
+  if(!act) return false;
+  var wd=act.wax_delta||0;
+  if(wd<0){
+    if(G.socialWaxSpent + (-wd) > 7) return false; // beginner cap
+    if(G.wax < (-wd)) return false;
+  }
+  return true;
+}
+function openSocial(npcId){
+  G.socialTarget=npcId;
+  var n=G.npcs[npcId]; if(!n) return;
+  document.getElementById('socTitle').textContent=n.name;
+  document.getElementById('socDesc').innerHTML='Disposition: <b>'+n.disposition+'</b> ('+n.numeric+'). Warm acts lower Dread but cost light; cold acts buy light now and raise Dread.';
+  var wrap=document.getElementById('socActions'); wrap.innerHTML='';
+  SOCIAL.forEach(function(act,idx){
+    var usable=socialActionUsable(act);
+    var lbl=act.id.replace('-',' ')+(act.wax_delta?(act.wax_delta>0?('  +'+act.wax_delta+' wax'):('  '+act.wax_delta+' wax')):'');
+    var btn=mkBtn(lbl,act.polarity==='cold'?'cold':'',function(){
+      if(!socialActionUsable(act)){ toast('NOT ENOUGH LIGHT FOR THAT'); return; }
+      applySocial(act.id, npcId);
+      closeModal('modal-social');
+      takeTurn('social');
+      checkCoLocation();
+      renderHUD();
+    });
+    btn.setAttribute('data-key', idx+1);
+    btn.innerHTML='<span>'+lbl+'</span><span class="tag '+(act.polarity==='cold'?'cold':'warm')+'">'+act.polarity+' · dread '+(act.dread_delta>0?'+':'')+act.dread_delta+'</span>';
+    if(!usable) btn.disabled=true;
+    wrap.appendChild(btn);
+  });
+  Audio.voice(npcId);
+  openModal('modal-social');
+}
+function applySocial(id, targetId){
+  var act=SOCIAL.filter(function(a){return a.id===id;})[0];
+  if(!act) return {id:id, dread:G.dread, npcs:npcList()};
+  var npc=G.npcs[targetId] || G.npcs[Object.keys(G.npcs)[0]];
+  var dreadBefore=G.dread;
+  var wd=act.wax_delta||0;
+  if(wd<0){ var spend=Math.min(-wd, G.wax); G.wax-=spend; G.socialWaxSpent+=spend; }
+  else if(wd>0){ G.wax=clamp(G.wax+wd,0,WAXCLK.max||30); }
+  var dd=act.dread_delta||0;
+  G.dread=clamp(G.dread+dd, DREADCLK.min, DREADCLK.max);
+  // Marked+ : warm acts draw the dark closer (+1 extra Dread)
+  if(act.polarity==='warm' && dreadTierIndex(G.dread)>=2 && G.depth>=2){
+    G.dread=clamp(G.dread+1, DREADCLK.min, DREADCLK.max);
+  }
+  if(npc){
+    var ddr=act.disposition_delta||[0,0];
+    var d=ddr[0]+Math.floor((G.rng?G.rng():Math.random())*(ddr[1]-ddr[0]+1));
+    npc.numeric=clamp(npc.numeric+d,-2,2); npc.disposition=dispoName(npc.numeric);
+  }
+  if(act.polarity==='warm'){ G.warmActs++; } else { G.coldActs++; }
+  G.socialLog.push({id:id, dreadBefore:dreadBefore, dreadAfter:G.dread});
+  Audio.social(act.polarity);
+  if(G.wax<=0 && !G.guttering) enterGuttering();
+  renderHUD();
+  return {dread:G.dread, npcs:npcList()};
+}
+
+/* =========================================================
+   16. SCORE
+   ========================================================= */
+function computeScore(){
+  var rows=[];
+  var base = G.won ? (G.wonType==='full'?1000:400) : 0;
+  if(G.won) rows.push(['Escape ('+(G.wonType==='full'?'own light':'borrowed door')+')', base]);
+  if(G.won && G.wonType==='full'){ rows.push(['Wax remaining ×10', Math.round(G.wax)*10]); }
+  rows.push(['Matches remaining ×25', G.matches*25]);
+  rows.push(['Lore fragments ×75', G.lore*75]);
+  rows.push(['Warm acts ×30', G.warmActs*30]);
+  rows.push(['Cold acts ×-20', G.coldActs*-20]);
+  var zc=Object.keys(G.zones).filter(function(d){return G.zones[d];}).length;
+  rows.push(['Zone bonus (floors) ×100', zc*100]);
+  rows.push(['Near-miss ×50', G.nearMiss*50]);
+  var total=0; rows.forEach(function(r){ total+=r[1]; });
+  return {rows:rows, total:total};
+}
+
+/* =========================================================
+   17. END STATES
+   ========================================================= */
+function win(type){
+  G.won=true; G.wonType=type; G.inGame=false;
+  Audio.victory(type==='borrowed');
+  Juice.flashWarm(); Juice.punchTo(1); Juice.burst(playerScreen().x,playerScreen().y,20,'#FFD27A',3,2.6,900,0.02);
+  Juice.transition();
+  document.getElementById('winTitle').textContent = type==='full'
+    ? 'You escaped on your own light.' : 'You slipped out in another\u2019s wake.';
+  var sc=computeScore();
+  document.getElementById('winScore').innerHTML=scoreHTML(sc)+
+    '<div class="legend" style="margin-top:8px;">seed '+G.seed+' · floor '+(G.depth===MAX_DEPTH?'Ground':G.depth)+'</div>';
+  showScreen('victory');
+}
+function endGame(){
+  G.dead=true; G.inGame=false;
+  Audio.death();
+  Juice.flashRed(); Juice.shake(6); Juice.punchTo(1); Juice.burst(playerScreen().x,playerScreen().y,18,'#8A3D12',2.6,2.4,900,0.02);
+  Juice.transition();
+  var sc=computeScore();
+  document.getElementById('overStats').textContent='seed '+G.seed+' · floor reached '+(G.depth===MAX_DEPTH?'Ground':G.depth)+
+    ' · turns '+G.turn+' · warm '+G.warmActs+' / cold '+G.coldActs;
+  document.getElementById('overScore').innerHTML=scoreHTML(sc);
+  showScreen('over');
+}
+function scoreHTML(sc){
+  var h='';
+  sc.rows.forEach(function(r){ h+='<div class="r"><span>'+r[0]+'</span><span>'+r[1]+'</span></div>'; });
+  h+='<div class="r tot"><span>Total</span><span>'+sc.total+'</span></div>';
+  return h;
+}
+
+/* =========================================================
+   18. JOURNAL
+   ========================================================= */
+function openJournal(){
+  var lines=[];
+  lines.push('Wax '+Math.round(G.wax)+' / '+(WAXCLK.max||30)+' · radius '+effRadius());
+  lines.push('Matches '+G.matches+' · Key '+(G.key?'held':'—')+' · Lore '+G.lore);
+  lines.push('Dread '+G.dread+' — '+dreadLabel(G.dread));
+  if(G.snuffed) lines.push('The candle is snuffed. Use a match to re-light.');
+  if(G.guttering) lines.push('GUTTERING DARK: grace '+G.grace+' turns. Orlok closes.');
+  if(G.loreFragments && G.loreFragments.length){
+    lines.push('&mdash; lore recovered &mdash;');
+    G.loreFragments.forEach(function(txt,i){ lines.push('<i>'+txt+'</i>'); });
+  }
+  Object.keys(G.npcs).forEach(function(id){ var n=G.npcs[id];
+    if(n.floor===G.depth) lines.push(n.name+' — '+n.disposition+' (floor '+n.floor+')'); });
+  if(!Object.keys(G.npcs).some(function(id){return G.npcs[id].floor===G.depth;})) lines.push('No survivors on this floor.');
+  var body=document.getElementById('journalBody');
+  body.innerHTML=lines.join('<br>')+
+    '<div class="btnrow" style="margin-top:10px;">'+
+    (G.matches>0 && (G.snuffed||G.guttering) ? '<button class="mbtn small" id="jn-relight">Use Match</button>' : '')+
+    '</div>';
+  openModal('modal-journal');
+  var rb=document.getElementById('jn-relight');
+  if(rb) rb.addEventListener('click',function(){ tryRelight(); closeModal('modal-journal'); });
+}
+
+/* =========================================================
+   18b. JUICE — game feel (particles, screen shake, hit-stop,
+        floating popups, screen transitions).  Purely additive:
+        every effect is gated by the existing juiceEnabled flag
+        (and suppressed under prefers-reduced-motion), and it
+        never reads, gates or mutates gameplay state.
+   ========================================================= */
+var Juice = (function(){
+  var parts=[], pops=[];             // particle & popup pools
+  var amp=0;                         // current shake amplitude (px)
+  var stop=0;                        // hit-stop frames remaining
+  var punch=0;                       // zoom-punch amount 0..1
+  var flash=0, flashCol='255,210,122';
+  var MAXP=48, MAXPOP=8;             // caps: <50 particles, <=8 popups
+  function on(){ return !!(G && G.flags && G.flags.juiceEnabled && !reducedMotion); }
+  function mild(){ return !!(G && G.flags && G.flags.juiceEnabled); } // survives reduced-motion (informational)
+  function addP(x,y,vx,vy,life,color,size,grav){
+    if(parts.length>=MAXP) parts.shift();
+    parts.push({x:x,y:y,vx:vx,vy:vy,life:life,max:life,color:color,size:size,grav:grav||0});
+  }
+  function burst(x,y,n,color,spd,size,life,grav){
+    if(!on()) return;
+    for(var i=0;i<n;i++){ var a=Math.random()*Math.PI*2, s=spd*(0.35+Math.random());
+      addP(x,y,Math.cos(a)*s,Math.sin(a)*s-0.25,life*(0.55+Math.random()*0.7),color,
+           size*(0.55+Math.random()*0.9),(grav==null?0.04:grav)); }
+  }
+  function update(dt){
+    var f=dt/16.67;
+    for(var i=parts.length-1;i>=0;i--){ var p=parts[i];
+      p.life-=dt; p.x+=p.vx*f; p.y+=p.vy*f; p.vy+=p.grav*f; p.vx*=0.985;
+      if(p.life<=0) parts.splice(i,1);
+    }
+    for(var j=pops.length-1;j>=0;j--){ var q=pops[j];
+      q.life-=dt; q.y+=q.vy*f; q.vy*=0.96;
+      if(q.life<=0) pops.splice(j,1);
+    }
+    amp = amp>0.05 ? amp*Math.pow(0.82,f) : 0;
+    punch = punch>0.004 ? punch*Math.pow(0.80,f) : 0;
+    if(flash>0){ flash-=dt/220; if(flash<0) flash=0; }
+    if(stop>0) stop-=f;
+  }
+  function offset(){
+    if(amp<=0) return {x:0,y:0};
+    return { x:(Math.random()*2-1)*amp, y:(Math.random()*2-1)*amp };
+  }
+  function drawParticles(c){
+    for(var i=0;i<parts.length;i++){ var p=parts[i]; var a=Math.max(0,p.life/p.max);
+      c.globalAlpha=a*0.9; c.fillStyle=p.color;
+      c.beginPath(); c.arc(p.x,p.y,Math.max(0.6,p.size*a+0.4),0,Math.PI*2); c.fill();
+    }
+    c.globalAlpha=1;
+  }
+  function drawPopups(c){
+    for(var j=0;j<pops.length;j++){ var q=pops[j]; var a=Math.min(1,q.life/500);
+      c.globalAlpha=a; c.fillStyle=q.color;
+      c.font='bold '+Math.round(q.size*(1+0.22*(1-a)))+'px Georgia,serif';
+      c.textAlign='center'; c.textBaseline='middle';
+      c.shadowColor='rgba(0,0,0,0.85)'; c.shadowBlur=6;
+      c.fillText(q.text,q.x,q.y); c.shadowBlur=0;
+    }
+    c.globalAlpha=1;
+  }
+  return {
+    update:update,
+    freeze:function(){ return stop>0; },
+    offset:offset,
+    drawParticles:drawParticles,
+    drawPopups:drawPopups,
+    punchAmt:function(){ return punch; },
+    flashAmt:function(){ return flash; },
+    flashArg:function(){ return flashCol; },
+    shake:function(px){ if(!on()) return; amp=Math.max(amp,Math.min(6,px||3)); },
+    stop:function(f){ if(!on()) return; stop=Math.max(stop,Math.min(5,f||3)); },
+    punchTo:function(v){ if(on()) punch=Math.max(punch,v||1); },
+    flashRed:function(){ if(on()){ flash=Math.max(flash,0.16); flashCol='192,26,26'; } },
+    flashWarm:function(){ if(on()){ flash=Math.max(flash,0.12); flashCol='255,210,122'; } },
+    burst:burst,
+    pop:function(text,x,y,color,size){
+      if(!mild()) return;
+      if(pops.length>=MAXPOP) pops.shift();
+      pops.push({text:text,x:x,y:y,vy:-0.9,life:1100,color:color||'#FFD27A',size:size||15});
+    },
+    transition:function(){
+      if(!mild()) return;
+      var el=document.getElementById('juice-transition'); if(!el) return;
+      el.style.transition='none'; el.style.opacity='1';
+      requestAnimationFrame(function(){ el.style.transition='opacity .5s ease-out'; el.style.opacity='0'; });
+    }
+  };
+})();
+
+/* =========================================================
+   19. RENDER LOOP
+   ========================================================= */
+var t0=performance.now(), flick=0;
+function drawScene(c){
+  var fl=G.floors[G.depth]; if(!fl) return;
+  var revealed=G.revealed[G.depth]||new Set();
+  Object.keys(fl.rooms).forEach(function(slug){
+    var r=fl.rooms[slug];
+    var isRev=revealed.has(r.x+','+r.y);
+    var sp=roomScreen(r.x,r.y);
+    var half=tile/2-4;
+    var tint=TINT[r.archetype]||[40,48,58];
+    // room body
+    c.save();
+    c.globalAlpha = isRev?1:0.35;
+    c.fillStyle='rgba('+tint[0]+','+tint[1]+','+tint[2]+',0.55)';
+    roundRect(c, sp.x-half, sp.y-half, half*2, half*2, 8); c.fill();
+    c.strokeStyle='rgba(76,90,107,'+(isRev?0.85:0.35)+')'; c.lineWidth=2; c.stroke();
+    // exits as small amber notches
+    Object.keys(r.exits).forEach(function(d){
+      if(['north','south','east','west'].indexOf(d)<0) return;
+      var ox=0,oy=0;
+      if(d==='north') oy=-half; else if(d==='south') oy=half; else if(d==='east') ox=half; else ox=-half;
+      c.fillStyle='rgba(232,145,43,'+(isRev?0.9:0.3)+')';
+      if(d==='north'||d==='south') c.fillRect(sp.x-6, sp.y+oy-2, 12, 4);
+      else c.fillRect(sp.x+ox-2, sp.y-6, 4, 12);
+    });
+    // archetype glyph
+    c.globalAlpha=isRev?1:0.4;
+    drawArchetypeGlyph(c, sp.x, sp.y, r.archetype);
+    // things
+    (r.items||[]).forEach(function(it,i){
+      c.fillStyle= it==='exit-key' ? '#FFD27A' : (it==='matches'?'#E8912B':'#8A3D12');
+      c.beginPath(); c.arc(sp.x-half+10+i*9, sp.y+half-10, 3, 0, Math.PI*2); c.fill();
+    });
+    // creature silhouette
+    if(r.encounter && !G.cleared[G.depth+':'+slug]){
+      var e=ROSTER.filter(function(x){return x.id===r.encounter;})[0];
+      if(e && e.kind==='creature' && isRev){ drawSilhouette(c, sp.x, sp.y, e.id, 0); }
+    }
+    // npc silhouette
+    if(r.npc){
+      var live=Object.keys(G.npcs).filter(function(id){return G.npcs[id].room===slug && G.npcs[id].floor===G.depth;});
+      if(live.length && isRev){ drawNpc(c, sp.x+14, sp.y-8, live[0]); }
+    }
+    c.restore();
+  });
+  // player at center
+  var p=playerScreen();
+  drawPlayer(c, p.x, p.y);
+  // hover highlight
+  if(hoverTile && G.inGame){
+    var hs=roomAtCoord(hoverTile.x,hoverTile.y);
+    if(hs){ var hr=fl.rooms[hs]; var sp2=roomScreen(hr.x,hr.y);
+      c.strokeStyle='rgba(255,210,122,0.8)'; c.lineWidth=2;
+      roundRect(c, sp2.x-tile/2+4, sp2.y-tile/2+4, tile-8, tile-8, 8); c.stroke(); }
+  }
+}
+function drawArchetypeGlyph(c,x,y,arch){
+  c.save();
+  c.strokeStyle='rgba(232,145,43,0.7)'; c.lineWidth=2;
+  if(arch==='descending-stair'){
+    c.beginPath(); c.moveTo(x-12,y+10); c.lineTo(x-4,y-2); c.lineTo(x+2,y+10); c.lineTo(x+10,y-4); c.stroke();
+    c.fillStyle='rgba(255,210,122,0.5)'; c.fillRect(x-16,y-14,32,4);
+  } else if(arch==='candle-nook'){
+    c.fillStyle='rgba(255,210,122,0.9)'; c.beginPath(); c.arc(x,y-8,4,0,Math.PI*2); c.fill();
+    c.fillStyle='rgba(232,145,43,0.8)'; c.fillRect(x-3,y-4,6,16);
+  } else if(arch==='shadow-hall'){
+    c.strokeStyle='rgba(192,26,26,0.6)';
+    c.beginPath(); c.moveTo(x-10,y+12); c.quadraticCurveTo(x,y-18,x+10,y+12); c.stroke();
+  } else if(arch==="scribe-alcove"){
+    c.fillStyle='rgba(200,190,170,0.6)'; c.fillRect(x-9,y-11,18,22);
+    c.strokeStyle='rgba(42,51,61,0.9)'; c.beginPath(); c.moveTo(x-3,y-6); c.lineTo(x+3,y-6); c.moveTo(x-3,y); c.lineTo(x+3,y); c.stroke();
+  } else if(arch==='survivor-camp'){
+    c.fillStyle='rgba(232,145,43,0.7)'; c.beginPath(); c.moveTo(x,y-12); c.lineTo(x-12,y+10); c.lineTo(x+12,y+10); c.closePath(); c.fill();
+  } else if(arch==='spire-entry'){
+    c.strokeStyle='rgba(76,90,107,0.9)'; c.beginPath(); c.arc(x,y+8,16,Math.PI,0); c.stroke();
+  }
+  c.restore();
+}
+function drawSilhouette(c,x,y,id,s){
+  c.save(); c.translate(x,y+(s||0));
+  c.fillStyle='rgba(5,4,3,0.98)'; c.strokeStyle='rgba(232,145,43,0.55)'; c.lineWidth=1.4;
+  if(id==='bats'){
+    c.beginPath(); c.moveTo(-14,-4); c.quadraticCurveTo(-4,-12,0,-2); c.quadraticCurveTo(4,-12,14,-4); c.quadraticCurveTo(6,2,0,-2); c.quadraticCurveTo(-6,2,-14,-4); c.closePath(); c.fill(); c.stroke();
+  } else if(id==='rats'){
+    c.beginPath(); c.ellipse(0,2,14,7,0,0,Math.PI*2); c.fill(); c.stroke();
+    c.beginPath(); c.moveTo(12,2); c.quadraticCurveTo(22,0,26,6); c.stroke();
+  } else if(id==='spiders'){
+    for(var i=0;i<4;i++){ c.beginPath(); c.moveTo(0,0); c.lineTo(-16+i*10, -12+i*4); c.moveTo(0,0); c.lineTo(16-i*10, 12-i*4); c.stroke(); }
+    c.beginPath(); c.arc(0,0,5,0,Math.PI*2); c.fill(); c.stroke();
+  } else if(id==='wolves'){
+    c.beginPath(); c.moveTo(-18,6); c.lineTo(-10,-4); c.lineTo(-2,-2); c.lineTo(2,-6); c.lineTo(8,-2); c.lineTo(18,4); c.lineTo(14,10); c.lineTo(-14,10); c.closePath(); c.fill(); c.stroke();
+  } else if(id==='shades'){
+    c.beginPath(); c.moveTo(0,-18); c.quadraticCurveTo(14,-2,10,16); c.quadraticCurveTo(0,10,-10,16); c.quadraticCurveTo(-14,-2,0,-18); c.closePath(); c.fill(); c.stroke();
+  } else if(id==='light-eater'){
+    c.beginPath(); c.arc(0,0,16,0,Math.PI*2); c.fill(); c.stroke();
+    c.globalCompositeOperation='destination-out'; c.beginPath(); c.arc(0,0,9,0,Math.PI*2); c.fill(); c.globalCompositeOperation='source-over';
+  } else {
+    c.beginPath(); c.arc(0,0,10,0,Math.PI*2); c.fill(); c.stroke();
+  }
+  c.restore();
+}
+function drawNpc(c,x,y,id){
+  c.save(); c.translate(x,y);
+  c.fillStyle='rgba(5,4,3,0.98)'; c.strokeStyle='rgba(232,145,43,0.6)'; c.lineWidth=1.3;
+  if(id==='vlask'){ c.fillRect(-7,-16,14,26); c.strokeRect(-7,-16,14,26); c.fillRect(6,-6,7,10); }
+  else if(id==='sister-marta'){ c.beginPath(); c.moveTo(0,-18); c.lineTo(8,10); c.lineTo(-8,10); c.closePath(); c.fill(); c.stroke(); }
+  else if(id==='ilona'){ c.beginPath(); c.moveTo(-8,-14); c.quadraticCurveTo(6,-16,8,2); c.lineTo(2,10); c.lineTo(-10,6); c.closePath(); c.fill(); c.stroke(); }
+  else if(id==='petr'){ c.beginPath(); c.arc(0,-10,6,0,Math.PI*2); c.fill(); c.stroke(); c.fillRect(-5,-4,10,14); }
+  else { c.beginPath(); c.moveTo(-6,-14); c.lineTo(8,-8); c.lineTo(4,10); c.lineTo(-8,6); c.closePath(); c.fill(); c.stroke(); }
+  c.restore();
+}
+function drawPlayer(c,x,y){
+  c.save(); c.translate(x,y);
+  c.fillStyle='rgba(5,4,3,0.98)'; c.strokeStyle='rgba(255,210,122,0.85)'; c.lineWidth=1.6;
+  c.beginPath(); c.moveTo(0,-20); c.lineTo(9,10); c.lineTo(-9,10); c.closePath(); c.fill(); c.stroke();
+  // flame
+  var fl = G.guttering?4:(G.wax<=6?5:6);
+  var wob = reducedMotion?0:Math.sin(flick*8)*1.6;
+  c.fillStyle='rgba(255,210,122,0.95)';
+  c.beginPath(); c.ellipse(wob,-26,4,fl,0,0,Math.PI*2); c.fill();
+  c.fillStyle='rgba(232,145,43,0.7)';
+  c.beginPath(); c.ellipse(wob,-30,2.4,fl*0.7,0,0,Math.PI*2); c.fill();
+  c.restore();
+}
+function roundRect(c,x,y,w,h,r){
+  c.beginPath();
+  c.moveTo(x+r,y); c.arcTo(x+w,y,x+w,y+h,r); c.arcTo(x+w,y+h,x,y+h,r);
+  c.arcTo(x,y+h,x,y,r); c.arcTo(x,y,x+w,y,r); c.closePath();
+}
+
+function render(now){
+  var dt=Math.min(50, now-t0); t0=now;
+  Juice.update(dt);
+  if(!Juice.freeze()){ flick += dt/1000; }  // hit-stop freezes the flame flicker
+  // camera/mask easing
+  camX += (camTargetX-camX)*0.18; camY += (camTargetY-camY)*0.18;
+  maskR += (maskRTarget-maskR)*0.18;
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+  ctx.fillStyle='#000'; ctx.fillRect(0,0,cssW,cssH);
+  if(G){
+    // update mask target
+    maskRTarget = effRadius()*tile;
+    sctx.setTransform(DPR,0,0,DPR,0,0);
+    sctx.clearRect(0,0,cssW,cssH);
+    drawScene(sctx);
+
+    // mask pass
+    mctx.setTransform(DPR,0,0,DPR,0,0);
+    mctx.clearRect(0,0,cssW,cssH);
+    mctx.drawImage(scene,0,0,cssW,cssH);
+    mctx.globalCompositeOperation='destination-in';
+    var p=playerScreen();
+    var RR = maskR*(1 + (reducedMotion?0:Math.sin(flick*1.2)*0.015));
+    var g=mctx.createRadialGradient(p.x,p.y,0,p.x,p.y,Math.max(1,RR));
+    g.addColorStop(0.00,'rgba(255,210,122,0.98)');
+    g.addColorStop(0.10,'rgba(255,210,122,0.92)');
+    g.addColorStop(0.28,'rgba(232,145,43,0.80)');
+    g.addColorStop(0.55,'rgba(138,61,18,0.55)');
+    g.addColorStop(0.82,'rgba(76,90,107,0.22)');
+    g.addColorStop(1.00,'rgba(76,90,107,0.00)');
+    mctx.fillStyle=g; mctx.fillRect(0,0,cssW,cssH);
+    mctx.globalCompositeOperation='source-over';
+
+    // spill pass
+    pctx.setTransform(DPR,0,0,DPR,0,0);
+    pctx.clearRect(0,0,cssW,cssH);
+    pctx.drawImage(scene,0,0,cssW,cssH);
+    pctx.globalCompositeOperation='destination-in';
+    var sg=pctx.createRadialGradient(p.x,p.y,RR*0.9,p.x,p.y,RR*1.3);
+    sg.addColorStop(0.0,'rgba(76,90,107,0.16)');
+    sg.addColorStop(0.5,'rgba(76,90,107,0.09)');
+    sg.addColorStop(1.0,'rgba(76,90,107,0.00)');
+    pctx.fillStyle=sg; pctx.fillRect(0,0,cssW,cssH);
+    pctx.globalCompositeOperation='source-over';
+
+    // juice: screen shake + zoom-punch (scene+mask+popups offset together
+    // so every layer stays aligned), dust motes, particles, popups
+    var sh=Juice.offset();
+    var z=1+Juice.punchAmt()*0.05;
+    ctx.save();
+    ctx.translate(cssW/2,cssH/2); ctx.scale(z,z);
+    ctx.translate(-cssW/2+sh.x,-cssH/2+sh.y);
+    ctx.drawImage(spill,0,0,cssW,cssH);
+    ctx.drawImage(masked,0,0,cssW,cssH);
+    // dust motes
+    if(G.flags.juiceEnabled && !reducedMotion){
+      for(var i=0;i<10;i++){
+        var mx=p.x+Math.sin(flick*0.7+i*2.3)*maskR*0.7;
+        var my=p.y+Math.cos(flick*0.5+i*1.7)*maskR*0.6;
+        ctx.fillStyle='rgba(255,210,122,0.05)';
+        ctx.beginPath(); ctx.arc(mx,my,1.2,0,Math.PI*2); ctx.fill();
+      }
+    }
+    Juice.drawParticles(ctx);
+    Juice.drawPopups(ctx);
+    ctx.restore();
+
+    // juice: impact/near-miss flash (screen anchored so it still reads)
+    if(Juice.flashAmt()>0){
+      ctx.fillStyle='rgba('+Juice.flashArg()+','+Juice.flashAmt().toFixed(3)+')';
+      ctx.fillRect(0,0,cssW,cssH);
+    }
+
+    // red pulse when guttering/dead/dread high
+    if(G.guttering && !reducedMotion){
+      var a=0.05+0.05*Math.sin(flick*2.0);
+      ctx.fillStyle='rgba(192,26,26,'+Math.max(0,a)+')'; ctx.fillRect(0,0,cssW,cssH);
+    }
+    // void breathing
+    var breath = reducedMotion?0.03:(0.02+0.02*(0.5+0.5*Math.sin(flick*2*Math.PI/6)));
+    ctx.fillStyle='rgba(0,0,0,'+breath+')'; ctx.fillRect(0,0,cssW,cssH);
+  }
+  requestAnimationFrame(render);
+}
+
+/* =========================================================
+   20. WORLD HOOKS (thin wrappers over the same handlers)
+   ========================================================= */
+window.worldState=function(){
+  var fl=G.floors[G.depth];
+  var rooms=snapshotRooms(fl);
+  return { seed:G.seed, start:fl.start, depth:G.depth, rooms:rooms };
+};
+window.systemState=function(){
+  return {
+    seed:G.seed,
+    dread:G.dread,
+    clocks:{
+      wax:{ value:G.wax, min:WAXCLK.min||0, max:WAXCLK.max||30 },
+      dread:{ value:G.dread, min:DREADCLK.min, max:DREADCLK.max }
+    },
+    npcs:npcList(),
+    socialActions:SOCIAL.map(function(a){return a.id;}),
+    encounters:ROSTER.map(function(e){return e.id;}),
+    socialLog:G.socialLog.slice()
+  };
+};
+window.move=function(dir){ return tryMove(dir); };
+window.social=function(id){
+  if(!SOCIAL.some(function(a){return a.id===id;})) return {dread:G.dread, npcs:npcList()};
+  var t=G.socialTarget || Object.keys(G.npcs)[0];
+  return applySocial(id, t);
+};
+window.pristineWorldState=function(){ return deepClone(G.pristine); };
+window.pristineState=window.pristineWorldState;
+window.pristineSystemState=function(){
+  return {
+    seed:G.pristineSeed,
+    dread:0,
+    clocks:{ wax:{value:WAXR.start||30,min:WAXCLK.min||0,max:WAXCLK.max||30},
+             dread:{value:0,min:DREADCLK.min,max:DREADCLK.max} },
+    npcs:NPCS_TPL.map(function(n){ return {id:n.id,name:n.name,disposition:n.disposition,numeric:n.numeric,floor:0}; }),
+    socialActions:SOCIAL.map(function(a){return a.id;}),
+    encounters:ROSTER.map(function(e){return e.id;}),
+    socialLog:[]
+  };
+};
+window.flags=null; // set in boot
+window.setSeed=function(s){ newRun(s>>>0); };
+window.audioTest=function(scenario,seed,opts){ return Audio.offline(scenario,seed,opts); };
+
+/* =========================================================
+   21. BOOT / NEW RUN
+   ========================================================= */
+function startGame(seed){
+  if(seed==null) seed = (G && G.seed!=null) ? G.seed : SEED;
+  Audio.resetMix();
+  newRun(seed);
+  G.inGame=true;
+  showScreen('gameplay');
+  Juice.transition();
+  reveal();
+  renderHUD();
+  enterRoom(G.pos);
+}
+function newRun(seed){
+  makeState(seed);
+  window.SEED=seed;
+  window.flags=G.flags;
+  // pristine boot snapshot (floor 1, pre-mutation)
+  var fl1=G.floors[1];
+  G.pristine={ seed:G.seed, start:fl1.start, depth:1, rooms:snapshotRooms(fl1) };
+  G.pristineSeed=G.seed;
+  document.getElementById('seedline').textContent='seeded run: '+G.seed;
+  resize();
+  renderHUD();
+  refreshToggles();
+}
+function boot(){
+  makeState(SEED);
+  window.flags=G.flags;
+  var fl1=G.floors[1];
+  G.pristine={ seed:G.seed, start:fl1.start, depth:1, rooms:snapshotRooms(fl1) };
+  G.pristineSeed=G.seed;
+  document.getElementById('seedline').textContent='seeded run: '+G.seed;
+  resize();
+  bindCanvasInput();
+  bindUI();
+  refreshToggles();
+  showScreen('title');
+  requestAnimationFrame(render);
+}
+
+/* =========================================================
+   22. UI BINDINGS
+   ========================================================= */
+function bindUI(){
+  var unlock=function(){ Audio.unlock(); };
+  document.body.addEventListener('touchstart',unlock,{passive:true});
+  document.body.addEventListener('mousedown',unlock);
+  document.body.addEventListener('keydown',unlock);
+
+  document.getElementById('btn-start').addEventListener('click',function(){ Audio.unlock(); Audio.ui(); startGame(G.seed); });
+  document.getElementById('btn-howto').addEventListener('click',function(){ Audio.ui(); howtoReturn='title'; showScreen('howto'); });
+  document.getElementById('btn-howto-back').addEventListener('click',function(){ Audio.ui(); showScreen(howtoReturn); });
+  document.getElementById('btn-title-settings').addEventListener('click',function(){ Audio.ui(); settingsReturn='title'; showScreen('settings'); });
+  document.getElementById('btn-settings-back').addEventListener('click',function(){ Audio.ui(); showScreen(settingsReturn); });
+
+  bindToggle('set-music',function(){ Audio.setMusic(!Audio.state.music); });
+  bindToggle('set-sfx',function(){ Audio.setSfx(!Audio.state.sfx); });
+  bindToggle('pause-music',function(){ Audio.setMusic(!Audio.state.music); });
+  bindToggle('pause-sfx',function(){ Audio.setSfx(!Audio.state.sfx); });
+  bindToggle('set-hints',function(){ G.hints=!G.hints; });
+  ['npcItemUse','creatureAttacksNpc','npcTrapTrip','allianceRadius','juiceEnabled'].forEach(function(f){
+    bindToggle('flag-'+f,function(){ G.flags[f]=!G.flags[f]; });
+  });
+
+  document.getElementById('btn-credits').addEventListener('click',function(){ Audio.ui();
+    var c=document.getElementById('creditsText'); c.style.display = c.style.display==='none'?'block':'none'; });
+  document.getElementById('btn-reset').addEventListener('click',function(){ Audio.ui();
+    if(confirm('Reset the run with a new seed?')){ newRun((Math.floor(Math.random()*4294967296)>>>0)); showScreen('title'); } });
+
+  document.getElementById('btn-pause').addEventListener('click',function(){ Audio.ui(); if(G.inGame){ showScreen('pause'); } });
+  document.getElementById('btn-resume').addEventListener('click',function(){ Audio.ui(); showScreen('gameplay'); });
+  document.getElementById('btn-pause-howto').addEventListener('click',function(){ Audio.ui(); howtoReturn='pause'; showScreen('howto'); });
+  document.getElementById('btn-pause-settings').addEventListener('click',function(){ Audio.ui(); settingsReturn='pause'; showScreen('settings'); });
+  document.getElementById('btn-pause-title').addEventListener('click',function(){ Audio.ui(); G.inGame=false; showScreen('title'); });
+
+  document.getElementById('btn-over-retry').addEventListener('click',function(){ Audio.ui(); startGame(G.seed); });
+  document.getElementById('btn-over-title').addEventListener('click',function(){ Audio.ui(); showScreen('title'); });
+  document.getElementById('btn-win-again').addEventListener('click',function(){ Audio.ui(); startGame((Math.floor(Math.random()*4294967296)>>>0)); });
+  document.getElementById('btn-win-title').addEventListener('click',function(){ Audio.ui(); showScreen('title'); });
+
+  document.getElementById('btn-wait').addEventListener('click',function(){ Audio.ui(); if(G.inGame&&!isModalOpen()){ takeTurn('wait'); } });
+  document.getElementById('btn-usematch').addEventListener('click',function(){ Audio.ui(); if(G.inGame&&!isModalOpen()){ if(!tryRelight()){ toast('NO MATCHES'); } } });
+  document.getElementById('btn-descend').addEventListener('click',function(){ Audio.ui(); if(G.inGame&&!isModalOpen()){
+    if(G.depth<MAX_DEPTH){ descend(); } else { attemptExit(); }
+  } });
+  document.getElementById('btn-journal').addEventListener('click',function(){ Audio.ui(); openJournal(); });
+  document.getElementById('btn-journal-close').addEventListener('click',function(){ Audio.ui(); closeModal('modal-journal'); });
+  document.getElementById('btn-talk').addEventListener('click',function(){ Audio.ui();
+    var id=coLocatedNpc(); if(id){ openSocial(id); } });
+  document.getElementById('btn-soc-close').addEventListener('click',function(){ Audio.ui(); closeModal('modal-social'); });
+
+  // keyboard
+  window.addEventListener('keydown',function(e){
+    Audio.unlock();
+    var k=e.key;
+    if(k==='Escape'){
+      if(isModalOpen()){ closeOpenModal(); return; }
+      if(G.inGame){ if(currentScreen==='pause') showScreen('gameplay'); else showScreen('pause'); }
+      return;
+    }
+    if(currentScreen!=='gameplay' || !G.inGame || isModalOpen()) {
+      // 1-6 handled when social modal open
+      if(document.getElementById('modal-social').classList.contains('active')){
+        var n=parseInt(k,10);
+        if(n>=1&&n<=6){ var btns=document.querySelectorAll('#socActions .mbtn'); if(btns[n-1] && !btns[n-1].disabled){ btns[n-1].click(); } }
+      }
+      // Space / 1-2 confirms encounter options (GDD 3.3)
+      if(document.getElementById('modal-encounter').classList.contains('active')){
+        var eb=document.querySelectorAll('#encBtns .mbtn'); var ei=parseInt(k,10);
+        if((k===' '||k==='Enter') && eb[0]){ eb[0].click(); e.preventDefault(); }
+        else if(ei>=1 && ei<=eb.length){ eb[ei-1].click(); e.preventDefault(); }
+      }
+      return;
+    }
+    if(k==='w'||k==='W'||k==='ArrowUp'){ tryMove('north'); e.preventDefault(); }
+    else if(k==='s'||k==='S'||k==='ArrowDown'){ tryMove('south'); e.preventDefault(); }
+    else if(k==='a'||k==='A'||k==='ArrowLeft'){ tryMove('west'); e.preventDefault(); }
+    else if(k==='d'||k==='D'||k==='ArrowRight'){ tryMove('east'); e.preventDefault(); }
+    else if(k===' '){ takeTurn('wait'); e.preventDefault(); }
+    else if(k==='q'||k==='Q'){ descend(); }
+  });
+}
+
+/* =========================================================
+   23. GO
+   ========================================================= */
+boot();
+
+})();
+</script>
+</body>
+</html>
+<script defer src="https://static.itch.io/htmlgame.js" type="text/javascript"></script>

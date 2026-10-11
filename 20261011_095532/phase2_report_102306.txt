@@ -1,0 +1,156 @@
+PHASE 2 REPORT — WORLD-MODEL CHECK (Holotron)
+Agent: puppeteer_agent (browser work agent-driven via playwright-cli/Firefox; dependency-free checker run as a script)
+Game: /home/fluke/Holotron/20261011_095532/index.html  (sha1 a87a8030…, mtime 2026-10-11 10:10:07)
+Template: /home/fluke/Holotron/20261011_095532/world_template.json  (sha1 5db73f73…)
+States written: state_20261010.json (floor-1 pristine), state_20261010_d2.json (pristineFloor(2)),
+                state_20261010_d3.json (pristineFloor(3) — companion/trap floor)
+Timestamp: 2026-10-11 10:23  |  suffix 102306
+
+===============================================================================
+1. DETERMINISM
+===============================================================================
+- window.TEMPLATE.test_seed = 20261010 (non-null).  [PASS]
+- Pinned BEFORE any app script via context.addInitScript(() => { window.SEED = 20261010; })
+  AND the game's own ?test=1 opt-in.
+- Post-load verification: window.SEED === 20261010 === TEMPLATE.test_seed. [PASS]
+- Boot snapshot taken BEFORE any move (title screen; then Start pressed only for the
+  run-time battery, not for the Phase-2 extraction).
+- Determinism ESTABLISHED.
+
+===============================================================================
+2. EXTRACTION  (fail-closed hooks all present)
+===============================================================================
+- Hooks present: worldState=function, systemState=function, social=function, move=function,
+  testState=function, pristineWorldState=function, pristineFloor=function,
+  pristineSystemState=function, TEMPLATE=object, SEED=number, audioTest=function,
+  AUDIO_SPEC=object.  (No fail-closed condition.)
+- Exported state_20261010.json = { "world": <worldState()>, "systems": <systemState() incl. socialLog> }.
+  Floor-1 (active at boot): depth 1, start d1-spire-entry-1, 8 rooms; ALL declare an archetype.
+  Tally: spire-entry 1 | stair-corridor 3 | candle-nook 2 | shadow-hall 1 | descending-stair 1 —
+  all within declared bounds; start room archetype = entry (spire-entry).
+- Clocks normalized (.value): wax {value:32,min:0,max:40}, dread {value:0,min:0,max:8}.
+- NPC reachability (B7 gate): 5/5 NPCs placed — vlask(f2), sister-marta(f2), petr(f2),
+  ilona(f3), nadja(f3). required_encounters [bats, vlask, rats] all present in
+  systemState().encounters. At least one NPC reachable on test_seed: CONFIRMED.
+
+socialLog synthesis (behavioral; cold first so dread leaves its 0-floor)
+-------------------------------------------------------------------------
+- steal        dreadBefore=0 -> dreadAfter=1   (template dread_delta +1, sign matches)
+- share-light  dreadBefore=1 -> dreadAfter=0   (template dread_delta -1, sign matches)
+Both observations appended to systems.socialLog in every exported state. A game that
+merely echoed the template could not produce these deltas.
+
+===============================================================================
+3. STATE A — GAME FLOOR-1 (pristine boot)
+===============================================================================
+Command:
+  node scripts/check_template.mjs --template /home/fluke/Holotron/20261011_095532/world_template.json \
+       --state /home/fluke/Holotron/20261011_095532/state_20261010.json --fail-on spatial
+Output:
+  (no MISMATCH lines)
+  0 mismatch(es) — spatial 0, systemic 0 (mode=all, fail-on=spatial)
+  PASS — no spatial mismatch
+Exit code: 0
+
+===============================================================================
+4. STATE B — pristineFloor(2)
+===============================================================================
+Command:
+  node scripts/check_template.mjs --template .../world_template.json \
+       --state .../state_20261010_d2.json --fail-on spatial
+Output:
+  (no MISMATCH lines)
+  0 mismatch(es) — spatial 0, systemic 0 (mode=all, fail-on=spatial)
+  PASS — no spatial mismatch
+Exit code: 0
+
+===============================================================================
+5. STATE C — pristineFloor(3): COMPANION ADJACENCY + PLACEMENT INVARIANT
+===============================================================================
+Command:
+  node scripts/check_template.mjs --template .../world_template.json \
+       --state .../state_20261010_d3.json --fail-on spatial
+Output:
+  (no MISMATCH lines)
+  0 mismatch(es) — spatial 0, systemic 0 (mode=all, fail-on=spatial)
+  PASS — no spatial mismatch
+Exit code: 0
+
+Direct inspection of floor 3 (pinned seed 20261010):
+- Companion pair declared in template: spider-web {kind:"trap", companion:"spiders"}.
+- Placed on floor 3: spiders in d3-shadow-hall-1, spider-web in d3-shadow-hall-2.
+- Adjacency check: d3-shadow-hall-2 (web) <-> d3-shadow-hall-1 (spiders) EXIT-ADJACENT = TRUE.
+  -> companion adjacency PASS (the checker's checkCompanions was exercised, not skipped).
+- Placement invariant (no required thing in a creature/trap room): every shadow-hall room on
+  floor 3 carrying a creature/trap encounter has an EMPTY required-things list; floor-key and
+  lore-fragment sit only in the trap-free scribe-alcove. 0 violations.
+- Archetype tally floor 3: spire-entry 1 | stair-corridor 3 | candle-nook 2 | shadow-hall 2 |
+  scribe-alcove 2 | descending-stair 1 — all within declared bounds.
+
+===============================================================================
+6. ANTI-VACUITY CONTROL FIXTURES (run before trusting green)
+===============================================================================
+C1 golden_template + golden_state               -> 0 mismatch(es)  spatial 0, systemic 0  PASS  exit 0  [req exit 0]
+C2 golden_template + malformed                  -> 12 mismatch(es) spatial 4, systemic 8  FAIL  exit 1  [req >=2 spatial, exit 1]
+     spatial lines:
+       MISMATCH [spatial] dangling exit: hall north -> 'ghost-room' (no such room)
+       MISMATCH [spatial] unreachable room: 'island'
+       MISMATCH [spatial] required thing 'lamp' is not placed on any reachable room
+       MISMATCH [spatial] required thing 'key' is not placed on any reachable room
+C3 golden_template + malformed_archetypes       -> 3 mismatch(es)  spatial 3, systemic 0  FAIL  exit 1  [req >=2 spatial, exit 1]
+     spatial lines:
+       MISMATCH [spatial] room 'common-room': archetype 'audience' is undeclared
+       MISMATCH [spatial] archetype 'corridor': 1 room(s), expected 2..4
+       MISMATCH [spatial] archetype 'social': 0 room(s), expected 1..2
+C4 golden_template + malformed_systems          -> 7 mismatch(es)  spatial 0, systemic 7  PASS* exit 0  [req >=2 systemic, exit 0]
+     systemic lines (advisory):
+       MISMATCH [systemic] clock 'dread': value 9 out of [0,8]
+       MISMATCH [systemic] npc 'innkeeper': disposition 'vivacious' not in [...]
+       MISMATCH [systemic] npc 'innkeeper': numeric 5 out of [-2,2]
+       MISMATCH [systemic] social action 'threaten' missing from systemState
+       MISMATCH [systemic] action 'share-light': Dread moved 0->3 (sign 1), declared -1 (sign -1)
+       MISMATCH [systemic] encounter 'innkeeper' missing from systemState
+       MISMATCH [systemic] required encounter 'innkeeper' not present/reachable in systemState
+
+All four fixtures behaved exactly as required — the checker is NOT vacuously green, and
+under --fail-on spatial the systemic scope is correctly advisory (C4 exit 0).
+
+===============================================================================
+7. PHASE 2b — AUDIO (advisory)
+===============================================================================
+Hook path: window.AUDIO_SPEC present + window.audioTest present (AudioContext exists).
+Path used: OFFLINE (Audio.offline -> OfflineAudioContext.startRendering), not the live fallback.
+seed pinned = 20261010.
+
+Declared thresholds: bed {rms:0.02, bandRms:0.003}, cue {rms:0.01}.
+
+Scenario   kind  rms        bandRms    floor                 verdict
+bed        bed   0.02447    0.01669    rms>=0.02, band>=0.003 PASS
+tick       cue   0.02448    0.01669    rms>=0.01              PASS
+creature   cue   0.02447    0.01670    rms>=0.01              PASS
+wax        cue   0.02470    0.01692    rms>=0.01              PASS
+guttering  cue   0.02709    0.01708    rms>=0.01              PASS
+victory    cue   0.02551    0.01779    rms>=0.01              PASS
+
+Anti-vacuity control (scripts/audio-check fixtures):
+  good-bed.html : bed rms=0.12247 bandRms=0.08514 -> PASS  [required PASS]
+  dead-bed.html : bed rms=0.00707 bandRms=0.00091 -> MISS  [required MISS]
+The audio check passes a good bed and misses a dead bed -> not vacuous.
+Phase 2b verdict: PASS (6/6 game scenarios clear their floors; 0 [AUDIO][advisory] misses).
+
+===============================================================================
+VERDICT
+===============================================================================
+SPATIAL (hard): PASS — 0 spatial mismatches in all three states (floor-1, floor-2, floor-3),
+  exit code 0 for each.
+SYSTEMIC (advisory): 0 systemic mismatches in all three states.
+COMPANION ADJACENCY (spider-web <-> spiders): PASS on the pinned seed (floor 3, exit-adjacent).
+PLACEMENT INVARIANT (no required thing in a creature/trap room): PASS on floors 2 and 3.
+PRISTINE-BOOT: states are pre-mutation (captured before any move); socialLog synthesized via
+  real window.social() deltas.
+AUDIO (advisory): PASS — see §7.
+UNVERIFIED conditions: NONE (all hooks present; test_seed non-null; socialLog produced;
+  NPC reachable).
+
+PHASE 2 VERDICT: PASS — checker exit 0, spatial 0 / systemic 0 across floor-1, floor-2 and
+floor-3; control fixtures and the audio fixtures confirm both checks discriminate.

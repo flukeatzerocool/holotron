@@ -23,6 +23,11 @@ Forward plan for Holotron. Completed work lands in `CHANGELOG.md`; this file tra
   (`window.TUNING`, task-legibility); wax pool **32 start / 40 max / refill +14** (refills now bank).
   Gate: `check_template.mjs --fail-on spatial` → **spatial 0, systemic 0, exit 0**; autoplay bar
   (greedy, arm A) **PASS** — 94 % completion, 43.8 % median surplus, 0 ghost keys (`playtest_ab_summary.txt`).
+- **2026-10-11 conformance update: DONE.** `f82e549`'s brief revision (hazard→trap, puzzles cut,
+  6-trap roster + companion events, always-visible Orlok) applied to the **game artifacts** from the
+  polished build: `world_agent` re-authored the template → `code_agent` modified `index.html` in place
+  (12.5 % diff). Gates: template parity, `check_template.mjs --fail-on spatial` exit 0, puppeteer
+  52/52, audio 7/7, autoplay 100 %/50 %/0 ghost keys; review loop clean at cycle 2. Run `20261011_095532/`.
 
 ## Next — deploy & submit (P5; user-gated)
 

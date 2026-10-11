@@ -1,0 +1,151 @@
+WORLD TEMPLATE v2 — Torre Nosferatu (Dread Weather) — conformance update
+Novel: torre-nosferatu-trap-20261011
+Run: 20261011_095532
+Contract: world_template.schema.json (required: archetypes, connectivity, required_things)
+Consumed by code_agent as window.TEMPLATE. FLOOR-AGNOSTIC: count bounds describe ONE
+generated floor; there is NO floors[] section. Per-floor escalation lives in the GDD.
+
+REVISION APPLIED (from direction.txt == TORRE_NOSFERATU.md)
+  - role/kind `hazard` -> `trap`. role `puzzle` RETIRED (puzzles cut).
+  - shadow-hall role: hazard -> trap.
+  - scribe-alcove repurposed as a TRAP-FREE lore/treasure room (role treasure); it hosts
+    the floor's floor-key + lore-fragment and must never be a trap room.
+  - encounter_roster: kind hazard -> trap; drop crumbling-stair + dark-leap (puzzle);
+    light-trap -> light-glyph; add snap-trap + spider-web. Roster is now 6 traps.
+  - Companion event: spider-web declares companion:"spiders" and lives in the trap-role
+    archetype (shadow-hall); spiders (floor 3) is the paired creature, same floor as the web.
+
+Seeds
+  seed_default: null        (random at boot)
+  test_seed:    20261010    (non-null integer; the game MUST honor it; Phase 2 uses it)
+
+ARCHETYPES (role — id, name, count per floor, things carried)
+  entry     spire-entry       Spire Entry        [1,1]
+  corridor  stair-corridor    Stair Corridor     [2,4]
+  treasure  candle-nook       Candle Nook        [1,2]  things: wax-cake, matches, oil-vial
+  trap      shadow-hall       Shadow Hall        [0,3]
+  treasure  scribe-alcove     Scribe's Alcove    [0,2]  (trap-free; key + lore ride here)
+  social    survivor-camp     Survivor Camp      [0,2]
+  exit      descending-stair  Descending Stair   [1,2]
+  NOTE: ONE KEY PER FLOOR. A single `floor-key` is placed per floor (ground floor's key is
+  the exit key); the floor's `down` gate stays locked until it is held. Floor 1 (Spire) puts
+  its key in the treasure room (candle-nook); floors 2-6 put it in the trap-free lore/treasure
+  room (scribe-alcove) together with the required lore-fragment. The key is refreshed per floor.
+  INVARIANT: no required thing sits in a creature/trap room (the trap takes a shadow-hall, not
+  the key room), so a trap room is never required for progress.
+  NOTE: trap/social minima are 0 so the Spire (the checked active floor, which is
+  wax+exploration only — social+Dread arrive on the second floor down) can never hard-fail
+  the spatial gate. The start room's archetype MUST be `spire-entry`.
+
+  ROLES ARE NOW: entry, corridor, trap, treasure, social, exit. There is NO `hazard` and
+  NO `puzzle` role. Both treasure archetypes collapse under the `treasure` role.
+
+CONNECTIVITY (legal transitions between roles; non-normative documentation, C7)
+  entry -> corridor*
+  entry -> treasure
+  corridor -> corridor*
+  corridor -> treasure | trap | social
+  treasure | trap | social -> corridor*
+  corridor -> exit
+  exit -> down
+  Vertical movement is down/up. Descent: Spire (top) -> ground-floor exit.
+
+REQUIRED THINGS (every generated floor must place and make reachable from start)
+  wax-cake, matches, lore-fragment, floor-key
+  (floor-key + lore-fragment are placed together in the TRAP-FREE treasure room (scribe-alcove);
+   wax-cake/matches in the treasure nook (candle-nook).)
+
+REQUIRED ENCOUNTERS (must exist/reachable on test_seed; >=1 reachable)
+  bats    creature floor 1  reachable: true   <- pinned reachable (Spire teaching creature)
+  vlask   npc      floor 2  reachable: true   <- pinned reachable (tower-wide at boot)
+  rats    creature floor 2  reachable: true
+  NOTE: systemState() is TOWER-WIDE (roster + Dread) at boot, so every encounter id below
+  must appear in systemState().encounters even when it roams a lower floor.
+
+RESOURCES (start, bounds, role)
+  wax             start 32 / max 40 / burn 1 per turn / gutters at 0   (clock, health, map; refill wax-cake +14)
+  matches         start 2  / max 6                                     (re-light a snuff)
+  key             start 0  (per-floor; win condition)                   (opens the floor's down gate; ground floor: the exit)
+  candle_radius   start 3  / max 7 / scales_with wax                   (reveal radius)
+                  penalty [[18,0],[6,1],[1,2]] penaltyFloor 2           (flattened curve: radius floors at 2)
+
+CLOCKS
+  wax    behavior decrement   direction decrement  [0,40]  (the deployed native countdown)
+  dread  behavior tug_of_war   direction increment  [0,8]   badge_scope shared
+         tiers (contiguous, cover 0..8 exactly):
+           0-1 calm | 2-3 watched | 4-5 marked | 6-7 hunted | 8 hunted-full
+         effects: at 8 -> orlok-lock
+         Dread is authored as LORE key `dread-dial` for the world model (the pinned
+         manage_countdown has no clock_type and cannot count up), and as this clocks[]
+         tug_of_war entry for the game + checker.
+
+NPC ROSTER (id — name, disposition/numeric, goals, voice)
+  vlask         Vlask        wary / -1       guard the wax cache; hoard light; never lend a match
+                                             voice: low, clipped, counts everything aloud
+  sister-marta  Sister Marta neutral / 0     preserve knowledge; trade lore/info, never light
+                                             voice: measured, archival, patient
+  ilona         Ilona       suspicious / -1  reach the door; sell the dark's knowledge at a price
+                                             voice: a wheeze under every word
+  petr          Petr        friendly / +1    stay alive and kind; follow someone braver
+                                             voice: young, uneven, a hum he cannot quiet
+  nadja         Nadja       wary / -1        reach the door first; strip the tower; win every trade
+                                             voice: bright, quick, transactional
+  disposition_scale: [hostile, suspicious, wary, neutral, friendly, allied]
+  numeric_range:     [-2, 2]  (hostile -2, suspicious/wary -1, neutral 0, friendly +1, allied +2)
+
+SOCIAL ACTIONS (warm -> cold; dread_delta signed: negative = warm)
+  share-light  warm  dread -1  disposition [0,2]   wax -2
+  ally         warm  dread -1  disposition [0,2]   wax -1
+  bargain      warm  dread  0  disposition [-1,1]  wax  0   (neutral; lore/info exchange)
+  trade        warm  dread  0  disposition [0,0]   wax  0   (neutral; even swap)
+  steal        cold  dread +1  disposition [-2,0]  wax +2
+  threaten     cold  dread +1  disposition [-2,0]  wax +1
+  Balance: warmth buys light later; cruelty buys light now. Lore never buys wax or matches.
+
+ENCOUNTER ROSTER (kind — threat, effect, first floor)
+  bats            creature 1  wax-spill       floor 1
+  rats            creature 1  match-destroy   floor 2
+  spiders         creature 2  turn-cost       floor 3
+  wolves          creature 3  run-wax-spill   floor 4
+  shades          creature 3  wax-drain       floor 5
+  light-eater     creature 4  snuff           floor 6
+  pressure-plate  trap 2  wax-cost  floor 2
+  collapsing-floor trap 2 wax-cost  floor 3
+  snap-trap       trap 2  snuff     floor 3
+  spider-web      trap 2  snuff     floor 3   companion: "spiders"
+  light-glyph     trap 2  snuff     floor 4
+  cursed-ward     trap 3  snuff     floor 5
+  NOTE: SIX traps. Traps escalate by DENSITY and region (not one-per-floor); a floor's
+  creature + trap escalation draws a single budget. Each trap sits in a non-required room
+  (a `shadow-hall`), so no trap is ever on the path to the key/lore.
+  COMPANION EVENT: `spider-web` declares companion:"spiders" (the paired creature, also
+  floor 3). The generator places the web trap's room adjacent to a Spiders room on the
+  active floor; check_template.mjs asserts the adjacency (spatial).
+  DROPPED: crumbling-stair (trap), dark-leap (puzzle) — puzzles are cut.
+  RENAMED: light-trap -> light-glyph (light-sensitive glyph).
+  vlask / sister-marta / ilona / petr / nadja  npc 0 social (floors 2-3)
+  NOTE: Count Orlok is deliberately EXCLUDED — he is the wax-out terminal state only (§8),
+  never rolled into the normal roster.
+
+LORE (Holonovel, key -> role)
+  dread-dial      shared   the 0-8 Dread tiers + effects (the dial authored as lore)
+  candle-clock    shared   wax as clock/health/map; snuff vs guttering dark
+  orlok-rule      shared   Orlok triggered only by wax-out; traps (avoid=wax, spring=snuff+match); no puzzles
+  social-poles    shared   warm/cold action table
+  tower-lawless   shared   "anything goes" geometry; floors persist once generated
+  descent         shared   wake at Spire; work down; key + exit; borrowed-door ending
+  ilona-bargain   secret   (GM-only) Ilona's true bargain
+
+RELATIONSHIPS
+  Nadja -> Ilona          rival
+  Vlask -> Nadja          suspicious
+  Sister Marta -> Petr    mentor
+  Petr -> Sister Marta    dependent
+  Ilona -> Vlask          suspicious
+
+WARNINGS / NOTES
+  - manage_world(action: generate) intentionally NOT used (forbidden; REQ-431).
+  - Dread is a clocks[] tug_of_war contract, not a Holonovel countdown; only `wax` is a
+    native narrative countdown (32 ticks).
+  - Social + Dread arrive on the second floor down; systemState() is tower-wide at boot.
+  - BOTH `hazard` and `puzzle` enums are absent from this template (conformance).

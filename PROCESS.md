@@ -283,7 +283,7 @@ from a static audit plus a new **zero-dependency autoplay harness** (`scripts/au
 source, agent-invoked, drives the real game through `worldState`/`systemState`/`testState`/`move`).
 - **One key per floor.** The auto-collected `exit-key` (which re-granted "THE KEY" on every stair,
   §7.2 cycle 2) and the ambiguous `locked-door` "force it" puzzle are replaced: each floor places a
-  single `floor-key` (Spire: treasure room; floors 2-6: puzzle room) that unlocks that floor's
+  single `floor-key` (Spire: treasure room; floors 2-6: lore/treasure room) that unlocks that floor's
   `down` gate; it is consumed by descending. Template `required_things` now includes `floor-key`.
 - **Run/Endure.** Run costs wax; Endure snuffs the candle for **no wax** and costs a **match** to
   re-light (re-light adds no wax); a snuff with no match enters the guttering-dark grace.
@@ -296,6 +296,30 @@ source, agent-invoked, drives the real game through `worldState`/`systemState`/`
 - **Gate:** `check_template.mjs --fail-on spatial` → **spatial 0, systemic 0, exit 0** on the
   revised template/state. Reports: `playtest_ab.json` / `playtest_ab_summary.txt`; stress-test:
   `docs/grill-me/2026-10-11-torre-nosferatu-autoplay-and-fixes-stress-test.md`.
+
+### 7.4b Conformance update — brief revision into the game (2026-10-11)
+
+The brief revision committed in `f82e549` (hazard→trap canonical, puzzles cut, 6-trap roster +
+companion events, always-visible Orlok) had updated the **tooling** (schema, checker, fixtures) but
+left the **game artifacts** one revision behind. This run brought the game into conformance.
+
+- **Method (hybrid, not a re-run).** `world_agent` re-authored the authored template under the new
+  schema (Novel `torre-nosferatu-trap-20261011`; 11 rooms / 22 exits), then `code_agent` **modified
+  the polished `build/index.html` in place** — preserving three review cycles, juice, and the
+  Playtest-revision features. The template is embedded verbatim as `window.TEMPLATE`; parity is a
+  hard gate (embedded deep-equals `world_template.json`).
+- **Off-contract usage (recorded).** `code_agent` is charged with *creating* `index.html`; here it was
+  used to **edit** one, guarded by a snapshot + unified-diff budget (reject if >35 % of lines change or
+  a screen id / required hook is removed). Final diff ≈12.5 %; the bugfix's own delta ≈25 lines.
+- **Approval gate.** No ideation re-run: the mandatory gate fired for concept #14 in the original run
+  (`COMPLIANCE.md`), and this is an **update**, not a new concept — rationale recorded here.
+- **Verification (all in `20261011_095532/`):** gate checks — `node --check` exit 0, template parity
+  true, diff 12.5 %; **Phase 2** `check_template.mjs --fail-on spatial` exit 0 (spatial 0 / systemic 0
+  on floors 1–3; companion adjacency + placement invariant PASS); **runtime** puppeteer 52/52 at three
+  viewports, 0 console errors; **Phase 2b** audio 7/7; **autoplay** greedy 100 % completion / 50 %
+  median surplus / 0 ghost keys. Review loop closed clean at cycle 2 (0 CRITICAL / 0 HIGH / 0 MEDIUM).
+- Stress-test: `docs/grill-me/2026-10-11-torre-conformance-update-stress-test.md`; plan:
+  `docs/plans/2026-10-11-torre-conformance-update-plan.md`.
 
 ### 7.5 Reproduction (Torre Nosferatu)
 

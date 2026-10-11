@@ -1,0 +1,137 @@
+TEST REPORT — Torre Nosferatu (conformance update, cycle-2 re-verification)
+Agent: puppeteer_agent (Playwright-cli fallback / Firefox headless; no npm deps)
+Game: /home/fluke/Holotron/20261011_095532/index.html  (sha1 135c95e2…, mtime 2026-10-11 10:38:48)
+Template: /home/fluke/Holotron/20261011_095532/world_template.json  (sha1 764dea93…)
+Served: python3 -m http.server 8841 --directory /home/fluke/Holotron/20261011_095532
+Timestamp: 2026-10-11 10:42  |  suffix 104232
+Pinned seed: window.SEED = 20261010 (TEMPLATE.test_seed) — set before app scripts via
+  context.addInitScript AND ?test=1; post-load window.SEED===20261010 verified.
+
+================================================================================
+1. STANDARD BATTERY — 17 checks x 3 viewports = 51/51 PASS, plus victory 1/1 PASS
+================================================================================
+All screens driven through the real UI, hit-tested with elementFromPoint (touch on
+mobile, mouse on desktop), with a real observable state change asserted (not just a
+screen swap). Mobile ran in a fresh context with hasTouch=true / isMobile=true.
+
+desktop 1920x1080 (mouse)
+  PASS title_loads                   screen=scr-title  title="Torre Nosferatu — Dread Weather"
+  PASS seed_pinned                   window.SEED=20261010
+  PASS howto_open                    hit=true 176x48 -> scr-howto
+  PASS howto_back                    hit=true -> scr-title
+  PASS settings_open                 hit=true 118x48 -> scr-settings
+  PASS settings_music_toggle         On -> Off
+  PASS settings_sfx_toggle           On -> Off
+  PASS settings_back                 hit=true -> scr-title
+  PASS start_transitions_to_gameplay hit=true screen=hud inGame=true pos=d1-spire-entry-1 wax=32
+  PASS pause_open                    hit=true 112x48 -> scr-pause
+  PASS pause_music_toggle            Off -> On
+  PASS pause_resume                  hit=true -> hud
+  PASS canvas_renders_nonblank       nonblack=63/4096 canvas=1920x1080
+  PASS canvas_move_changes_state     mouse east off=90 hit=true pos d1-spire-entry-1->d1-stair-corridor-1
+                                     wax 32->31 turn 0->1
+  PASS layout_no_overflow            docX=false docY=false small=[]
+  PASS game_over_reachable           real Space turns -> dead=true turn=37 wax=0 scr-over
+  PASS game_over_retry               hit=true inGame=true -> hud
+
+desktop-small 800x600 (mouse)
+  PASS (all 12 UI checks: title/howto/settings/settings-toggles/start/pause/pause-toggle/resume)
+  PASS canvas_renders_nonblank       nonblack=133/4096 canvas=800x600
+  PASS canvas_move_changes_state     mouse east off=50 hit=true pos d1-spire-entry-1->d1-stair-corridor-1
+                                     wax 32->31 turn 0->1
+  PASS layout_no_overflow            docX=false docY=false small=[]
+  PASS game_over_reachable           dead=true turn=37 wax=0 scr-over
+  PASS game_over_retry               hit=true inGame=true -> hud
+
+mobile 375x667 (touch — real hasTouch context)
+  PASS (all 12 UI checks: title/howto/settings/settings-toggles/start/pause/pause-toggle/resume)
+  PASS canvas_renders_nonblank       nonblack=223/4096 canvas=375x667
+  PASS canvas_move_changes_state     touch east off=48 hit=true pos d1-spire-entry-1->d1-stair-corridor-1
+                                     wax 32->31 turn 0->1
+  PASS layout_no_overflow            docX=false docY=false small=[]
+  PASS game_over_reachable           dead=true turn=37 wax=0 scr-over
+  PASS game_over_retry               hit=true inGame=true -> hud
+
+  Console errors/exceptions: 0 / 0 / 0. One non-game harness warning on mobile
+  (chrome://juggler/... stylesheet timing) — see runtime_errors_104232.txt.
+
+================================================================================
+2. SCREEN REACHABILITY (GDD Screen Inventory)
+================================================================================
+  Title            reachable (default boot)                                 PASS
+  How to Play      Title -> How to Play -> Back                             PASS
+  Settings         Title -> Settings (music/SFX toggles) -> Back            PASS
+  Gameplay         Start -> gameplay; inGame=true, hud active               PASS
+  Pause            gameplay -> Pause -> Resume; pause music toggle          PASS
+  Game Over        real play: 37 Space turns burn wax 32->0, Guttering grace
+                   expires -> endGame() -> scr-over; Retry returns to game   PASS
+  Victory          real play: auto-descent F1..F6 (key -> stair -> Descend
+                   each floor, wax-cakes collected when wax<16) -> win('full')
+                   -> scr-victory (wonType=full, depth=6, wax=9)             PASS
+
+================================================================================
+3. VICTORY AUTO-DESCENT TRACE (desktop, real handlers)
+================================================================================
+  depth 1 wax=32  -> depth 2 wax=34  -> depth 3 wax=24  -> depth 4 wax=17
+  -> depth 5 wax=7 (refuel) -> depth 6 wax=9 -> WON(full) depth=6 wax=9
+  screen=scr-victory
+The descent uses only window.move(dir)/window.move('down') (the same transition
+handler the UI tile-tap and Descend button call) plus real button clicks for Start.
+
+================================================================================
+4. FIX VERIFICATION — H1: spring on pressure-plate / collapsing-floor snuffs (no wax burn)
+================================================================================
+Pinned test_seed 20261010 places NO pressure-plate/collapsing-floor on any floor, so a
+seed sweep found seed 1234567, which places pressure-plate in d2-shadow-hall-2 (floor 2).
+Run via window.setSeed(1234567) + real Start; BFS-navigated to the trap room; the
+encounter modal opened by the game's own transition handler.
+
+  modal        : open, title "A pressure-plate shifts"
+  before       : wax=29 matches=3 snuffed=false
+  click Spring : hit=true
+  after        : wax=28 (delta -1 = the normal turn cost ONLY — the old burnWax(2) is gone)
+                 matches=3 (a match is NOT auto-spent)
+                 snuffedAfter=true
+  Use Match    : visible (btn-usematch), clicked -> matches 3->2, snuffed=false
+  => Spring now snuffs the flame with NO wax burn and requires a match to re-light. PASS.
+
+================================================================================
+5. FIX VERIFICATION — M1: avoid leaves the trap armed + telegraphed
+================================================================================
+Same trap room (seed 1234567, d2-shadow-hall-2), fresh run.
+
+  modal        : open
+  before       : wax=29 snuffed=false
+  click Around : hit=true
+  after        : wax=27 (delta -2 = route cost 1 + turn 1), snuffed=false
+  re-entry     : stepped east then back to the room -> encounter modal RE-OPENED
+                 (reentryModal=true) => the trap is still armed, not marked cleared.
+  telegraph    : instrumented drawTrapTelegraph stroke calls after avoid = 25 over
+                 400ms (telegraph persists); after spring on a fresh run = 0 (cleared).
+  => Avoid no longer disarms the trap; it stays armed and telegraphed. PASS.
+
+================================================================================
+6. FIX VERIFICATION — H2/H3 runtime
+================================================================================
+H2 (all six trap types reachable) — 40-seed x 6-floor generator sweep:
+  declared trap roster: pressure-plate, collapsing-floor, snap-trap, spider-web,
+                        light-glyph, cursed-ward  (6)
+  placements found     : spider-web 79, light-glyph 63, cursed-ward 25,
+                         pressure-plate 22, collapsing-floor 20, snap-trap 19
+  distinct trap types  : 6   (> 2)                                 PASS
+
+H3 (a roaming NPC inside the candle radius renders on the map) — instrumented
+CanvasRenderingContext2D.fillStyle setter, counting only calls whose stack contains
+drawNpc (drawNpc is called ONLY from the survivors-in-light render block):
+  floor 1 (0 NPCs on floor)  : draws = 0   [negative control — nothing drawn]
+  floor 2 (roaming survivors): draws = 576 over 400ms, with on-floor NPCs in
+                               d2-stair-corridor-3 (roaming) and d2-survivor-camp-1
+  => a roaming survivor inside the light is drawn on the map. PASS.
+
+================================================================================
+SUMMARY
+================================================================================
+52/52 checks PASS (51 standard + 1 victory). 0 console errors, 0 pageerrors at all
+viewports. 0 failed interaction mechanics, 0 layout/overflow issues, 0 small touch
+targets. Fix verification H1/H2/H3/M1 all PASS at runtime.
+CRITICAL: 0  HIGH: 0  MEDIUM: 0  LOW: 0 (game code).

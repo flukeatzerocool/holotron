@@ -1,0 +1,60 @@
+WORLD MAP — Torre Nosferatu (concrete validated exemplar floor) — conformance update
+Novel: torre-nosferatu-trap-20261011
+Seed: 20261010   Start: spire-landing
+Source: Holonovel manage_world(convert) — 11 rooms, 22 directed exits (11 authored + 11 auto-reverse), 6 things
+This is the authored, validated exemplar (diagnostic / back-compat). The game generates
+concrete floors at runtime from world_template.json, seeded by window.SEED.
+MIGRATION NOTE: the role/kind rename hazard->trap and the puzzle->treasure repurpose are
+TEMPLATE-level (archetype `role`), not map-level; the room/exit/thing graph is unchanged.
+Here shadow-hall (2 rooms) is the trap-role archetype and scribe-alcove is the trap-free
+lore/treasure room carrying lore-fragment (the floor-key rides here in generated floors).
+
+ROOMS (slug — name [archetype id -> role])
+  spire-landing      Spire Landing       [spire-entry -> entry]        things: candle
+  long-gallery       Long Gallery        [stair-corridor -> corridor]
+  broken-stair       Broken Stair        [stair-corridor -> corridor]
+  cold-hearth-hall   Cold Hearth Hall    [stair-corridor -> corridor]
+  candle-nook        Candle Nook         [candle-nook -> treasure]    things: wax-cake, matches, floor-key
+  wax-coffer-room    Wax Coffer Room     [candle-nook -> treasure]
+  wainscot-warren    Wainscot Warren     [shadow-hall -> trap]         things: lore-bleeding-wall
+  shadow-hall        Shadow Hall         [shadow-hall -> trap]
+  scribes-alcove     Scribe's Alcove     [scribe-alcove -> treasure]  things: lore-fragment (trap-free)
+  survivor-camp      Survivor Camp       [survivor-camp -> social]
+  down-stair         Down Stair          [descending-stair -> exit]   (the down gate is locked until floor-key is held)
+
+EXITS (directed; the reverse is generated automatically by the server)
+  spire-landing    north -> long-gallery      east -> candle-nook
+  long-gallery     south -> spire-landing     north -> broken-stair      east -> cold-hearth-hall
+  broken-stair     south -> long-gallery      east -> wainscot-warren    west -> scribes-alcove
+  cold-hearth-hall west  -> long-gallery      north -> shadow-hall       east -> survivor-camp
+  candle-nook      west  -> spire-landing     north -> wax-coffer-room
+  wax-coffer-room  south -> candle-nook
+  wainscot-warren  west  -> broken-stair
+  shadow-hall      south -> cold-hearth-hall  DOWN -> down-stair
+  scribes-alcove   east  -> broken-stair      south -> down-stair
+  survivor-camp    west  -> cold-hearth-hall
+  down-stair       UP    -> shadow-hall       north -> scribes-alcove
+
+VERTICAL MOVEMENT
+  down/up are valid exits. The descent runs Spire (top) -> ground floor (exit door).
+  shadow-hall --down--> down-stair --up--> shadow-hall.
+
+THINGS
+  candle             (light)    at spire-landing  — the player's clock/health/map
+  wax-cake           (resource) at candle-nook    — refills the candle
+  matches            (resource) at candle-nook    — re-lights a snuff
+  floor-key          (key)      at candle-nook    — opens this floor's down gate (one per floor)
+  lore-fragment      (lore, readable) at scribes-alcove
+  lore-bleeding-wall (lore, readable) at wainscot-warren
+
+REACHABILITY
+  Every room is reachable from spire-landing; every required thing (wax-cake, matches,
+  lore-fragment, floor-key) is placed on a reachable room. No dangling exits. No required
+  thing shares a room with a creature/trap encounter (placement invariant).
+
+NPCs PLACED (roam the tower; simulation is active-floor-only, state is tower-wide)
+  Vlask (wary)          wax-coffer-room
+  Sister Marta (neutral) scribes-alcove
+  Ilona (suspicious)    shadow-hall
+  Petr (friendly)       survivor-camp
+  Nadja (wary)          cold-hearth-hall

@@ -1,0 +1,55 @@
+# Holotron run log — 20261011_095532
+
+[20261011_095532] Conformance update: hazard→trap + always-visible Orlok into the shipped game.
+[20261011_095532] Plan: docs/plans/2026-10-11-torre-conformance-update-plan.md (plan-review passed).
+[20261011_095532] Grill: docs/grill-me/2026-10-11-torre-conformance-update-stress-test.md (READY_WITH_RISKS, 83/100).
+[20261011_095532] P0.1 git clean; HEAD=f82e549.
+[20261011_095532] P0.2 run folder + direction.txt written.
+[20261011_095532] P0.3 rollback: build/index.html copied to 20261011_095532/rollback/index.live.html (sha1 caae08e5…). Live itch slug PENDING user confirmation.
+[20261011_095532] P0.4 base snapshot: 20261011_095532/index.pre-update.html.
+[20261011_095532] P0.5 Holonovel checkout b6a182a verified at /home/fluke/Holonovel-deployed/holonovel.
+[20261011_095532] NEXT: P1 world_agent (user-invoked pipeline agent).
+[100000] P1.3 fixture dry-run (checker behavior confirmed):
+[100000]   trap_template+trap_pass      -> exit 0 (spatial 0; 2 systemic advisory)
+[100000]   trap_template+trap_fail      -> exit 1 (spatial: trap room holds required thing)
+[100000]   trap_template+companion_fail -> exit 1 (spatial: web trap not adjacent to spiders)
+[100000]   golden_template+golden_state -> exit 0 (0/0)
+[100000]   => checker fires the placement invariant + companion adjacency; not vacuous.
+[100000] BLOCKED at P1.1: world_agent is a user-invoked pipeline agent; awaiting invocation.
+[101000] P0.3 RESOLVED: live game slug confirmed by user = flukeatzerocool/torre-nosferatu:html5
+[101000]   live page: https://flukeatzerocool.itch.io/torre-nosferatu
+[101000]   rollback push command: butler push <rollback-build-dir> flukeatzerocool/torre-nosferatu:html5
+[101000] P0.3 rollback base remains build/index.html (sha1 caae08e5…); re-verify vs live before push.
+[101200] P1.1 world_agent DONE -> world_template.json/.txt + world_map.json/.txt (Novel torre-nosferatu-trap-20261011; 11 rooms / 22 exits / 5 NPCs).
+[101200] P1.2 ACCEPTANCE: PASS (roles entry/corridor/treasure/trap/social/exit; kinds creature/trap/npc; 6 traps; spider-web companion=spiders; test_seed=20261010; 5 NPCs; 5 dread tiers; required_encounters reachable). checker vs synthetic state -> exit 0.
+[101200] P2.1 working copy: index.html (sha1 caae08e5…) == pre-update snapshot.
+[101200] P2.2 code_agent modify-in-place START.
+[101400] P2.2 code_agent DONE -> index.html in place (126489->133916 bytes); diff 460 lines.
+[101400] P2.3 GUARD PASS: 272/2509 lines = 10.8% (<=35%); all 10 screen ids + 8 required hooks preserved.
+[101400] P2.4 node --check exit 0.
+[101400] P3.1 PARITY: embedded window.TEMPLATE deep-equal world_template.json = true.
+[101400] P4 review loop START: review_agent + puppeteer_agent (parallel).
+[102300] P4 cycle1: puppeteer_agent PASS (52/52 runtime; 0 console errors; Phase2 exit 0 spatial0/systemic0; companion adjacency PASS; placement PASS; audio 6/6). 0 CRIT/HIGH/MEDIUM.
+[102300] P4 cycle1: review_agent -> 0 CRIT / 3 HIGH / 2 MED / 4 LOW (buglist_102248.txt).
+[102300]   H1 spring semantics: pressure-plate/collapsing-floor effect:"wax-cost" makes Spring burn wax, not snuff (§6.1.1).
+[102300]   H2 dead traps: snap-trap/light-glyph/cursed-ward spawn on 0 seeds (trapPool prefix + trapIdx reset).
+[102300]   H3 D6 NPC-in-light gated on static r.npc -> roaming NPCs invisible.
+[102300]   M1 "Go around" marks trap cleared (violates armed->sprung persistence); M2 traps have no audio cue / no AUDIO_SPEC trap scenario.
+[102300] P4.3 bugfix_agent START (HIGH+MEDIUM).
+[102500] P4.3 bugfix_agent DONE: H1 (all traps spring->snuff; effect wax-cost->snuff in template+embedded), H2 (per-depth trap-pool rotation; all 6 traps now place), H3 (NPC-in-light position-gated), M1 (avoid leaves armed), M2 (trap cues + AUDIO_SPEC scenario), +1 LOW. Parity preserved.
+[102500] gates: diff 313/2509=12.5% (<=35%); parity deep-equal true; node --check exit 0; hooks intact.
+[102500] P4 cycle2 START: review_agent + puppeteer_agent (parallel).
+[104500] P4 cycle2: review_agent 0 CRIT / 0 HIGH / 0 MEDIUM (5 LOW: buglist_105013.txt).
+[104500] P4 cycle2: puppeteer_agent PASS (52/52; 0 errors; Phase2 exit 0 spatial0/systemic0 + adjacency + placement; audio 7/7 incl. trap). Fixes H1/H2/H3/M1 verified at runtime.
+[104500] P4 STOP: 0 CRIT/0 HIGH. Entering P5 advisory.
+[101500] P5 advisory: autoplay greedy arm A -> completion 100% / median surplus 50% / ghost keys 0 -> PASS (advisory).
+[101600] P6.1 D9 doc alignment DONE: gdd.md (hazard->trap 10 tokens; puzzle retired), visual_direction.txt (Orlok always-visible + void #0a0708), audio_direction.txt (trap cues + AUDIO_SPEC trap).
+[101600] P6.2 registers DONE: CHANGELOG entry; PROCESS §7.4b + puzzle-room->lore/treasure-room; COMPLIANCE "Updated" bullet; ROADMAP conformance-update bullet.
+[101700] P7.1 build staged: build/index.html = <ts>/index.html (sha1 135c95e2…); butler v15.32.0 present.
+[101700] P7.2 BLOCKED pending explicit confirmation + target channel: butler status torre-nosferatu:html5 -> "No channel html5 found"; holotron:html5 -> 400 invalid game. Live build likely uploaded manually (prior butler-log: NOTHING PUSHED).
+[101800] P7.2 FINDING: live build = html-classic.itch.zone/html/19677872/index.html, 107488 bytes, sha1 514036a4… — matches NO local build (095651=f55740d2, 004054=caae08e5, new=135c95e2); hazard-era.
+[101800] P7.2 FINDING: no butler channel exists for flukeatzerocool/torre-nosferatu (probed html/web/html5/default/torre-nosferatu/linux/windows). Live entry was uploaded via the itch web uploader (upload id 19677872), not butler.
+[101800] P7.2 CORRECTION: true rollback artifact saved -> <ts>/rollback/index.live.html (the 107488-byte live build), replacing the assumed build/index.html copy.
+[101900] P7.2 DECISION: user chose MANUAL web re-upload (no butler push). build/index.html (sha1 135c95e2…) is staged for upload, replacing itch upload html-19677872.
+[101900] P7.2 deploy NOT executed by agent: no butler channel exists, ITCH_USERNAME/PASSWORD not set for web automation. User action required.
+[101900] RUN COMPLETE: D1–D9 conformance update implemented + verified. Deployment pending user manual upload.

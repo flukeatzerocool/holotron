@@ -1,0 +1,187 @@
+{
+  "seed_default": null,
+  "test_seed": 20261010,
+  "archetypes": [
+    {
+      "id": "spire-entry",
+      "name": "Spire Entry",
+      "role": "entry",
+      "count": [1, 1],
+      "things": []
+    },
+    {
+      "id": "stair-corridor",
+      "name": "Stair Corridor",
+      "role": "corridor",
+      "count": [2, 4],
+      "things": []
+    },
+    {
+      "id": "candle-nook",
+      "name": "Candle Nook",
+      "role": "treasure",
+      "count": [1, 2],
+      "things": ["wax-cake", "matches", "oil-vial"]
+    },
+    {
+      "id": "shadow-hall",
+      "name": "Shadow Hall",
+      "role": "trap",
+      "count": [0, 3],
+      "things": []
+    },
+    {
+      "id": "scribe-alcove",
+      "name": "Scribe's Alcove",
+      "role": "treasure",
+      "count": [0, 2],
+      "things": []
+    },
+    {
+      "id": "survivor-camp",
+      "name": "Survivor Camp",
+      "role": "social",
+      "count": [0, 2],
+      "things": []
+    },
+    {
+      "id": "descending-stair",
+      "name": "Descending Stair",
+      "role": "exit",
+      "count": [1, 2],
+      "things": []
+    }
+  ],
+  "connectivity": {
+    "rules": [
+      "entry -> corridor*",
+      "entry -> treasure",
+      "corridor -> corridor*",
+      "corridor -> treasure | trap | social",
+      "treasure | trap | social -> corridor*",
+      "corridor -> exit",
+      "exit -> down"
+    ]
+  },
+  "required_things": ["wax-cake", "matches", "lore-fragment", "floor-key"],
+  "required_encounters": [
+    { "id": "bats", "kind": "creature", "floor": 1, "reachable": true },
+    { "id": "vlask", "kind": "npc", "floor": 2, "reachable": true },
+    { "id": "rats", "kind": "creature", "floor": 2, "reachable": true }
+  ],
+  "resources": {
+    "wax": { "start": 32, "max": 40, "min": 0, "burn_per_turn": 1, "gutters_at": 0, "role": "candle fuel; clock, health and map at once" },
+    "matches": { "start": 2, "max": 6, "role": "re-light a snuffed candle" },
+    "key": { "start": 0, "win_condition": true, "role": "one floor-key per floor; opens the floor's down gate; the ground-floor key opens the exit" },
+    "candle_radius": { "start": 3, "max": 7, "scales_with": "wax", "role": "reveal radius in tiles", "penaltyFloor": 2, "penalty": [[18, 0], [6, 1], [1, 2]] }
+  },
+  "clocks": [
+    {
+      "id": "wax",
+      "name": "Wax",
+      "behavior": "decrement",
+      "direction": "decrement",
+      "min": 0,
+      "max": 40,
+      "badge_scope": "shared"
+    },
+    {
+      "id": "dread",
+      "name": "Dread Weather",
+      "behavior": "tug_of_war",
+      "direction": "increment",
+      "min": 0,
+      "max": 8,
+      "badge_scope": "shared",
+      "tiers": [
+        { "range": [0, 1], "state": "calm" },
+        { "range": [2, 3], "state": "watched" },
+        { "range": [4, 5], "state": "marked" },
+        { "range": [6, 7], "state": "hunted" },
+        { "range": [8, 8], "state": "hunted-full" }
+      ],
+      "effects": [
+        { "at": 8, "type": "orlok-lock" }
+      ]
+    }
+  ],
+  "npcs": [
+    {
+      "id": "vlask",
+      "name": "Vlask",
+      "disposition": "wary",
+      "numeric": -1,
+      "disposition_scale": ["hostile", "suspicious", "wary", "neutral", "friendly", "allied"],
+      "numeric_range": [-2, 2],
+      "goals": ["Guard the wax cache", "Hoard light", "Never spend a match on anyone else"],
+      "voice": "Low, clipped, transactional; counts everything out loud."
+    },
+    {
+      "id": "sister-marta",
+      "name": "Sister Marta",
+      "disposition": "neutral",
+      "numeric": 0,
+      "disposition_scale": ["hostile", "suspicious", "wary", "neutral", "friendly", "allied"],
+      "numeric_range": [-2, 2],
+      "goals": ["Preserve what knowledge survives", "Trade lore and information, never light", "Buy safe passage with hints"],
+      "voice": "Measured, archival, patient; speaks in fragments she has already catalogued."
+    },
+    {
+      "id": "ilona",
+      "name": "Ilona",
+      "disposition": "suspicious",
+      "numeric": -1,
+      "disposition_scale": ["hostile", "suspicious", "wary", "neutral", "friendly", "allied"],
+      "numeric_range": [-2, 2],
+      "goals": ["Reach the door before the dark finishes her", "Sell the dark's knowledge at a price"],
+      "voice": "A wheeze under every word; she knows the way and will not say what it costs."
+    },
+    {
+      "id": "petr",
+      "name": "Petr",
+      "disposition": "friendly",
+      "numeric": 1,
+      "disposition_scale": ["hostile", "suspicious", "wary", "neutral", "friendly", "allied"],
+      "numeric_range": [-2, 2],
+      "goals": ["Stay alive and stay kind", "Follow someone braver", "Share what little light he has"],
+      "voice": "Young, uneven, hopeful; a hum he cannot keep quiet."
+    },
+    {
+      "id": "nadja",
+      "name": "Nadja",
+      "disposition": "wary",
+      "numeric": -1,
+      "disposition_scale": ["hostile", "suspicious", "wary", "neutral", "friendly", "allied"],
+      "numeric_range": [-2, 2],
+      "goals": ["Reach the door first", "Strip the tower on the way", "Win every trade"],
+      "voice": "Bright, quick, transactional; always one landing ahead."
+    }
+  ],
+  "social_actions": [
+    { "id": "share-light", "polarity": "warm", "dread_delta": -1, "disposition_delta": [0, 2], "wax_delta": -2 },
+    { "id": "ally", "polarity": "warm", "dread_delta": -1, "disposition_delta": [0, 2], "wax_delta": -1 },
+    { "id": "bargain", "polarity": "warm", "dread_delta": 0, "disposition_delta": [-1, 1], "wax_delta": 0 },
+    { "id": "trade", "polarity": "warm", "dread_delta": 0, "disposition_delta": [0, 0], "wax_delta": 0 },
+    { "id": "steal", "polarity": "cold", "dread_delta": 1, "disposition_delta": [-2, 0], "wax_delta": 2 },
+    { "id": "threaten", "polarity": "cold", "dread_delta": 1, "disposition_delta": [-2, 0], "wax_delta": 1 }
+  ],
+  "encounter_roster": [
+    { "id": "bats", "kind": "creature", "threat": 1, "effect": "wax-spill", "floor": 1 },
+    { "id": "rats", "kind": "creature", "threat": 1, "effect": "match-destroy", "floor": 2 },
+    { "id": "spiders", "kind": "creature", "threat": 2, "effect": "turn-cost", "floor": 3 },
+    { "id": "wolves", "kind": "creature", "threat": 3, "effect": "run-wax-spill", "floor": 4 },
+    { "id": "shades", "kind": "creature", "threat": 3, "effect": "wax-drain", "floor": 5 },
+    { "id": "light-eater", "kind": "creature", "threat": 4, "effect": "snuff", "floor": 6 },
+    { "id": "pressure-plate", "kind": "trap", "threat": 2, "effect": "snuff", "floor": 2 },
+    { "id": "collapsing-floor", "kind": "trap", "threat": 2, "effect": "snuff", "floor": 3 },
+    { "id": "snap-trap", "kind": "trap", "threat": 2, "effect": "snuff", "floor": 3 },
+    { "id": "spider-web", "kind": "trap", "threat": 2, "effect": "snuff", "floor": 3, "companion": "spiders" },
+    { "id": "light-glyph", "kind": "trap", "threat": 2, "effect": "snuff", "floor": 4 },
+    { "id": "cursed-ward", "kind": "trap", "threat": 3, "effect": "snuff", "floor": 5 },
+    { "id": "vlask", "kind": "npc", "threat": 0, "effect": "social", "floor": 2 },
+    { "id": "sister-marta", "kind": "npc", "threat": 0, "effect": "social", "floor": 2 },
+    { "id": "ilona", "kind": "npc", "threat": 0, "effect": "social", "floor": 3 },
+    { "id": "petr", "kind": "npc", "threat": 0, "effect": "social", "floor": 2 },
+    { "id": "nadja", "kind": "npc", "threat": 0, "effect": "social", "floor": 3 }
+  ]
+}

@@ -38,6 +38,11 @@ Nosferatu** (dev-facing depth: `PROCESS.md`; dated change list: `CHANGELOG.md`).
   exits / 5 NPCs); a dependency-free Phase-2 world↔game checker (rooms hard, systemic advisory)
   with control fixtures that prove it catches injected errors; an advisory Phase-2b audio check
   that closed the "silent game passed every gate" gap.
+- **Updated:** after the post-playtest revision, the brief's `f82e549` revision (hazard→trap, puzzles
+  cut, 6-trap roster + companion events, always-visible Orlok) was propagated to the **shipped game**
+  by a hybrid run — `world_agent` re-authored the template, `code_agent` modified the polished
+  `index.html` in place (run `20261011_095532/`). No ideation re-run (gate fired for #14; an update,
+  not a new concept).
 - **Before/after metric:** world structures validated before `code_agent` — **none → 11 rooms /
   17 directed exits**; game↔world mismatches on `test_seed` — **unmeasured → 0 spatial, 0
   systemic**; console errors across 3 viewports — **0** (51/51 checks).
