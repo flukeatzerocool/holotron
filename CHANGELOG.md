@@ -3,6 +3,18 @@
 All notable changes to Holotron are documented here.
 Format: date-stamped sections, bulleted entries.
 
+## 2026-10-11 — World-model contract: connectivity demoted to non-normative documentation
+
+- **`connectivity.rules` is documentation, not a contract.** The generator never consumes it
+  (`genFloor()` reads archetypes/roster/NPCs/`required_encounters` only), `scripts/check_template.mjs`
+  never enforces it, and the authored exemplar violates the declared grammar. Reworded
+  `world_agent.md` (§Role, template contract), `gdd_agent.md` (§Input), and
+  `world_template.schema.json` (`connectivity.rules` description) to state it is non-normative.
+- **`ROADMAP.md` backlog.** Recorded the deferred world-model items (R2 Dread single-source, R4
+  systemic hard gate, R5 native count-up spike, R6 template self-consistency, R7 contract entry point)
+  each with a revisit trigger, and closed R1 (exemplar load-bearing) and the `exit-key`→`floor-key`
+  rename as not-doing (evidence: `docs/grill-me/2026-10-11-holotron-world-model-stress-test.md`).
+
 ## 2026-10-11 — Torre Nosferatu: post-playtest revision + autoplay harness
 
 - **New `scripts/autoplay/`** (zero-dependency, agent-invoked): `bot.js` plays the real

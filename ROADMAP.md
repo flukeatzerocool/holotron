@@ -30,7 +30,36 @@ Forward plan for Holotron. Completed work lands in `CHANGELOG.md`; this file tra
   `build/index.html` via butler on user confirmation, set Public, confirm the page resolves and the
   jam entry is in — **before 2026-10-11 12:00.**
 - **C7 — Connectivity validation.** Still deferred: validate `connectivity.rules` (`"entry ->
-  corridor*"`); the `*` grammar must be defined first.
+  corridor*"`); the `*` grammar must be defined first. (`connectivity.rules` is now documented as
+  **non-normative** — the generator does not consume it and the checker does not enforce it.)
+
+## Deferred — world-model contract (post-grill 2026-10-11)
+
+Revisit each only when its trigger fires (evidence: `docs/grill-me/2026-10-11-holotron-world-model-stress-test.md`).
+
+- **R2 — Dread single-source.** Make template `clocks[dread]` canonical and the `dread-dial` lore a
+  projection, with a `world_agent` self-check that the two match.
+  *Trigger:* a game's Dread tiers/lore diverge from its template clock.
+- **R4 — Systemic hard gate.** Add systemic golden/malformed controls, then promote `--fail-on` to
+  `any` when systemic content is declared.
+  *Trigger:* a game ships an undetected world-model mismatch (the falsifiable bar).
+- **R5 — Native count-up.** Spike `manage_faction` progress / `manage_vow` for Dread before accepting
+  the lore workaround.
+  *Trigger:* the pinned Holonovel build gains a countable clock_type, or a game needs a non-Dread
+  count-up dial.
+- **R6 — Template self-consistency mode.** Checker `--self` (tiers, things registry,
+  `required_things ⊆ declared things`).
+  *Trigger:* a second game reuses the template and an internal inconsistency slips past design.
+- **R7 — Contract entry point.** One `AGENTS.md` pointer to the schema + the verify command.
+  *Trigger:* a second implementer cannot locate the canonical contract.
+
+## Closed — considered, not doing (post-grill 2026-10-11)
+
+- **R1 (exemplar load-bearing):** rejected — would reverse the deliberate procgen switch; the exemplar
+  is already self-validated (`world_map.json`, run log `:10`).
+- **`exit-key` → `floor-key` rename:** rejected — every shipped artifact already says `floor-key`; only
+  the disposable per-run Novel differed.
+- **Anti-smuggling guard:** discipline-only, no mechanical guard (accepted risk).
 
 
 ## Deferred — Holonovel systems not needed for Torre

@@ -39,7 +39,7 @@
       "properties": {
         "rules": {
           "type": "array",
-          "description": "Legal directed transitions between roles, e.g. \"entry -> corridor*\".",
+          "description": "Non-normative documentation of intended transitions between roles, e.g. \"entry -> corridor*\". The generator does not consume it and scripts/check_template.mjs does not enforce it.",
           "items": { "type": "string" }
         }
       }

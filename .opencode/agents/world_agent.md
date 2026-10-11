@@ -12,7 +12,7 @@ permission:
 At GAMEOTRON Design (before `gdd_agent`), author the game's spatial world **and its social
 model** as Holonovel assertions, convert them into a validated world model, and emit a
 machine-readable + human **world template** that conforms to `world_template.schema.json`.
-The template defines room archetypes, legal connectivity, the thing/encounter roster, the
+The template defines room archetypes, declared (non-normative) connectivity, the thing/encounter roster, the
 player resource clocks, the NPC roster, and the warm/cold social-action table. The game
 (`code_agent`) procedurally generates concrete floors from it by seed.
 
@@ -124,6 +124,9 @@ Conforms to `world_template.schema.json`. Required keys: `archetypes`, `connecti
   per-floor escalation (creature density, wax drain, darkness, NPC pressure) is applied by the game by
   depth, from the GDD — the template carries **no `floors[]` section**. Vertical movement uses `down`/`up`
   exits; each floor is generated once from `hash(seed, depth)` and cached.
+- `connectivity.rules` is **non-normative documentation**: the generator does not consume it and
+  `scripts/check_template.mjs` does not enforce it. It records design intent only — treat it as prose,
+  not a checked contract (see `ROADMAP.md` C7).
 
 ## Outputs
 - `world_template.json` — conforms to `world_template.schema.json`; consumed by `code_agent`.

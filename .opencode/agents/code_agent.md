@@ -29,7 +29,7 @@ never boot silently with a partial model.
 Generation:
 - Generate the floor layout at runtime from `window.TEMPLATE`; never diverge from its
   archetypes (respect each archetype's `count` bounds; tag every generated room with its
-  archetype id in `worldState()`), connectivity rules, `required_things`, or
+  archetype id in `worldState()`), `required_things`, or
   `required_encounters`.
 - Seed deterministically from `window.SEED` (integer — default random at boot; overridable
   via a URL parameter and a Settings control so tests can pin it). When no override is
