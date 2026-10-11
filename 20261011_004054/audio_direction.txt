@@ -38,6 +38,43 @@ peak≥0.01; muted rms≤0.001).
 
 ---
 
+## 0b. REVISION (2026-10-11) — organ bed replaces the drone (user-directed)
+
+**This supersedes the §12 "one pervasive low-frequency drone" rule and the
+rule-zero "silence is the default, music withheld" stance for this entry.**
+The user judged the implemented bed (sub-bass + harmonics + broad-band
+fire/wind noise) as *static*, and directed that it be replaced with actual
+music appropriate to the setting. The superseding design:
+
+- **Ambient music floor = a phrase-based pipe organ.** An **original** 4-note
+  minor lament cell (D minor / Aeolian) — deliberately **not** a Dies Irae
+  quote — played on an additive drawbar organ (sines at 0.5/1/1.5/2/3/4/6/8×,
+  two slightly-detuned voices for chorus) through a **procedural cathedral
+  reverb** (a send; IR = exponentially-decaying filtered noise). One phrase,
+  then a long silence (`CYCLE_MIN..CYCLE_MAX` = 9–14 s), so silence remains an
+  event — §12 rule zero survives in *density*, not in kind.
+- **Choir layer.** Three detuned sawtooths through parallel formant bandpasses
+  (≈320/800/2300 Hz) with a **capped** breathy-noise component (≤25% of the
+  tonal level — chosen specifically so the layer cannot read as hiss).
+  `setDread` fades it in from tier 2; the organ registration also opens with
+  tier.
+- **Candle crackle replaces the fire/wind hiss.** Sparse, irregular
+  band-passed noise *bursts* (not a continuous noise bed) — the broadband hiss
+  was a principal source of the "static" reading.
+- **Bus routing (user-directed).** Organ + choir + reverb on the **MUSIC** bus;
+  crackle and all event cues on the **SFX** bus. This departs from §6's "drone
+  is ambient/SFX" guidance; Music-off now silences the bed and Orlok's theme
+  (footsteps survive on SFX).
+- **Offline contract.** `window.audioTest('bed',…)` forces the opening organ
+  phrase at t=0 (the bed is event-based), so the 3 s render always contains
+  music and the `bed` floors (rms≥0.02, bandRms>300Hz≥0.003) stay meaningful.
+  Measured across seeds 1–20261010: rms 0.0245–0.0297, bandRms 0.0167–0.0194.
+- **Superseded:** the `drone`/`fire`/`wind` mix entries and the 38 Hz/sub
+  discussion above are historical; the `MIX` table
+  (`organ`/`choir`/`crackle`/`reverbWet`) is authoritative.
+
+---
+
 ## 1. THREE AUDIO DIRECTION CONCEPTS
 
 ### Concept A — "The Room Breathes" (diegetic-first, minimal score)

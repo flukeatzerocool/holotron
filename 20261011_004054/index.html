@@ -864,11 +864,17 @@ function seedDispoForFloor(base){
    ========================================================= */
 var Audio = (function(){
   var ctx=null, master=null, musicGain=null, sfxGain=null;
-  var droneGain=null, fireGain=null, windGain=null, dreadGain=null;
+  var organGain=null, choirGain=null, crackleGain=null, reverbWet=null;
   var state={music:true, sfx:true};
   // single source of truth for mix levels (audible-on-small-speakers)
-  var MIX={ master:0.9, bus:0.9, drone:0.10, fire:0.05, wind:0.045, droneCut:450, off:0.0001 };
-  var DREAD_BASE=0.004, DREAD_MAX=0.05;
+  var MIX={ master:0.9, bus:0.9, organ:0.09, choir:0.05, crackle:0.03, reverbWet:0.32, off:0.0001 };
+  var CHOIR_BASE=0.0, CHOIR_STEP=0.022;
+  var CYCLE_MIN=9, CYCLE_MAX=14, dreadTier=0, phraseTimer=null;
+  // original minor lament cell (D minor / Aeolian) — NOT a Dies Irae quote
+  var D4=293.66, M3=Math.pow(2,3/12), M2=Math.pow(2,2/12);
+  var PHRASE=[ {f:D4,d:1.6}, {f:D4*M3,d:1.4}, {f:D4*M2,d:1.8}, {f:D4,d:2.6} ];
+  var PEDAL=D4/2;
+  var ORGAN_STOPS=[[0.5,0.40],[1,1.0],[1.5,0.28],[2,0.55],[3,0.18],[4,0.35],[6,0.12],[8,0.16]];
 
   function makeRng(seed){
     if(seed==null) return Math.random;
@@ -926,6 +932,113 @@ var Audio = (function(){
       s.start(t0); s.stop(t0+dur+0.05);
     }catch(e){}
   }
+  // --- organ bed: an original minor-chant motif as the ambient music floor ---
+  function organEnv(g,t0,dur,peak){
+    try{ g.gain.cancelScheduledValues(t0); g.gain.setValueAtTime(0.0001,t0);
+      g.gain.linearRampToValueAtTime(peak,t0+0.35);
+      g.gain.setValueAtTime(peak,t0+Math.max(0.36,dur));
+      g.gain.exponentialRampToValueAtTime(0.0001,t0+dur+1.2); }catch(e){}
+  }
+  function organVoice(c,dest,rng,freq,dur,at,opts){
+    if(!c||!dest) return;
+    try{
+      var t0=c.currentTime+(at||0);
+      var reg=(opts&&opts.reg)||ORGAN_STOPS, det=(opts&&opts.detune)||0;
+      var g=c.createGain(); organEnv(g,t0,dur,0.5);
+      g.connect(dest);
+      for(var vi=0;vi<2;vi++){
+        var dt=vi?det:0;
+        for(var si=0;si<reg.length;si++){
+          var o=c.createOscillator(); o.type='sine';
+          o.frequency.value=freq*reg[si][0];
+          if(dt) o.detune.value=dt;
+          var hg=c.createGain(); hg.gain.value=reg[si][1]/2;
+          o.connect(hg); hg.connect(g);
+          o.start(t0); o.stop(t0+dur+1.3);
+        }
+      }
+    }catch(e){}
+  }
+  function makeImpulse(c,rng,secs,decay){
+    var sr=c.sampleRate, n=Math.floor(sr*secs), b=c.createBuffer(2,n,sr);
+    for(var ch=0;ch<2;ch++){
+      var d=b.getChannelData(ch), lp=0;
+      for(var i=0;i<n;i++){
+        var t=i/sr, env=Math.pow(1-t/secs,decay);
+        lp += 0.35*((rng()*2-1)-lp);
+        d[i]=lp*env;
+      }
+    }
+    return b;
+  }
+  function choirVoice(c,dest,rng,freq,dur,at,level){
+    if(!c||!dest) return;
+    try{
+      var t0=c.currentTime+(at||0), lv=level||0.05;
+      var g=c.createGain();
+      g.gain.setValueAtTime(0.0001,t0);
+      g.gain.linearRampToValueAtTime(lv,t0+0.8);
+      g.gain.setValueAtTime(lv,t0+Math.max(0.9,dur));
+      g.gain.exponentialRampToValueAtTime(0.0001,t0+dur+1.0);
+      g.connect(dest);
+      var f1=c.createBiquadFilter(); f1.type='bandpass'; f1.frequency.value=320; f1.Q.value=6;
+      var f2=c.createBiquadFilter(); f2.type='bandpass'; f2.frequency.value=800; f2.Q.value=8;
+      var f3=c.createBiquadFilter(); f3.type='bandpass'; f3.frequency.value=2300; f3.Q.value=10;
+      f1.connect(g); f2.connect(g); f3.connect(g);
+      [freq,freq*1.004,freq*0.997].forEach(function(f,i){
+        var o=c.createOscillator(); o.type='sawtooth'; o.frequency.value=f;
+        var og=c.createGain(); og.gain.value=0.33;
+        o.connect(og); og.connect(f1); og.connect(f2); og.connect(f3);
+        var lfo=c.createOscillator(); lfo.frequency.value=4.5+i*0.6;
+        var lg=c.createGain(); lg.gain.value=f*0.003;
+        lfo.connect(lg); lg.connect(o.frequency);
+        o.start(t0); lfo.start(t0); o.stop(t0+dur+1.1); lfo.stop(t0+dur+1.1);
+      });
+      var nb=noiseBuf(c,rng);
+      if(nb){ var ns=c.createBufferSource(); ns.buffer=nb; ns.loop=true;
+        var nf=c.createBiquadFilter(); nf.type='bandpass'; nf.frequency.value=1200; nf.Q.value=0.8;
+        var ng=c.createGain(); ng.gain.value=lv*0.25;   // capped breath — never hiss
+        ns.connect(nf); nf.connect(ng); ng.connect(g); ns.start(t0); ns.stop(t0+dur+1.1); }
+    }catch(e){}
+  }
+  function crackleAt(c,dest,rng,at){
+    if(!c||!dest) return;
+    try{
+      var t0=c.currentTime+(at||0);
+      var s=c.createBufferSource(); s.buffer=noiseBuf(c,rng);
+      var f=c.createBiquadFilter(); f.type='bandpass'; f.frequency.value=1500+rng()*1200; f.Q.value=1.2;
+      var g=c.createGain(); envAt(g,t0,0.002,0.012+rng()*0.02,0.02+rng()*0.02);
+      s.connect(f); f.connect(g); g.connect(dest);
+      s.start(t0); s.stop(t0+0.05);
+    }catch(e){}
+  }
+  function regForTier(t){
+    if(t<=1) return [[0.5,0.35],[1,1.0],[2,0.45],[4,0.25]];
+    if(t<=3) return [[0.5,0.40],[1,1.0],[1.5,0.28],[2,0.55],[3,0.18],[4,0.35],[6,0.12]];
+    return ORGAN_STOPS;
+  }
+  // one cycle: phrase + pedal + (tier>=2) choir + crackle; silence follows (sparse)
+  function cycleInto(c,organDest,choirDest,crackleDest,rng,at,dur){
+    if(!c||!organDest) return;
+    var a=at||0, reg=regForTier(dreadTier), cur=0;
+    for(var i=0;i<PHRASE.length;i++){
+      organVoice(c,organDest,rng,PHRASE[i].f,PHRASE[i].d,a+cur,{reg:reg,detune:4});
+      cur+=PHRASE[i].d*0.92;
+    }
+    organVoice(c,organDest,rng,PEDAL,cur+0.4,a,{reg:[[1,0.8],[2,0.3]],detune:2});
+    if(dreadTier>=2 && choirDest) choirVoice(c,choirDest,rng,PHRASE[0].f*0.5,cur+0.6,a+0.3,0.9);
+    var n=Math.max(4,Math.round((dur||10)*1.4));
+    for(var k=0;k<n;k++) crackleAt(c,crackleDest,rng,a+rng()*(dur||10));
+  }
+  function stopPhrase(){ if(phraseTimer){ clearTimeout(phraseTimer); phraseTimer=null; } }
+  // live bed: schedule a cycle then re-arm (crackle stays audible even when Music is off)
+  function armCycle(){
+    if(!ctx) return;
+    var dur=CYCLE_MIN+Math.random()*(CYCLE_MAX-CYCLE_MIN);
+    cycleInto(ctx,organGain,choirGain,crackleGain,Math.random,0,dur);
+    stopPhrase();
+    phraseTimer=setTimeout(armCycle, dur*1000);
+  }
   // builds a full graph on any context and returns its nodes WITHOUT touching module state
   function buildInto(c,rng,st){
     var g={};
@@ -933,39 +1046,28 @@ var Audio = (function(){
     g.music=c.createGain(); g.music.gain.value=st.music?MIX.bus:0; g.music.connect(g.master);
     g.sfx=c.createGain(); g.sfx.gain.value=st.sfx?MIX.bus:0; g.sfx.connect(g.master);
     if(st.bed!==false){
-      // drone bed on the MUSIC bus — sub + detune + harmonics up to ~304 Hz (small-speaker audible)
-      var flt=c.createBiquadFilter(); flt.type='lowpass'; flt.frequency.value=MIX.droneCut; flt.Q.value=0.7;
-      g.drone=c.createGain(); g.drone.gain.value=MIX.drone;
-      flt.connect(g.drone); g.drone.connect(g.music);
-      [[38,1.0,'sine'],[38*1.01,1.0,'sine'],[76,0.5,'triangle'],[114,0.30,'sine'],[152,0.35,'sine'],[228,0.22,'sine'],[304,0.18,'sine']].forEach(function(sp){
-        var o=c.createOscillator(); o.type=sp[2]; o.frequency.value=sp[0];
-        var hg=c.createGain(); hg.gain.value=sp[1];
-        o.connect(hg); hg.connect(flt); o.start(0);
-      });
-      // ambient fire + wind on the MUSIC bus
-      var nb=noiseBuf(c,rng);
-      var src=c.createBufferSource(); src.buffer=nb; src.loop=true;
-      var ff=c.createBiquadFilter(); ff.type='bandpass'; ff.frequency.value=1500; ff.Q.value=0.7;
-      g.fire=c.createGain(); g.fire.gain.value=MIX.fire;
-      src.connect(ff); ff.connect(g.fire); g.fire.connect(g.music); src.start(0);
-      var src2=c.createBufferSource(); src2.buffer=nb; src2.loop=true;
-      var fw=c.createBiquadFilter(); fw.type='bandpass'; fw.frequency.value=750; fw.Q.value=0.5;
-      g.wind=c.createGain(); g.wind.gain.value=MIX.wind;
-      src2.connect(fw); fw.connect(g.wind); g.wind.connect(g.music); src2.start(0);
-      // dread-tier melodic layer on the MUSIC bus
-      g.dread=c.createGain(); g.dread.gain.value=DREAD_BASE; g.dread.connect(g.music);
-      [[220,1.0],[233,0.8]].forEach(function(sp){
-        var o=c.createOscillator(); o.type='sine'; o.frequency.value=sp[0];
-        var hg=c.createGain(); hg.gain.value=sp[1]*0.5;
-        o.connect(hg); hg.connect(g.dread); o.start(0);
-      });
+      // cathedral reverb: a procedural IR on a SEND the organ+choir feed
+      var conv=c.createConvolver(); conv.buffer=makeImpulse(c,rng,2.0,2.8);
+      g.reverbWet=c.createGain(); g.reverbWet.gain.value=MIX.reverbWet;
+      g.reverbSend=c.createGain(); g.reverbSend.gain.value=1;
+      g.reverbSend.connect(conv); conv.connect(g.reverbWet); g.reverbWet.connect(g.music);
+      // ORGAN bus (the ambient music floor; dry + reverb send) on the MUSIC bus
+      g.organ=c.createGain(); g.organ.gain.value=MIX.organ;
+      g.organ.connect(g.music); g.organ.connect(g.reverbSend);
+      // CHOIR bus — starts silent; setDread fades it in from tier 2
+      g.choir=c.createGain(); g.choir.gain.value=CHOIR_BASE;
+      g.choir.connect(g.music); g.choir.connect(g.reverbSend);
+      // CRACKLE bus (candle) — sparse bursts on the SFX bus, not continuous noise
+      g.crackle=c.createGain(); g.crackle.gain.value=MIX.crackle;
+      g.crackle.connect(g.sfx);
     }
     return g;
   }
   function build(){
     var g=buildInto(ctx, Math.random, state);
     master=g.master; musicGain=g.music; sfxGain=g.sfx;
-    droneGain=g.drone; fireGain=g.fire; windGain=g.wind; dreadGain=g.dread;
+    organGain=g.organ; choirGain=g.choir; crackleGain=g.crackle; reverbWet=g.reverbWet;
+    armCycle();
   }
   function unlock(){
     if(ctx){ if(ctx.state==='suspended'){ try{ctx.resume();}catch(e){} } return; }
@@ -1000,22 +1102,28 @@ var Audio = (function(){
     now:now,
     setMusic:function(on){ state.music=on; if(musicGain){ try{musicGain.gain.setValueAtTime(on?MIX.bus:0,now());}catch(e){} } },
     setSfx:function(on){ state.sfx=on; if(sfxGain){ try{sfxGain.gain.setValueAtTime(on?MIX.bus:0,now());}catch(e){} } },
-    clearPending:function(){ for(var ti=0;ti<pending.length;ti++){ clearTimeout(pending[ti]); } pending.length=0; },
+    clearPending:function(){ stopPhrase(); for(var ti=0;ti<pending.length;ti++){ clearTimeout(pending[ti]); } pending.length=0; },
     resetMix:function(){
+      stopPhrase();
       for(var ti=0;ti<pending.length;ti++){ clearTimeout(pending[ti]); }
       pending.length=0;
       if(!ctx) return;
       try{ master.gain.cancelScheduledValues(now()); master.gain.setValueAtTime(MIX.master,now()); }catch(e){}
       try{ musicGain.gain.setValueAtTime(state.music?MIX.bus:0,now()); }catch(e){}
       try{ sfxGain.gain.setValueAtTime(state.sfx?MIX.bus:0,now()); }catch(e){}
-      try{ droneGain.gain.cancelScheduledValues(now()); droneGain.gain.setValueAtTime(MIX.drone,now()); }catch(e){}
-      try{ fireGain.gain.cancelScheduledValues(now()); fireGain.gain.setValueAtTime(MIX.fire,now()); }catch(e){}
-      try{ windGain.gain.cancelScheduledValues(now()); windGain.gain.setValueAtTime(MIX.wind,now()); }catch(e){}
+      try{ organGain.gain.cancelScheduledValues(now()); organGain.gain.setValueAtTime(MIX.organ,now()); }catch(e){}
+      try{ choirGain.gain.cancelScheduledValues(now()); choirGain.gain.setValueAtTime(CHOIR_BASE,now()); }catch(e){}
+      try{ crackleGain.gain.cancelScheduledValues(now()); crackleGain.gain.setValueAtTime(MIX.crackle,now()); }catch(e){}
+      try{ reverbWet.gain.cancelScheduledValues(now()); reverbWet.gain.setValueAtTime(MIX.reverbWet,now()); }catch(e){}
+      dreadTier=0;
+      armCycle();
     },
     setDread:function(tier){
-      if(!dreadGain) return;
       var t=Math.max(0,Math.min(4,tier||0));
-      try{ dreadGain.gain.linearRampToValueAtTime(DREAD_BASE + DREAD_MAX*t/4, now()+0.8); }catch(e){}
+      dreadTier=t;
+      if(!choirGain) return;
+      var target=(t>=2)?(CHOIR_BASE+CHOIR_STEP*(t-1)):CHOIR_BASE;
+      try{ choirGain.gain.linearRampToValueAtTime(target, now()+1.2); }catch(e){}
     },
     tick:function(wax){ var f = 0.5 + 0.5*((wax||0)/((WAXR.start||30))); toneAt(ctx,sfxGain,Math.random,110*(1+0.02*Math.random()),0.04,'sine',0.03); noiseAt(ctx,sfxGain,Math.random,2200*(1+0.15*(1-f)),0.025,0.028); },
     waxFound:function(){ toneAt(ctx,sfxGain,Math.random,392,0.16,'sine',0.06); later(function(){toneAt(ctx,sfxGain,Math.random,523,0.20,'sine',0.06);},90); },
@@ -1023,12 +1131,12 @@ var Audio = (function(){
     keyFound:function(){ toneAt(ctx,sfxGain,Math.random,220,0.5,'sine',0.06); toneAt(ctx,sfxGain,Math.random,330,0.5,'sine',0.04); toneAt(ctx,sfxGain,Math.random,440,0.5,'sine',0.03); },
     loreFound:function(){ noiseAt(ctx,sfxGain,Math.random,1800,0.5,0.03); toneAt(ctx,sfxGain,Math.random,900,0.5,'sine',0.02); },
     orlok:function(){ orlokInto(ctx,musicGain,Math.random); },
-    snuff:function(){ if(droneGain){ try{droneGain.gain.setValueAtTime(MIX.off,now());}catch(e){} } if(fireGain){ try{fireGain.gain.setValueAtTime(MIX.off,now());}catch(e){} } toneAt(ctx,sfxGain,Math.random,48,0.35,'sine',0.14); },
+    snuff:function(){ if(organGain){ try{organGain.gain.cancelScheduledValues(now()); organGain.gain.setValueAtTime(MIX.off,now());}catch(e){} } if(crackleGain){ try{crackleGain.gain.setValueAtTime(MIX.off,now());}catch(e){} } if(choirGain){ try{choirGain.gain.setValueAtTime(MIX.off,now());}catch(e){} } toneAt(ctx,sfxGain,Math.random,48,0.35,'sine',0.14); },
     matchStrike:function(){ noiseAt(ctx,sfxGain,Math.random,1800,0.18,0.07); toneAt(ctx,sfxGain,Math.random,700,0.25,'sine',0.03);
-      if(droneGain){ try{droneGain.gain.setValueAtTime(MIX.drone,now());}catch(e){} }
-      if(fireGain){ try{fireGain.gain.setValueAtTime(MIX.fire,now());}catch(e){} }
-      if(windGain){ try{windGain.gain.setValueAtTime(MIX.wind,now());}catch(e){} } },
-    guttering:function(){ if(droneGain){ try{droneGain.gain.linearRampToValueAtTime(MIX.drone*1.6,now()+1.6);}catch(e){} } toneAt(ctx,sfxGain,Math.random,65,2.0,'sine',0.05); toneAt(ctx,sfxGain,Math.random,69,2.0,'sine',0.04); },
+      if(organGain){ try{organGain.gain.setValueAtTime(MIX.organ,now());}catch(e){} }
+      if(crackleGain){ try{crackleGain.gain.setValueAtTime(MIX.crackle,now());}catch(e){} }
+      if(choirGain){ try{ choirGain.gain.setValueAtTime((dreadTier>=2)?(CHOIR_BASE+CHOIR_STEP*(dreadTier-1)):CHOIR_BASE, now()); }catch(e){} } },
+    guttering:function(){ if(organGain){ try{organGain.gain.cancelScheduledValues(now()); organGain.gain.linearRampToValueAtTime(MIX.organ*1.6,now()+1.6);}catch(e){} } toneAt(ctx,sfxGain,Math.random,65,2.0,'sine',0.05); toneAt(ctx,sfxGain,Math.random,69,2.0,'sine',0.04); },
     gutterStep:function(grace){ toneAt(ctx,sfxGain,Math.random,55,0.16,'sine',0.05); noiseAt(ctx,sfxGain,Math.random,400,0.14,0.03); },
     death:function(){ if(master){ try{master.gain.linearRampToValueAtTime(MIX.off,now()+0.03);}catch(e){} } },
     victory:function(borrowed){ toneAt(ctx,sfxGain,Math.random,392,0.5,'sine',0.06); later(function(){toneAt(ctx,sfxGain,Math.random,523,0.6,'sine',0.06);},220); if(!borrowed) later(function(){toneAt(ctx,sfxGain,Math.random,659,0.8,'sine',0.05);},460); },
@@ -1064,12 +1172,14 @@ var Audio = (function(){
       var st={ music:!(opts&&opts.music===false), sfx:!(opts&&opts.sfx===false), bed:!(opts&&opts.bed===false) };
       var g=buildInto(c,rng,st);
       var S=g.sfx, M=g.music;
+      // the ambient bed is event-based: force the opening organ phrase at t=0 so an
+      // offline render always contains music (the live bed re-arms its own cycle)
+      if(st.bed!==false){ cycleInto(c,g.organ,g.choir,g.crackle,rng,0,Math.min(dur,3)); }
       if(scenario==='tick'){ toneAt(c,S,rng,110,0.04,'sine',0.03); noiseAt(c,S,rng,2200,0.025,0.028); }
       else if(scenario==='creature'){ noiseAt(c,S,rng,2500,0.12,0.05); }
       else if(scenario==='wax'){ toneAt(c,S,rng,392,0.16,'sine',0.06); toneAt(c,S,rng,523,0.20,'sine',0.06); }
       else if(scenario==='guttering'){ orlokInto(c,M,rng); }
       else if(scenario==='victory'){ toneAt(c,S,rng,392,0.5,'sine',0.06); toneAt(c,S,rng,523,0.6,'sine',0.06); toneAt(c,S,rng,659,0.8,'sine',0.05); }
-      // 'bed' schedules nothing extra: the ambient bed is already running
       return c.startRendering().then(function(buf){ return measure(buf); });
     }
   };

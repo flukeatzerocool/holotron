@@ -3,6 +3,26 @@
 All notable changes to Holotron are documented here.
 Format: date-stamped sections, bulleted entries.
 
+## 2026-10-11 — Torre Nosferatu: organ bed replaces the drone (audio, user-directed)
+
+- **The "static" bed is gone.** Judged by the user as static, the 38 Hz sub-drone plus broadband
+  fire/wind noise in `20261011_004054/index.html` was replaced with an **original** 4-note minor
+  lament played on a procedural pipe organ (additive drawbars, two detuned voices) through a
+  **procedural cathedral reverb** (convolver; IR = decaying filtered noise). Phrase-based with 9–14 s
+  of silence between phrases, so §12's rule-zero contrast survives in density.
+- **Formant choir layer.** Three detuned sawtooths through parallel formant bandpasses (≈320/800/2300 Hz)
+  with the breathy-noise component capped at 25%, faded in by `setDread` from tier 2; organ registration
+  opens with tier. **Candle crackle** (sparse band-passed bursts) replaces the continuous fire/wind hiss.
+- **Bus routing (user-directed).** Organ + choir + reverb on the Music bus; crackle + cues on SFX.
+- **Offline contract preserved.** `audioTest('bed')` forces the opening phrase at t=0 (event-based bed);
+  measured `bed` rms 0.0245–0.0297 across seeds 1–20261010 (floor 0.02), bandRms 0.0167–0.0194 (floor
+  0.003); cues ≥ 0.01; 0 console errors; toggles verified. Evidence: `audio_baseline_20261011.json`,
+  `audio_after_20261011.json`; stress-test `docs/grill-me/2026-10-11-torre-audio-organ-bed-stress-test.md`.
+- **Direction artifact:** `20261011_004054/audio_direction.txt` gains a §0b revision block recording the
+  deliberate override of the §12 drone rule. `build/index.html` refreshed byte-identical from the
+  canonical source.
+- **Rollback:** `20261011_004054/index.html.preaudio.bak`.
+
 ## 2026-10-11 — World-model contract: connectivity demoted to non-normative documentation
 
 - **`connectivity.rules` is documentation, not a contract.** The generator never consumes it
