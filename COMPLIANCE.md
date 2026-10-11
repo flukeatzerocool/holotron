@@ -21,7 +21,29 @@ A valid entry demonstrates **both**:
 
 ## Process / sharing
 
-- [x] `PROCESS.md` documents use/configuration/improvement + one before/after metric (§ Torre run)
+### Documented process (summary)
+
+How GAMEOTRON was **used, configured, and improved** to produce the submission game **Torre
+Nosferatu** (dev-facing depth: `PROCESS.md`; dated change list: `CHANGELOG.md`).
+
+- **Used:** theme override `Torre Nosferatu — escape a pitch-black candle-lit tower…` + full
+  controls. Ideation ran and the mandatory approval gate fired (user selected concept **#14
+  "Dread Weather"**); the brief `TORRE_NOSFERATU.md` reached `gdd_agent` as `direction.txt` (a
+  constraint, not a spec). Full pipeline ran: `world_agent` → `gdd_agent` → audio ∥ visual →
+  `code_agent` → review loop → `juice_agent`.
+- **Configured:** `opencode.json` mounts the Holonovel world-model MCP, scoped to a new
+  `world_agent`; `scripts/holonovel-mcp.sh` is hermetic and pinned to commit `b6a182a`; the
+  default run ends at Phase 5.5 with deployment **opt-in**.
+- **Improved:** the world is authored and `convert`-validated before code (11 rooms / 17 directed
+  exits / 5 NPCs); a dependency-free Phase-2 world↔game checker (rooms hard, systemic advisory)
+  with control fixtures that prove it catches injected errors; an advisory Phase-2b audio check
+  that closed the "silent game passed every gate" gap.
+- **Before/after metric:** world structures validated before `code_agent` — **none → 11 rooms /
+  17 directed exits**; game↔world mismatches on `test_seed` — **unmeasured → 0 spatial, 0
+  systemic**; console errors across 3 viewports — **0** (51/51 checks).
+
+- [x] `PROCESS.md` documents use/configuration/improvement in depth; this summary + `CHANGELOG.md`
+      carry the judged process half
 - [x] Public documented fork ("share improvements on GitHub")
 - [x] Pipeline artifacts published: GDD, visual/audio direction, review/runtime/test/juice reports, process logs, game source (`gameotron_output/20261010_095651/`)
 - [x] License preserved: PolyForm Noncommercial 1.0.0 + `Required Notice:` lines

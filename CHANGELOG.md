@@ -3,6 +3,23 @@
 All notable changes to Holotron are documented here.
 Format: date-stamped sections, bulleted entries.
 
+## 2026-10-10 — Reorient PROCESS.md to GAMEOTRON developers
+
+- Reframed `PROCESS.md` as the dev-facing "documented fork" the Gameotron jam asks participants
+  to publish: title/purpose rewritten for GAMEOTRON developers, a reading path added (Torre run
+  §7 = submission; §2–§6 = baseline), and a curated **"Changes vs upstream GAMEOTRON"** table
+  (artifact → change → rationale → `Holonovel`/`dependency-free`) added to §1. The exhaustive
+  change list is deferred to this file to avoid drift.
+- Added **§7.5 Reproduction (Torre Nosferatu)** — the submission-run path a reader can follow
+  cold (`direction.txt` → approval gate → #14 → multi-floor `down`/`up` → B7/Phase-2 checks).
+- Moved the judged process summary into `COMPLIANCE.md` as a self-contained section; the
+  `COMPLIANCE.md` pointer no longer relies on `PROCESS.md`.
+- Docs only; **no agent/pipeline behavioral change**. Section numbering preserved so the live
+  anchors `ROADMAP.md:41` (§4.4) and `CHANGELOG.md` §4.4–§4.7 still resolve — frozen anchors in
+  dated `docs/` and this changelog are intentional.
+- Added `docs/plans/2026-10-10-process-doc-reorientation-plan.md` and
+  `docs/grill-me/2026-10-10-process-doc-reorientation-stress-test.md`.
+
 ## 2026-10-10 — Jam-requirement interpretations codified in the pipeline
 
 - Clarified three pipeline behaviors to match the Gameotron jam requirements as
