@@ -15,6 +15,34 @@ Format: date-stamped sections, bulleted entries.
   each with a revisit trigger, and closed R1 (exemplar load-bearing) and the `exit-key`→`floor-key`
   rename as not-doing (evidence: `docs/grill-me/2026-10-11-holotron-world-model-stress-test.md`).
 
+## 2026-10-11 — Torre Nosferatu: hazard placement invariant + relight/ascend (residual review close-out)
+
+- **Hazard placement invariant (corrects an over-claim).** `TORRE_NOSFERATU.md` claimed hazards are
+  "never on a cut-edge (by construction)" — but the generator builds a spanning tree, so every edge
+  is a cut-edge. Reworded the invariant (§6.4.1/§15/§6.4.4/§14) to **"a hazard's room is never
+  required for progress"** and made it real: floors 2-6 now force **two `scribe-alcove`s** — the
+  first is the hazard-free **key room** (holds `floor-key` + `lore-fragment`; may host a routing
+  **puzzle**), the second hosts the **hazard**. No required thing ever shares a creature/hazard room.
+- **New checker assertion** in `scripts/check_template.mjs` (`checkPlacement`, spatial/hard,
+  template-driven): a room carrying a creature/hazard encounter must not hold a `required_thing`.
+  No-op without an encounter roster; non-vacuous via the new read-only `window.pristineFloor(d)` hook
+  (Phase 2 now checks a hazard floor, not only floor 1).
+- **Relight rule (was a refresh loop).** A match now: re-lights a **snuff** (no wax); during the
+  **guttering dark** buys exactly **+1 grace** (guttering persists, capped at the tier's grace) and is
+  **not consumable at full grace**; a `wax-cake` pickup ends guttering when the flame is lit
+  (`!snuffed`). Fixes the prior "match resets the full grace every turn" loop; `canRelight`/journal
+  now share one `relightAvailable()` guard. `gdd.md` §2.8/§227/§489 aligned.
+- **Ascend affordance.** New `#btn-ascend` HUD button (shown where `exits.up` exists) wired to
+  `ascend()`, so engine backtracking is reachable in play.
+- **Known, deferred deviation (documented, not hidden):** hazards still live in a `role:"puzzle"`
+  alcove rather than a `role:"hazard"` archetype — the invariant (no required thing in a hazard room)
+  is satisfied; a hazard-role archetype is a not-yet-adopted refinement.
+- **Verification:** generator probe — all 5 named hazards + `dark-leap` placed, 0 required-thing
+  violations across 6 floors; `check_template.mjs --fail-on spatial` → spatial 0 on floor 1 **and** a
+  pristine floor-2 hazard floor; anti-vacuity injection → spatial 1 (fails); `test_worlds/` fixtures
+  unchanged (golden 0 / malformed 1 / archetypes 1 / systems 0); puppeteer runtime 39/39, Phase 2
+  PASS (both floors), audio PASS; autoplay greedy 6/6 complete.
+
 ## 2026-10-11 — Torre Nosferatu: post-playtest revision + autoplay harness
 
 - **New `scripts/autoplay/`** (zero-dependency, agent-invoked): `bot.js` plays the real
