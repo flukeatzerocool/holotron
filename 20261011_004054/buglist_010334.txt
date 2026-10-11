@@ -1,0 +1,288 @@
+BUGLIST — Torre Nosferatu (VERIFICATION CYCLE 2, after bugfixes)
+Reviewer: review_agent | Static review | 2026-10-11 01:03:34
+Target:   /home/fluke/Holotron/20261011_004054/index.html (2303 lines, single file, vanilla JS)
+Baseline: TORRE_NOSFERATU.md (§5.1, §6.4, §8, §9, §10, §13, §14, §15) + gdd.md (§2.5, §2.8,
+          §8, §10.4, §11) + AGENTS standard checks (contract, mobile, game feel, screens)
+Cycle 1 fixed list cross-checked against the code (see VERIFICATION section).
+No CRITICAL issues: the script parses ("node --check" PASS on the 91,114-byte inline JS), boot
+runs clean in a stubbed DOM, and floor 1 generates with all required things reachable. Findings
+are ordered HIGH -> MEDIUM -> LOW.
+
+================================================================================
+HIGH
+================================================================================
+
+[HIGH] A snuffing puzzle hazard consumes a match WITHOUT re-lighting, and a 1-match holder is
+  dropped into the guttering-dark grace — contradicting §8 and creature-path parity.
+Location: index.html:1591:5 and index.html:1593:5  (resolvePuzzle; cf. resolveCreature 1560-1567)
+Explanation: On "Press on" a snuff-effect hazard (light-trap / cursed-ward) the fix runs:
+  `G.snuffed=true; Audio.snuff(); if(G.matches>0) G.matches=clamp(G.matches-1,...)`
+  then `if(G.wax<=0 || (G.snuffed && G.matches<=0)) enterGuttering();`.
+  - With exactly 1 match: it is consumed -> matches=0 -> `G.snuffed && G.matches<=0` fires
+    -> enterGuttering(). The player HELD a match (§8: "a snuff is recoverable only while you
+    hold a match") yet is pushed into the terminal guttering grace.
+  - With 2+ matches: one match is silently spent and the candle is NOT re-lit, so the player
+    must spend a SECOND match with the Use Match button. The spec grammar — "spring -> snuffs
+    the candle + costs a match to re-light" (§6.4.1) — is double-charged and the match buys
+    no re-light.
+  Compare resolveCreature (line 1560-1567): Endure snuffs, leaves the match in hand, and enters
+  guttering only if matches<=0 BEFORE any consumption. The two snuff paths are inconsistent.
+Fix approach: Mirror the creature path — do not auto-consume a match in resolvePuzzle. Snuff,
+  then `if(G.wax<=0 || (G.snuffed && G.matches<=0)) enterGuttering();` (the zero-match case only).
+  If the intent is that springing must cost a match, then consume ONE match AND restore the
+  flame in the same step (`G.snuffed=false;`), so the cost buys the crossing; never leave the
+  player snuffed after payment, and never enter guttering when the player held a match.
+
+[HIGH] The exit gate reads stale `G.key` while the stair gate and HUD read `G.floorKey[G.depth]`
+  — ascending off the ground floor and returning permanently locks the full win.
+Location: index.html:1394:12 / 1396:7 (attemptExit) vs index.html:1347 (tryMove gate),
+          index.html:1103 (HUD), index.html:1370 (descend resets G.key)
+Explanation: `descend()` sets `G.key=false` for the new floor (line 1370) but `ascend()` never
+  re-derives `G.key` from `G.floorKey[]`. On the ground floor the floor-key pickup sets
+  `G.key=true`; if the player then ascends (entry has an `up` exit) and descends back, descend()
+  resets `G.key=false` while `G.floorKey[MAX_DEPTH]` stays true. Now:
+    - HUD says "KEY HELD" (line 1103, from floorKey) and Journal agrees (line 1758),
+    - tryMove('down') passes the floorKey gate (line 1347) and calls attemptExit(),
+    - attemptExit() then sees `G.key===false` -> "THE DOOR IS LOCKED" (line 1396), or with a
+      borrowed door open returns the lesser `win('borrowed')` (line 1395).
+  The key item is already removed from the room, so a full (own-light) win is unrecoverable in
+  that run — a soft-lock of the primary win condition and a direct HUD/gate contradiction.
+Fix approach: Derive the exit check from the same source as the stair gate, e.g.
+  `var hasKey = !!G.floorKey[G.depth];` and use `hasKey` at lines 1394/1396 (or set
+  `G.key = !!G.floorKey[G.depth]` on entry to descend()/ascend()).
+
+================================================================================
+MEDIUM
+================================================================================
+
+[MEDIUM] "Crumbling stair" (a named must-have hazard) is authored but can never spawn —
+  it is shadowed by collapsing-floor on the same floor index.
+Location: index.html:452 (roster entry) and index.html:661-664 (byFloor/puzzleFor).
+Explanation: `puzzleFor(d)` = `puzzles.filter(x=>x.floor===d)[0]`. The roster declares BOTH
+  collapsing-floor (447) and crumbling-stair (452) with `floor:3`; filter order returns
+  collapsing-floor first, so every scribe-alcove on floor 3 gets collapsing-floor and no floor
+  ever selects crumbling-stair. The §6.4.4/§15 "five hazards" set therefore yields only four
+  distinct hazards actually placed in play (collapsing-floor, light-trap, pressure-plate,
+  cursed-ward — plus dark-leap). The hazard exists as dead data.
+Fix approach: Give crumbling-stair its own floor slot (or a distinct trigger floor) so
+  `puzzleFor` can select it, or replace the byFloor[0] pick with a per-floor rotation that
+  guarantees each named hazard is introduced on exactly one floor (matching §6.4.4 "one new
+  hazard per floor").
+
+[MEDIUM] Hazards are authored as `kind:"puzzle"` in the puzzle-role archetype, not as
+  `kind:"hazard"` / `role:"hazard"` as the world-model contract §14 requires.
+Location: index.html:447-452 (roster kind:"puzzle"); index.html:666-670 (assigned only to
+          scribe-alcove, role:"puzzle").
+Explanation: §14: "A hazard is authored as an `encounter_roster` entry (`kind:"hazard"`, ...);
+  its room carries archetype `role:"hazard"`." All six hazard/trap entries ship as
+  `kind:"puzzle"` and are placed in `scribe-alcove` (role:"puzzle"); `shadow-hall` (role:"hazard")
+  carries only creatures. The mechanical cost grammar (avoid=wax, spring=snuff) is present, but
+  the hazard/puzzle distinction the contract and §6.4.1 draw is not modelled. Cycle 1 logged
+  this as "UNFIXED [HIGH-nuance]"; it remains present, so it is filed rather than treated as
+  resolved.
+Fix approach: Author the hazard-role entries with `kind:"hazard"` and place them in a
+  `role:"hazard"` room (or a new hazard archetype), keeping puzzle-role rooms for the routing
+  puzzles; the encounter UI already branches correctly if a `kind:"hazard"` branch is added.
+
+[MEDIUM] The shipped template artifacts `world_template.json` / `world_template.txt` are out of
+  sync with the embedded `window.TEMPLATE` (missing the 3 new hazards and `oil-vial`).
+Location: index.html:450-452 and 644 (embedded template, 17 roster entries) vs
+          world_template.json (14 roster entries) and world_template.txt.
+Explanation: Cycle 1 added pressure-plate, cursed-ward, crumbling-stair (and the `oil-vial`
+  candle-nook thing) to the embedded data block, but `world_template.json` still lists only
+  14 roster entries and does not contain those ids; `world_template.txt` is likewise stale.
+  `window.TEMPLATE` and the template-of-record now disagree, so a re-run of the Phase 2 check
+  against `world_template.json` cannot exercise the new entries, and the Holotron world model
+  does not reflect what the game actually ships.
+Fix approach: Regenerate/update `world_template.json` + `world_template.txt` to match the
+  embedded block (add the 3 roster entries and the `oil-vial` thing), then re-run
+  `scripts/check_template.mjs` to confirm 0 spatial mismatches.
+
+[MEDIUM] Guttering dark cannot be ended by a match, contradicting gdd.md §2.8.
+Location: index.html:1614:5 (tryRelight guard) and index.html:1128 (HUD canRelight).
+Explanation: §2.8 states that during the guttering window "you may still reach a match
+  (relights and ends the guttering dark) or the exit". `tryRelight` returns false when
+  `G.guttering && G.wax<=0`, and guttering is only ever entered at wax<=0, so a match alone can
+  never end guttering; only a wax-cake pickup (raising wax>0) re-enables the relight. The code
+  comment defends "no fuel: a match cannot re-light an empty candle", but that is a design
+  divergence from the stated rule and makes the match a dead resource during the one window
+  the GDD says it should help.
+Fix approach: Either allow a match to clear guttering (restore flame, do not add wax) so the
+  behaviour matches §2.8, or amend gdd.md §2.8 to state a match cannot end guttering without
+  fuel. Pick one — do not leave code and spec contradictory.
+
+================================================================================
+LOW
+================================================================================
+
+[LOW] Default run still uses the fixed test seed, not a random one.
+Location: index.html:541-546.
+Explanation: The seed order is window.SEED -> ?seed= -> seed_default -> test_seed -> random.
+  `seed_default` is null in the template, so an unstyled launch resolves to test_seed 20261010,
+  not a random layout (brief §14 "default random, overridable"). Cycle 1 made seed_default
+  *honoured* but it is unset, so the observable behaviour is unchanged.
+Fix approach: Set `seed_default` to a random-at-boot sentinel or move test_seed behind an
+  explicit `?test=1`/window.SEED pin.
+
+[LOW] `window.social(id)` still diverges from the UI social flow (no turn / no co-location).
+Location: index.html:2126-2130 vs index.html:1643-1650.
+Explanation: The UI handler runs applySocial -> takeTurn('social') -> checkCoLocation ->
+  renderHUD; `window.social()` calls only applySocial. A checker driving the hook under-observes
+  the real flow. Cycle 1 documented this as a deliberate mutation accessor.
+Fix approach: Document it in a code comment as a pure mutation accessor, or route it through the
+  same takeTurn/checkCoLocation path.
+
+[LOW] Keyboard controls present although "full controls" was not requested.
+Location: index.html:2264-2292.
+Explanation: WASD/arrows/Space/Esc/1-6/Q are implemented. §13 makes keyboard optional and this
+  run did not request it. Harmless superset; flagged for scope only. No change required.
+
+[LOW] `n.tripped` is a single per-NPC boolean, so an NPC can trip at most one trap tower-wide.
+Location: index.html:1463.
+Explanation: `if(... && !n.tripped){ n.tripped=true; G.cleared[...]=true; }` — once true, that
+  survivor never trips another trap on any floor, so the flagged "NPCs trip traps" detail decays
+  after the first event. The G.cleared persistence itself is correct.
+Fix approach: Track per-room (e.g. `n.trippedRooms[n.floor+':'+n.room]`) or drop the guard.
+
+[LOW] Scheduled audio tones are not cleared on run end/reset from the death path.
+Location: index.html:973-975 (resetMix clears `pending`), index.html:1733 (endGame).
+Explanation: `later()` timers are cleared by Audio.resetMix() (called from startGame), but
+  endGame()/win() do not call resetMix, so a pending victory/zone/creature tone scheduled just
+  before death can still fire on the persistent context. Audible only; unguarded.
+Fix approach: Call Audio.resetMix() (or a lighter clearPending()) in endGame()/win().
+
+[LOW] A warm act performed at Dread tier >= Marked can record a non-negative socialLog delta.
+Location: index.html:1670-1672.
+Explanation: The extra "+1 Dread after a warm act at Marked+" is applied before the
+  `socialLog.push({dreadBefore, dreadAfter})`, so e.g. share-light at Dread 4 logs 4->4
+  (observed sign 0) while the template declares dread_delta -1. The Phase 2 checker's systemic
+  sign assertion would then emit an advisory MISMATCH (advisory only, never gates), but the
+  game's own log becomes internally inconsistent with the declared action.
+Fix approach: Record the declared-action delta separately, or apply the tier penalty outside
+  the measured before/after window.
+
+================================================================================
+VERIFICATION OF CYCLE-1 CLAIMED FIXES (independent check)
+================================================================================
+- AUDIO_SPEC added — VERIFIED. index.html:2156-2167 defines applicable:true, scenarios as
+  {id,kind} objects (bed + 5 cues) and thresholds {bed:{rms:0.02,bandRms:0.003}, cue:{rms:0.01}}.
+  This matches the exact schema the Phase 2b checker reads (scripts/audio-check/README.md:
+  `for (const s of spec.scenarios) audioTest(s.id,1); spec.thresholds.bed/cue`). Resolved.
+- Missing hazards + spring match — PARTIAL. Roster now has 5 named hazards (447-452) and
+  spring snuffs/consumes (1591), BUT the consumption logic is buggy (see HIGH #1) and
+  crumbling-stair never spawns (MEDIUM #3) and the entries are still kind:"puzzle" (#4).
+- Spire depth-1 tutorial — VERIFIED. index.html:626 (`nP=(depth===1)?0:...`) and 629
+  (`nH=(depth===1)?1:...`). Harness on seed 20261010: floor 1 = 8 rooms
+  (spire-entry 1, stair-corridor 3, candle-nook 2, shadow-hall 1 w/ bats, descending-stair 1),
+  0 scribe-alcove, 0 survivor-camp; all four required things placed on reachable
+  d1-candle-nook-1; exitDown metadata present; start archetype spire-entry. No regression.
+- Puzzle-snuff grace parity — PARTIAL. index.html:1593 mirrors resolveCreature's
+  `(G.snuffed && G.matches<=0)` guard, but because the same line auto-consumed a match it fires
+  in the 1-match case wrongly (HIGH #1).
+- Tradeable lore — VERIFIED (capped). index.html:1681-1689 grants +1 disposition (clamped,
+  once per NPC) on bargain/trade when lore is held; never awards wax/matches. Matches §5.1.
+- npcItemSweep oil-vial — VERIFIED. `oil-vial` added to candle-nook (644), not in REQ_THINGS,
+  takeable by NPCs (1429-1438) and pickable by the player (1300).
+- n.tripped consumption — VERIFIED (with LOW #4 nuance). index.html:1463-1466 persists the
+  sprung trap to G.cleared.
+- worldState vertical-exit metadata — VERIFIED. index.html:723-734 emits exitDown/exitUp and
+  keeps them out of `exits`; check_template.mjs ignores unknown fields, so no dangling-exit
+  mismatch; harness confirms `d1-descending-stair-1 -> d2-spire-entry-1`.
+- HUD key from G.floorKey — PARTIAL. index.html:1103 derives the HUD from G.floorKey, but the
+  exit gate still uses G.key (HIGH #2), so the two now disagree in the other direction.
+- Snuff visual hard-cut — VERIFIED. index.html:1874, 2092-2095 draws a 3-frame pure-black
+  overlay on the transition into G.snuffed; the guttering red pulse (2088-2091) is separate and
+  only briefly overdrawn — no interference.
+- Shared noise-buffer cache — VERIFIED. index.html:849-860 caches one buffer per AudioContext;
+  bandpass paths (886-898) unchanged; the same buffer backing two looping sources is valid.
+- Hazard pre-commit telegraph — VERIFIED. index.html:1917-1926 draws a pulsing red hairline
+  crack for revealed, uncleared puzzle rooms, SFX-independent.
+- toast rf amount — VERIFIED. index.html:1296-1297 both use `rf`.
+- #btn-talk CSS — VERIFIED. index.html:65 targets the existing button id.
+- Single WAX_MAX — VERIFIED. index.html:501 defined once, used at 1243 and 1296.
+- setTimeout cancellation — PARTIAL. index.html:849-850/973-975 add and clear `later()` timers
+  via Audio.resetMix(), but endGame/win do not clear (LOW #5).
+- seed_default — PARTIAL. index.html:541-546 honours it, but it is null, so default runs still
+  use test_seed (LOW #1).
+- Named seed constants — VERIFIED. index.html:718 SEED_DREAD_MIX/SEED_PRNG_MIX/SEED_NPC_MIX,
+  used at 758/768/777.
+No new dependency or tooling was introduced: `grep -nE "https?://|<script[^>]*src=|import |require\("`
+finds nothing; the file remains a single self-contained vanilla-JS document.
+
+Standard checks: single-file/vanilla OK; viewport meta present; touch (1220-1222) + mouse
+(1215-1218) both bound; buttons >=48 px; canvas DPR-aware and responsive; 7 screens
+(title/howto/settings/pause/over/victory + gameplay HUD) with Pause music/SFX/HowTo/resume/back
+and Settings music/SFX/reset/credits; wave-3 flags independently gated and required hooks
+(social/encounters/NPC/Dread) not gated; game-feel systems (particles, shake, hit-stop,
+transitions, popups) present and gated by juiceEnabled/reducedMotion.
+
+================================================================================
+SUMMARY
+================================================================================
+CRITICAL: 0 | HIGH: 2 | MEDIUM: 4 | LOW: 6 — 12 issues total.
+Top themes: the two snuff paths disagree on match handling (HIGH #1); the exit gate and HUD
+read different key sources, soft-locking the full win after backtracking (HIGH #2); one named
+  hazard (crumbling-stair) is dead data; the shipped world_template.json/.txt are out of sync with
+  the embedded template; guttering-vs-match behaviour contradicts gdd.md §2.8.
+
+================================================================================
+FIXED BUGS (bugfix_agent, cycle 2)
+================================================================================
+- [HIGH] Snuffing puzzle hazard auto-consumed a match WITHOUT re-lighting (a 1-match holder was
+  wrongly dropped into guttering; a 2+-match holder was double-charged) - RESOLVED via mirroring
+  resolveCreature: snuff and leave the match in hand; guttering only when
+  `G.wax<=0 || (G.snuffed && G.matches<=0)` (index.html:1604-1608)
+- [HIGH] Exit gate read stale `G.key` while the stair gate + HUD read `G.floorKey[G.depth]`
+  (soft-locked the full own-light win after ascending then descending) - RESOLVED via
+  `var hasKey = !!G.floorKey[G.depth]` at both exit branches and re-deriving `G.key` on
+  descend/ascend (index.html:1402-1410, 1379, 1392)
+- [MEDIUM] "crumbling-stair" never spawned (shadowed by collapsing-floor on floor 3) - RESOLVED
+  via a one-hazard-per-floor roster (floors 2..6) plus per-alcove selection (`puzzleListAt`), so
+  all five named hazards are introduced on exactly one floor each (index.html:447-452, 671, 677)
+- [MEDIUM] Hazards authored `kind:"puzzle"` rather than `kind:"hazard"` - RESOLVED (safe scope)
+  via retagging the five named hazards `kind:"hazard"` and teaching the generator / npc-trap /
+  telegraph / encounter-UI branches to accept the hazard kind; creatures unaffected
+  (index.html:447-452, 670-671, 1479, 1940)
+- [MEDIUM] world_template.json/.txt out of sync with embedded window.TEMPLATE (missing
+  pressure-plate, cursed-ward, crumbling-stair, oil-vial) - RESOLVED via regenerating both
+  artifacts to match the embedded block: 17 roster entries, candle-nook things
+  wax-cake/matches/oil-vial (world_template.json, world_template.txt, index.html:296)
+- [MEDIUM] Guttering dark could not be ended by a match (contradicted gdd.md §2.8) - RESOLVED via
+  removing the `guttering && G.wax<=0` guard in tryRelight (restores flame only, never adds wax)
+  and aligning the HUD + journal canRelight (index.html:1626-1636, 1137, 1791)
+- [LOW] Default run used the fixed test seed - RESOLVED via a random-at-boot default, with
+  test_seed behind an explicit `?test=1` opt-in (index.html:538-549)
+- [LOW] window.social(id) diverged from the UI social flow with no documentation - RESOLVED via a
+  code comment documenting it as a pure mutation accessor (index.html:2145-2149)
+- [LOW] n.tripped tracked once per NPC tower-wide - RESOLVED via per-room
+  `n.trippedRooms[floor:room]` (index.html:1474-1479)
+- [LOW] Pending scheduled audio timers not cleared on endGame/win - RESOLVED via
+  `Audio.clearPending()` called before the end cue in win()/endGame() (index.html:981, 1740, 1754)
+- [LOW] socialLog delta could go sign-inconsistent at Dread tier >= Marked - RESOLVED via
+  capturing the declared-action Dread result before the tier penalty is applied
+  (index.html:1685, 1708)
+
+Unfixed bugs:
+- [UNFIXED] [MEDIUM] Hazards are not placed in a `role:"hazard"` room (they remain in the
+  role:"puzzle" scribe-alcove) | Reason: satisfying this requires authoring a new hazard
+  archetype + connectivity rules (a generator/archetype restructure); only the `kind:"hazard"`
+  retag is surgically safe, so the room-role half is deferred per the safety directive. Carried
+  from the cycle-1 [UNFIXED] [HIGH-nuance] entry.
+- [WONTFIX] [LOW] Keyboard controls present although "full controls" was not requested | Reason:
+  intentional harmless superset; §13 makes keyboard optional and it does not affect touch/mouse.
+
+================================================================================
+CYCLE-2 FIX VERIFICATION (bugfix_agent)
+================================================================================
+- `node --check` on the extracted inline JS: PASS (93,067 bytes).
+- `JSON.parse` of the embedded world-template block: PASS (17 roster entries; candle-nook things
+  wax-cake/matches/oil-vial).
+- `node scripts/check_template.mjs --template 20261011_004054/world_template.json \
+     --state 20261011_004054/state_20261010.json --fail-on spatial`
+  -> 0 mismatch(es) — spatial 0, systemic 0 — PASS, exit 0.
+- Stubbed-DOM boot + buildWorld(20261010): floor 1 = 8 rooms, 0 scribe-alcove, 0 survivor-camp,
+  1 creature (bats) — floor-1 constraints OK; floors 2..6 select pressure-plate, collapsing-floor,
+  light-trap, cursed-ward (+dark-leap secondary), crumbling-stair — each named hazard on exactly
+  one floor.
+- Behavioural tests (stub boot): HIGH #1 (match preserved, no false guttering), HIGH #2 (floorKey
+  drives the exit, not stale G.key), MEDIUM #6 (match ends guttering, wax unchanged) — 10/10 PASS.

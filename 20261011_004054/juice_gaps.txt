@@ -1,0 +1,41 @@
+=====================================================================
+JUICE GAP ANALYSIS — Torre Nosferatu: Dread Weather (Phase 5.5 re-pass)
+Target: 20261011_004054/index.html (2326 lines)
+Prior juice pass: 20261010_095651 (5 categories). This is a SECOND pass.
+Cross-referenced: visual_direction.txt, audio_direction.txt, gdd.md, prior juice_report.txt
+=====================================================================
+
+EXISTING JUICE (confirmed present — do NOT duplicate)
+  [PARTICLES]        Juice.burst() pooled cap 48; dust motes (10); ember/ash/gold bursts
+  [SCREEN SHAKE]     Juice.shake() cap 6px decay 0.82; 9 trigger sites
+  [HIT-STOP]         Juice.stop() cap 5f; freezes flick only
+  [POPUPS]           Juice.pop() cap 8; score/event text
+  [TRANSITIONS]      #juice-transition veil fade
+  [VISUAL FEEDBACK]  flashRed/flashWarm full-screen tint; zoom-punch; hazard pulse
+  [AMBIENCE]         void breathing, guttering red pulse, snuff hard-cut blackout
+  [MOTION]           camera glide lerp .18, mask radius easing .18
+  [TOGGLE]           juiceEnabled flag + reducedMotion gating
+
+GENUINELY MISSING (visual_direction items, absent in code)
+  §5  Mask-edge danger ring (0.92–1.00 R, red a=0.5 decay 350ms) ....... MISSING
+      Only a full-screen flashRed() exists; the SIGNATURE mask edge is never
+      stroked red on damage/near-miss/snuff.
+  §7  Affected-entity 2-frame red flicker .............................. MISSING
+      Entities are drawn from static-state silhouettes; no per-entity hit flash.
+  §8  Low-wax warning (flame red-tint; meter shakes 1px at wax<=6) ..... MISSING
+      HUD wax value/meter are static; drawPlayer flame colour is fixed.
+
+ASSESSED & SKIPPED
+  §6  Per-Dread-tier mask colour shift — CORE rendering of the signature
+      gradient; not additive juice; higher regression risk (screenshot/parity).
+  §4  Ancestral-portrait eye tracking — set-piece ART, not present as geometry;
+      adding it is new content, out of scope for a conservative polish pass.
+  [CAMERA] lerp-follow/look-ahead — fixed player-at-centre contract (prior pass).
+  [EASING] squash/stretch — sprite draw paths; prior pass scope note stands.
+  [SOUND COMPLEMENT] equalizer/ring — prior pass: noise vs horror contrast.
+
+SELECTED (3 additive, gated by juiceEnabled + reducedMotion)
+  1. [MASK-EDGE DANGER FLASH]  §5
+  2. [ENTITY HIT-FLASH]        §7
+  3. [HUD/FLAME LOW-WAX WARNING] §8
+=====================================================================

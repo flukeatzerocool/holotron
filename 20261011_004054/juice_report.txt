@@ -1,0 +1,132 @@
+=====================================================================
+JUICE REPORT — Torre Nosferatu: Dread Weather
+Run folder: 20261011_004054
+Target (in place): 20261011_004054/index.html
+Agent: juice_agent (Phase 5.5, SECOND pass). Additive only.
+Source: index.html 2326 -> 2361 lines (+35 net).
+Supersedes the first pass report (20261010_095651, 5 categories).
+=====================================================================
+
+CONTEXT
+-------
+This game already carried a full juice layer (particles, screen shake,
+hit-stop, popups, screen transitions, flash/zoom-punch, void breathing,
+dust motes, snuff hard-cut, hazard telegraph). This pass is deliberately
+EXTRA conservative: gap analysis first, then only genuinely-missing,
+low-risk, spec-backed additives. No deletions, no renames, no restructure.
+The 3-cycle-verified runtime (39/39), Phase-2 world-model and audio
+behaviour are untouched: all new juice reads render/DOM state only and
+never mutates gameplay or draws from any RNG stream.
+
+MASTER TOGGLE / GATING
+----------------------
+- All new effects are gated by the EXISTING Settings flag `juiceEnabled`
+  (id `#flag-juiceEnabled`, default true).
+- Ring / hit-flash use the module helper `on()` (= juiceEnabled AND not
+  prefers-reduced-motion), consistent with the pre-existing share/shake/
+  flashRed path. The low-wax HUD warning is disabled under reduced-motion
+  via a CSS media query; it is informational (not motion-gated in JS, so
+  the red wax reading survives reduced-motion, per visual_direction §9).
+
+JUICE FEATURES ADDED (3 categories)
+-----------------------------------
+
+1. [MASK-EDGE DANGER FLASH]  §5 — the signature mask edge is stroked red
+   on damage/near-miss/snuff/guttering/death; SPEC: ring at 0.92-1.00 R,
+   red a=0.5 decaying 350 ms (+ soft full-radius red tint).
+   - Module state/getter: `edge` var, `edgeFlash()` / `edgeAmt()` —
+     location: ~line 1820, ~line 1848 (decay), ~line 1888-1889 (API).
+   - Draw: inside the existing shake/punch transform, after the masked
+     composite, so the ring rides the mask+player exactly —
+     location: ~line 2107-2115.
+   - Triggers (appended to existing flashRed sites): enterGuttering
+     ~line 1270; near-miss ~line 1347; creature ENDURE ~line 1595;
+     snuff hazard ~line 1624; death ~line 1765.
+
+2. [ENTITY HIT-FLASH]  §7 — "the affected entity flickers red for 2
+   frames" on damage/near-miss.
+   - Module: `eflash` var, `hitFlash()` / `hitAmt()` — location:
+     ~line 1821, ~line 1849 (decay), ~line 1890-1891 (API).
+   - Draw: red halo over the player silhouette, same transform block —
+     location: ~line 2117-2121.
+   - Triggers: near-miss ~line 1347; ENDURE ~line 1595; snuff ~line 1624.
+
+3. [HUD / FLAME LOW-WAX WARNING]  §8 — when wax <= 6 the wax meter shakes
+   1 px, the wax value reads danger-red, and the player's flame is red-
+   tinted (red is the reserved danger hue; wax<=6 is danger).
+   - CSS keyframes + cursor rule + reduced-motion override —
+     location: ~line 96-100.
+   - Class toggle in renderHUD, gated by G.flags.juiceEnabled —
+     location: ~line 1126.
+   - Canvas flame tint in drawPlayer — location: ~line 2040-2044.
+
+SKIPPED
+-------
+- [PARTICLES] Extra emitters — the pooled 48-cap emitter set already
+  covers pickups, impacts, snuff, floor-change, steps, win/death.
+  Adding more would risk the <50 perf cap for no new meaning. Duplicate.
+- [SCREEN SHAKE / HIT-STOP] Already specified and capped (6 px / 5 f) at
+  9 sites; no gap. Duplicate.
+- [SCORE/EVENT POPUPS] Already capped at 8 with the full event set. No gap.
+- [SCREEN TRANSITIONS] #juice-transition veil already fires on new-run /
+  floor / win / death. No gap.
+- [CAMERA MOTION] Smooth lerp-follow / look-ahead / deadzone — SKIPPED.
+  Camera is intentionally fixed player-at-centre (worldState contract);
+  the 1-tile glide is the reserved motion budget. Out of scope/risk.
+- [ANIMATION EASING] Squash/stretch, bouncy UI — SKIPPED. Would touch
+  sprite/UI draw paths; move-glide + zoom-punch cover the motion budget.
+- [SOUND VISUAL COMPLEMENT] Equalizer/ring indicators — SKIPPED. Prior
+  pass excluded it (noise vs horror contrast); unchanged.
+- [DREAD-TIER MASK COLOUR SHIFT] (visual_direction §6) — SKIPPED. This is
+  CORE rendering of the signature gradient, not additive juice; changing
+  per-frame gradient stops is a higher regression/parity risk than a
+  conservative polish pass should take. Flagged, not implemented.
+- [PORTRAIT EYE-TRACKING] (visual_direction §4) — SKIPPED. New set-piece
+  geometry/art, not juice; out of scope for an additives-only pass.
+
+VERIFICATION
+------------
+Command 1 — inline script syntax + template JSON:
+  $ node -e '<extract <script> blocks>'
+  -> TEMPLATE JSON: OK (keys=seed_default,test_seed,archetypes,
+     connectivity,required_things,required_encounters,resources,clocks,
+     npcs,social_actions,encounter_roster)
+  -> APP SCRIPT: extracted 1891 lines
+  $ node --check /tmp/opencode/app_check.js
+  -> NODE --CHECK: SYNTAX OK
+
+Command 2 — external-dependency scan:
+  $ grep -nE "src=|href=|https?://|fetch\(|import |XMLHttpRequest|
+     WebSocket|cdn\." index.html
+  -> only two local `var src=` (JS locals, not resource attrs); ZERO
+     external references. No external deps.
+
+Command 3 — world-model spatial check (unchanged expectation):
+  $ node scripts/check_template.mjs --template 20261011_004054/
+     world_template.json --state 20261011_004054/state_20261010.json
+     --fail-on spatial
+  -> 0 mismatch(es) — spatial 0, systemic 0 (mode=all, fail-on=spatial)
+  -> PASS — no spatial mismatch   (EXIT=0)
+
+Command 4 — headless smoke boot (Playwright + Firefox, http-served):
+  $ playwright-cli open --browser=firefox http://127.0.0.1:8731/index.html
+  Hooks present: TEMPLATE=object, SEED=3443473691, worldState/systemState/
+    move/social=function, audioTest=function, AUDIO_SPEC=object.
+  Started run; drove 40+ moves (window.move) -> wax fell 32 -> 5, then
+    -> 0 (enterGuttering fired: edgeFlash + shake + stop + burst + pop).
+  Low-wax confirmation at wax 5:
+    .candlewrap class = "candlewrap lowwax"; wax value computed colour =
+    rgb(192,26,26) (#C01A1A). PASS.
+  Canvas centre non-empty after moves (pixel sum 4192, 1280x720); render
+    intact, no black/broken frame.
+  Console: "Total messages: 0 (Errors: 0, Warnings: 0)" across the whole
+    run INCLUDING the guttering path that executes the new ring/hit-flash
+    draw code (ea>0) and the low-wax HUD warning.
+  Network: only the 1 static index.html request; no external fetches.
+
+FILES
+-----
+- Modified: index.html (2361 lines, in place)
+- Added:    juice_gaps.txt (Phase-1 analysis)
+- Added:    juice_report.txt (this file)
+=====================================================================

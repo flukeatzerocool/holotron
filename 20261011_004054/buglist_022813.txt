@@ -1,0 +1,184 @@
+BUGLIST — Torre Nosferatu (CYCLE 3 follow-up FIX VERIFICATION, static review)
+Reviewer: review_agent | Static review | 2026-10-11 02:28:13
+Target:   /home/fluke/Holotron/20261011_004054/index.html (2399 lines, single file, vanilla JS)
+References: TORRE_NOSFERATU.md (§6.4.1, §6.4.4, §8, §14, §15), gdd.md (§2.8),
+            world_template.json / world_template.txt, buglist_020912.txt (prior cycle)
+Method:   static read + `node --check` on the inline JS + a stubbed-DOM boot in a Node VM
+          (genuine boot()/makeState() exercised over 3,000 seeds; per-floor `pristineFloor`
+          export) + `scripts/check_template.mjs` run on the pinned seed's floors 1-6
+          (spatial, --fail-on spatial) + injection / npc-only negative controls.
+
+Headline: the fix round is correct and complete. All four declared fixes are present and
+verified; both prior MEDIUMs are RESOLVED. No CRITICAL, no HIGH, no MEDIUM. Three LOWs
+remain (one new dead field introduced by fix #3; two pre-existing defensive/theoretical
+edges). The build is CLEAN of CRITICAL/HIGH and is now also clean of MEDIUM.
+
+================================================================================
+CRITICAL
+================================================================================
+(none)
+
+================================================================================
+HIGH
+================================================================================
+(none)
+
+================================================================================
+MEDIUM
+================================================================================
+(none)
+
+  Prior [MEDIUM] #1 (dark-leap dead-data regression) — RESOLVED.
+    Location of fix: index.html:692-698 (key room may host `kind:"puzzle"`).
+    Evidence: over 3,000 seeds all five named hazards AND `dark-leap` are instantiated;
+      pinned seed 20261010 floor 5 = `d5-scribe-alcove-1` (key room: floor-key +
+      lore-fragment + `dark-leap`) and `d5-scribe-alcove-2` = `cursed-ward`.
+  Prior [MEDIUM] #2 (hazard room role vs spec) — RESOLVED by the §6.4.4/§14 rewording.
+    Location: TORRE_NOSFERATU.md:214-219 (§6.4.4) and :493-499 (§14) now state the hazard
+      sits in the second `scribe-alcove` and a `role:"hazard"` archetype is a deferred
+      refinement — no longer contradicting §6.4.1:184-189.
+
+================================================================================
+LOW
+================================================================================
+
+[LOW] `gutterCause` is now write-only dead state (no reader anywhere in the build).
+Location: index.html:780 (initialised `gutterCause:null`), index.html:1288 (assigned
+            `G.gutterCause=cause||'wax'`). Zero read sites (grep count = 2, both writes).
+Explanation: fix #3 replaced the cause-qualified wax-cake rule
+  (old: `G.gutterCause==='wax'`) with the snuffed-qualified `!G.snuffed` rule at
+  index.html:1336, and `tryRelight` never consults the cause either. The field is now
+  vestigial — harmless, but it invites a future reader to believe the snuff/wax cause is
+  still behaviourally significant. No gameplay or Phase-2 impact.
+Fix approach: either delete `gutterCause` (init + assignment) or retain it and add a
+  comment that it is informational only; optionally log it in `window.testState()`.
+
+[LOW] (defensive, unreachable) On a degenerate floor with <2 scribe-alcoves the key-room
+  fallback moves to a candle-nook and the single remaining alcove takes `pl[0]`, so floor
+  5's `kind:"puzzle"` `dark-leap` would go unplaced; the fallback can also select a
+  `shadow-hall`.
+Location: index.html:667-669 (`alcoveSlugs.length<2` → keyRoom = candle-nook) and
+            index.html:696-698 (sole non-key alcove = `pl[alcoveIdx%pl.length]` = `pl[0]`);
+            index.html:670 (generic catch-all can pick a `shadow-hall`).
+Explanation: Unreachable in practice — 3,000 fresh seeds plus the prior 20,000-seed sweep
+  always produced 0 alcoves on floor 1 and exactly 2 on floors 2-6 (alcoveCountBad = 0).
+  Filed as hardening only: the dark-leap placement now depends structurally on a floor
+  generating two alcoves, not merely empirically.
+Fix approach: when `alcoveSlugs.length<2`, also assign any leftover `kind:"puzzle"` id to
+  the fallback key room (or, in the catch-all, prefer a non-`shadow-hall` archetype).
+
+[LOW] (theoretical) The key room's puzzle assignment takes `qps[0]` only; a floor that
+  declared more than one `kind:"puzzle"` entry would silently drop the rest, and the
+  non-key alcove can receive a duplicate of the key room's puzzle.
+Location: index.html:696-697 (`qps[0]`).
+Explanation: The shipped roster declares exactly one puzzle (`dark-leap`, floor 5), so
+  `qps` is a singleton on every floor and this cannot occur today. Data-drift guard only.
+Fix approach: route leftover puzzles to the non-key alcove(s) (e.g. index the non-key
+  assignment off the union list minus the key room's pick), or assert `qps.length<=1`.
+
+================================================================================
+VERIFICATION — the four declared fixes (cited + evidence)
+================================================================================
+
+1. FIX #1 — key room hosts a routing PUZZLE but never a creature/hazard; second alcove
+   hosts the hazard — PRESENT AND CORRECT.
+   - Key-room branch: index.html:693-697 assigns only `kind==='puzzle'` ids found on that
+     floor; `alcoveIdx` is untouched by the key room; non-key alcoves (index.html:698)
+     still cycle the full haz+puz list.
+   - Empirical (3,000 seeds, live `pristineFloor`): hazards seen =
+     {collapsing-floor, light-trap, pressure-plate, cursed-ward, crumbling-stair};
+     `dark-leap` seen. Pinned seed 20261010 floor 5: key room `d5-scribe-alcove-1` =
+     floor-key+lore-fragment+`dark-leap`; `d5-scribe-alcove-2` = `cursed-ward`.
+     Other pinned floors: f2 pressure-plate, f3 collapsing-floor, f4 light-trap,
+     f6 crumbling-stair — each in the second alcove.
+   - No creature/hazard shares a required-thing room: 0 violations over 3,000 seeds
+     (every room holding floor-key/lore-fragment/wax-cake/matches has a null encounter).
+   - world_template.txt:104 & 107-110 updated to match (dark-leap in the key room; puzzles
+     may share a required room, hazards may not) — the prior stale-prose LOW is cleared.
+
+2. FIX #2 — Journal "Use Match" gating uses the same helper as the HUD — PRESENT.
+   - `relightAvailable()` defined index.html:1130-1132; HUD uses it index.html:1165;
+     journal uses it index.html:1830. Both are the identical boolean, so the journal button
+     can no longer render as a no-op at full grace.
+   - Guard equality (static): `relightAvailable()` = `matches>0 && ((guttering &&
+     grace<graceForTier()) || (snuffed && !guttering))`; `tryRelight()` (index.html:1660-1669)
+     returns true exactly under the same condition. Algebraically identical.
+
+3. FIX #3 — wax-pickup-ends-guttering — PRESENT.
+   - index.html:1336 condition is now `G.guttering && G.wax>0 && !G.snuffed`. A wax-out
+     guttering ends on refill; a snuff (snuffed=true) is not cleared by wax; a re-lit
+     snuff (snuffed=false after a match) can now be ended by wax — resolving the prior
+     "snuff-cause drift" LOW. Consistent with gdd.md:155-156 and TORRE §8:289-297.
+   - Residual: `gutterCause` becomes dead data (LOW #1 above).
+
+4. FIX #4 — TORRE §6.4.4 / §14 reworded to match §6.4.1 — PRESENT.
+   - §6.4.4 (TORRE_NOSFERATU.md:214-219): hazards are "placed in a non-required room — one
+     that holds no required thing ... never on the path to the key/lore (§14)".
+   - §14 (TORRE_NOSFERATU.md:493-499): the hazard room is the second `scribe-alcove`; a
+     `role:"hazard"` archetype is a "not-yet-taken refinement".
+   - §6.4.1 (:184-189) and §15 (:504-509) already used "never on a required path"; the two
+     clauses now agree. No internal contradiction remains.
+
+================================================================================
+VERIFICATION — RE-CONFIRM items (no regression)
+================================================================================
+
+A. Generator — PASS.
+   - Floors 2-6: exactly 2 scribe-alcoves (0 violations / 3,000 seeds; alcoveCountBad=0);
+     key room = first alcove, holding floor-key + lore-fragment, encounter either null or a
+     `kind:"puzzle"` only (index.html:657, 663-669, 693-697).
+   - Floor 1 unchanged: nP=0 (index.html:638); keyRoom = first candle-nook (:664-665);
+     key + lore ride there; exactly 1 creature (bats) and 0 alcoves. Pinned seed confirms
+     `d1-candle-nook-1` = wax/matches/oil + floor-key + lore-fragment, `d1-shadow-hall-1` = bats.
+   - Required things never share a creature/hazard room (0 violations).
+
+B. checkPlacement — PASS (hard, non-vacuous, template-driven, no false positive).
+   - scripts/check_template.mjs:90-109: `taxing` = only `kind:'creature'|'hazard'` (:96);
+     `kind:'puzzle'` is therefore NOT flagged, which is what makes the key-room puzzle legal.
+     Non-vacuous (taxing.size>0 and required.size>0 on this template). Mismatch kind is
+     `spatial` (:106), so `--fail-on spatial` is hard (:249-255).
+   - Positive control: injecting `floor-key` into the hazard room `d5-scribe-alcove-2`
+     (`cursed-ward`) → 1 spatial MISMATCH, exit 1 (FAIL).
+   - Negative control: with `encounter_roster` filtered to `kind:'npc'`, the same offending
+     state → 0 mismatches, exit 0 (early return, :98). Confirms template-driven, not hard-coded.
+   - No false positive on shipped data: floors 1-6 exported from `window.pristineFloor(20261010)`
+     and the shipped `state_20261010.json` / `state_20261010_d2.json` all PASS
+     `--mode all|spatial --fail-on spatial` (0 mismatch).
+
+C. Relight — PASS.
+   - `relightAvailable()` == `tryRelight()`'s guard exactly (see fix #2); HUD button cannot
+     appear where `tryRelight` fails.
+   - `tryRelight` (index.html:1657-1675) contains no `G.wax=` write → no wax exploit; a
+     match buys at most +1 grace and is bounded by MATR.max.
+   - Terminal path preserved: guttering is never cleared by a match; grace decrements in
+     `takeTurn` (:1298-1301) to death; wax-cake ends only a not-snuffed guttering (:1336).
+
+D. Cycle-2/3 HIGH fixes intact — PASS.
+   - Snuff parity: `resolvePuzzle` risk branch (index.html:1639) →
+     `enterGuttering(G.wax<=0?'wax':'snuff')`; `resolveCreature` (:1611-1612) →
+     `if(G.wax<=0) enterGuttering('wax'); else if(G.snuffed && G.matches<=0) enterGuttering('snuff')`.
+     Equivalent guards.
+   - Exit gate key source: `attemptExit` reads `G.floorKey[G.depth]` (:1433); stair gate
+     (:1387), `descend` (:1406), pickup write (:1351), HUD `haveKey` (:1137), journal (:1816).
+     `G.key` re-derived on descend (:1410) and ascend (:1423). No stale read.
+   - worldState vertical-exit metadata: `snapshotRooms` emits `exitUp`/`exitDown` (:757-763);
+     live `pristineFloor(2)` shows `d2-spire-entry-1 exitUp=d1-descending-stair-1` and
+     `d2-descending-stair-1 exitDown=d3-spire-entry-1`.
+
+E. No new dependency / single-file vanilla JS — PASS.
+   - `node --check` on the inline JS PASS. No `http(s)://`, `<script src>`, `import`, or
+     `require(` references. Only two `<script>` tags: the JSON data block and the code block.
+   - viewport meta present (:5); touch + mouse both bound (:1255-1262); 7 screens
+     (title/howto/settings/pause/over/victory + gameplay HUD) with Pause music/SFX/resume/
+     howto/settings/title and Settings music/SFX/reset/credits; `window.AUDIO_SPEC` +
+     `window.audioTest` exposed (:2249-2262); game-feel gated by `juiceEnabled`/`reducedMotion`.
+
+================================================================================
+SUMMARY
+================================================================================
+CRITICAL: 0 | HIGH: 0 | MEDIUM: 0 | LOW: 3 — 3 issues total.
+All four declared fixes are present and correct; both prior MEDIUMs are RESOLVED (dark-leap
+now instantiated; TORRE §6.4.4/§14 reconciled with §6.4.1). The build is CLEAN of
+CRITICAL/HIGH and CLEAN of MEDIUM. The three LOWs are non-blocking: one new dead field
+(`gutterCause`), and two defensive/theoretical generator edges that are unreachable on all
+sampled seeds.

@@ -1,0 +1,37 @@
+RUNTIME ERRORS — Torre Nosferatu
+Agent: puppeteer_agent (Playwright-cli fallback / Firefox headless)
+Game under test: /home/fluke/Holotron/20261011_004054/index.html  (mtime 2026-10-11 01:14)
+World template:  /home/fluke/Holotron/20261011_004054/world_template.json (mtime 01:14, current/regenerated)
+Run timestamp: 2026-10-11 01:16:55  (FINAL verification, REVIEW CYCLE 3, suffix 011655)
+Browser: Firefox (playwright-cli 0.1.19, cached firefox-1542)
+Server: python3 -m http.server 8123 --bind 127.0.0.1 --directory 20261011_004054
+Viewports exercised: 1920x1080 (desktop), 800x600 (desktop-small), 375x667 (mobile/touch)
+
+Console errors / warnings captured (page load through full input battery):   NONE
+Uncaught exceptions captured (window.onerror / pageerror):                   NONE
+Failed interaction mechanics:                                                NONE
+Viewport-specific layout/overflow issues:                                    NONE
+New runtime bugs (CRITICAL/HIGH/MEDIUM/LOW):                                 NONE
+
+Details
+-------
+- desktop        (1920x1080): 0 console errors, 0 console warnings, 0 uncaught exceptions, 0 issues
+- desktop-small  (800x600):   0 console errors, 0 console warnings, 0 uncaught exceptions, 0 issues
+- mobile         (375x667):   0 console errors, 0 console warnings, 0 uncaught exceptions, 0 issues
+  (mobile driven in a REAL touch context: browser.newContext({hasTouch:true}) + page.touchscreen.tap,
+   so every mobile interaction was a genuine touchscreen tap, not synthetic dispatchEvent.)
+
+Cycle-3 delta (after cycle-2 bugfix_agent edits, index.html mtime 01:14)
+----------------------------------------------------------------------
+- Re-ran the FULL battery from scratch against the freshly edited index.html and the regenerated
+  world_template.json. No cycle-1/2 result was reused.
+- New this cycle: a driven end-to-end win playthrough (floor 1 -> ground floor, depth 1..6), the
+  hazard encounter-modal drive on all five named hazards, the match/guttering exploitation probe,
+  and the HUD-vs-gate key parity round trip. All ran with 0 console errors / 0 page errors
+  (see test_report_011655.txt for the mechanics results).
+- The cycle-2 changes (hazards retagged kind:"hazard"; floor-1 generation; vertical-exit metadata)
+  produced NO runtime regression: all screens render, all inputs fire, gameplay mutates state,
+  canvas renders, no layout overflow at any viewport.
+- AUDIO_SPEC still defined; all declared scenarios render audibly (see audio_report_011655.txt).
+
+RESULT: NO RUNTIME ERRORS. No new runtime bug of any severity (CRITICAL/HIGH/MEDIUM/LOW) found.

@@ -1,0 +1,247 @@
+BUGLIST — Torre Nosferatu (CYCLE 3 post-structural-change, static verification)
+Reviewer: review_agent | Static review | 2026-10-11 02:09:12
+Target:   /home/fluke/Holotron/20261011_004054/index.html (2392 lines, single file, vanilla JS)
+References: TORRE_NOSFERATU.md (§6.4.1, §6.4.4, §8, §14, §15)
+            gdd.md (§2.8) + world_template.json / world_template.txt
+Prior:    buglist_011655.txt (cycle 3) — residual items re-verified below.
+Pre-change baseline for regression diff: index.html.cycle3.bak (118,802 bytes).
+Method:   static read + `node --check` on the inline JS + stubbed-DOM boot in a Node VM
+          (genuine boot(), makeState() exercised up to 20,000 seeds) + a behavioural
+          assertion harness against the exposed internals + `scripts/check_template.mjs`
+          run on all six floors (spatial, --fail-on spatial).
+
+Headline: the structural change is functionally sound — the key-room/hazard separation
+holds, relight has no wax exploit, ascend re-derives the key, and no cycle-2/3 HIGH
+regressed. ONE new content regression (MEDIUM) was introduced: the floor-5 `dark-leap`
+puzzle is now never generated. A carried MEDIUM (hazard room role) is unchanged and the
+change left two spec clauses stale. No CRITICAL, no HIGH.
+
+================================================================================
+CRITICAL
+================================================================================
+(none)
+
+================================================================================
+HIGH
+================================================================================
+(none)
+
+================================================================================
+MEDIUM
+================================================================================
+
+[MEDIUM] (NEW REGRESSION) Forcing floors 2-6 to exactly 2 scribe-alcoves and reserving the
+  first as the key room leaves only ONE encounter alcove per floor, so any floor that
+  declares more than one hazard/puzzle loses the extra. On the shipped roster this drops
+  `dark-leap` entirely: it is never instantiated on any floor or seed.
+Location: index.html:638 (`var nP = (depth===1) ? 0 : 2;`)
+          index.html:664-666 (keyRoom = alcoveSlugs[0] on floors 2-6)
+          index.html:692-694 (only non-key alcoves consume `alcoveIdx`, and with a single
+            such alcove `pl[alcoveIdx % pl.length]` only ever evaluates `pl[0]`)
+          Roster: world_template.json:180 (`dark-leap`, kind `puzzle`, floor 5), which sits
+            AFTER `cursed-ward` (world_template.json:178) in roster order.
+          Declared intent: gdd.md:80 (floor-5 puzzle = `dark-leap`), gdd.md:103,
+            world_template.txt:104 & 107 ("dark-leap ... shares floor 5 as a secondary
+            encounter").
+Explanation: `puzzleListAt(5)` returns `[cursed-ward, dark-leap]`, but floors 2-6 now place
+  exactly two alcoves and permanently exclude `alcoveSlugs[0]` (the key room) from
+  encounters (index.html:693). With one remaining alcove, `alcoveIdx` is 0 once, so only
+  `pl[0]` = `cursed-ward` is ever assigned; `dark-leap` is unreachable on every floor.
+  Verified by booting the exact file and scanning random/per-floor state: across 30 seeds
+  the CURRENT build instantiates floor-5 encounters `{cursed-ward, shades}` only, while the
+  pre-change backup (index.html.cycle3.bak:636, whose encounter loop at :683 gave EVERY
+  alcove a puzzle) instantiates `{cursed-ward, dark-leap, shades}`. This is a true
+  regression of the behaviour the cycle-3 review previously cited as proof-of-fix
+  ("f5 cursed-ward + dark-leap — all five named hazards selectable", buglist_011655.txt:115-116).
+  The Phase-2 checks do NOT catch it: `dark-leap` is absent from `required_encounters`
+  (world_template.json:67-71) and `window.systemState()` echoes the whole roster id list
+  regardless of placement (index.html:2198), so the systemic check stays green while the
+  content is missing. Mechanically the game still plays; a declared hazard/encounter class
+  and its GDD-described recon puzzle are simply gone.
+Fix approach (choose one, minimal):
+  (a) lift the key-room exclusion to hazards only — a `kind:"puzzle"` encounter (dark-leap)
+      may share the key room since it is not a "hazard" and `checkPlacement` already excludes
+      `kind:"puzzle"` (scripts/check_template.mjs:96); assign leftover `pl[1..]` to the
+      key-room alcove; or
+  (b) place the secondary floor-5 puzzle in a `shadow-hall`/corridor, or add a third alcove
+      on floors whose roster declares >1 puzzle/hazard; or
+  (c) if the single-encounter-per-floor model is intended, remove `dark-leap` from
+      `encounter_roster` and its GDD/world_template.txt references so the declared content
+      matches what ships.
+  Re-run the per-floor scan afterwards (expect `dark-leap` to appear on floor 5).
+
+[MEDIUM] (CARRIED — deliberately deferred in cycle 3; NOT addressed by this change) Hazards
+  are still placed in a `role:"puzzle"` room. TORRE §6.4.4 and §14 require a hazard's room
+  to carry archetype `role:"hazard"`; the only such archetype (`shadow-hall`) holds
+  creatures, while every hazard sits in a `scribe-alcove` (`role:"puzzle"`).
+Location: index.html:692-694 (hazards assigned to non-key `scribe-alcove`s);
+          index.html:298-318 (archetypes: `shadow-hall.role:"hazard"`,
+            `scribe-alcove.role:"puzzle"`, mirrored in the embedded block);
+          TORRE_NOSFERATU.md:216-217 (§6.4.4) and TORRE_NOSFERATU.md:492-493 (§14).
+Explanation: The change reworded §6.4.1 (line 184-189) and §15 (line 504-505) from
+  "never on a cut-edge" to "never required for progress" — and the implementation now
+  satisfies that rewording (the key room is encounter-free; verified below). But §6.4.4
+  and §14 still assert the hazard's ROOM archetype carries `role:"hazard"`, and the shipped
+  engine does not. The change therefore left the spec internally contradictory: §6.4.1/§15
+  are now met while §6.4.4/§14 are not. Data-model / spec-conformance only; no gameplay or
+  Phase-2 impact (spatial gate passes on all floors).
+Fix approach: either (i) author a dedicated `role:"hazard"` archetype and route hazards
+  there (the cycle-2/3 deferred restructure), or (ii) amend §6.4.4 and §14 to state the
+  hazard shares the puzzle-room archetype and is identified by its `kind:"hazard"` roster
+  entry. Whichever is chosen, make the two clauses agree with §6.4.1.
+
+================================================================================
+LOW
+================================================================================
+
+[LOW] Journal "Use Match" button is gated more loosely than `tryRelight()`, so it can render
+  at full grace where a press is a silent no-op (modal closes, nothing happens).
+Location: index.html:1823 (condition `G.matches>0 && (G.snuffed||G.guttering)`) vs
+          index.html:1158 (HUD `canRelight`, correctly gated) and index.html:1653-1655
+          (`tryRelight` guttering guard requires `G.grace<graceForTier()`).
+Explanation: The HUD button is exactly aligned with `tryRelight` and therefore cannot yield a
+  dead "CANNOT RE-LIGHT" (verified below). The journal button, however, shows whenever the
+  candle is snuffed/guttering and a match is held — including guttering AT full grace, where
+  `tryRelight` returns false without feedback. No misleading toast is shown (the handler at
+  :1827 ignores the return), so this is minor UX only.
+Fix approach: gate the journal button with the same expression as line 1158 (e.g. compute
+  `canRelight` once and reuse it in `openJournal`).
+
+[LOW] Snuff-caused guttering cannot be ended by wax even after the flame is re-lit: a match
+  during guttering sets `G.snuffed=false` but `G.gutterCause` stays `'snuff'`, so a later
+  wax-cake never clears it (the candle is lit and fuelled, yet still gutters to death).
+Location: index.html:1653-1655 (`tryRelight` guttering branch clears `snuffed`, +1 grace,
+            leaves `guttering`/`gutterCause` unchanged) and index.html:1329 (wax-cake clears
+            guttering only when `G.gutterCause==='wax'`).
+Explanation: The cause-qualified wax-cake rule is the intended new behaviour and it does make
+  the code consistent with gdd.md:155 ("a snuff with no match is not recoverable") + :156.
+  The edge is the state `snuffed=false, guttering=true (cause 'snuff'), wax>0`, in which the
+  flame is described as "lit" yet remains terminal. Wording in TORRE §8 ("you may still reach
+  a match or the exit") and gdd.md:156 ("only wax ... ends it") does not spell out the
+  cause qualifier, so a reader could expect the wax-cake to catch the flame.
+Fix approach: documentation-only, or (optionally) clear guttering when `wax>0 &&
+!snuffed`; at minimum add the cause qualifier to gdd.md:156 and TORRE §8.
+
+[LOW] world_template.txt still describes `dark-leap` as sharing floor 5, contradicting the
+  regression in MEDIUM #1 (stale prose after the structural change).
+Location: world_template.txt:104 and world_template.txt:107-109.
+Explanation: With the change, `dark-leap` is never placed, so the .txt claim is now false.
+  Embedded `window.TEMPLATE` and world_template.json are byte-identical (verified), so only
+  the human-readable .txt drifted from runtime reality.
+Fix approach: fixed automatically by the MEDIUM #1 fix; otherwise reword the prose.
+
+[LOW] Defensive: the keyRoom fallback can, on a hypothetical degenerate floor with neither a
+  candle-nook nor a scribe-alcove, select a `shadow-hall` and place `floor-key`/`lore-fragment`
+  in a creature room — violating the new invariant.
+Location: index.html:667-671 (fallback chain culminates in "any room that is not the entry or
+            a descending-stair", which can be a `shadow-hall`); index.html:692-694 only
+            excludes the key room when it is a `scribe-alcove`.
+Explanation: Unreachable in practice: over 20,000 seeds every floor 1-6 always generated a
+  candle-nook and every floor 2-6 generated exactly two scribe-alcoves (0 placement
+  violations, 0 archetype-bound violations, 0 missing required things). Filed as defensive
+  hardening only — the invariant is structurally, not just empirically, dependent on a
+  candle-nook or an alcove existing.
+Fix approach: in the fallback, exclude rooms that carry a taxing encounter when choosing
+  `keyRoom` (e.g. prefer a non-`shadow-hall` archetype before the generic catch-all).
+
+================================================================================
+VERIFICATION (each item in the change under review, with line citations + evidence)
+================================================================================
+
+1. Generator correctness — PASS.
+   - Key room never has an encounter: `slug===keyRoom` sets `encounter=null`
+     (index.html:693); only `shadow-hall` (:691) and non-key `scribe-alcove` (:692-694)
+     ever receive a `kind:"creature"|"hazard"` id.
+   - Every required thing is in a hazard-free room on every floor. 20,000-seed sweep of a
+     genuine `makeState` boot: placementViolations=0 (no `wax-cake|matches|lore-fragment|
+     floor-key` co-located with a creature/hazard encounter), missingRequired=0. Pinned seed
+     20261010: floor 1 key+lore in `d1-candle-nook-1`; floors 2-6 key+lore in the first
+     alcove (e.g. `d2-scribe-alcove-1`), the hazard in the second (`d2-scribe-alcove-2` =
+     pressure-plate; f3 collapsing-floor; f4 light-trap; f5 cursed-ward; f6 crumbling-stair).
+   - Floor 1 unchanged: nP=0 (:638), keyRoom = first candle-nook (:664-665), lore rides with
+     it (:675). Runtime floor-1 state matches the pre-change backup.
+   - scribe-alcove count within [0,2]: exactly 0 on floor 1 and exactly 2 on floors 2-6
+     across all 20,000 seeds (archetypeCountViolations=0). `check_template.mjs` archetype
+     bounds (index.html archetypes → scribe-alcove `count:[0,2]`) pass on all six floors.
+
+2. checkPlacement — PASS.
+   - Kind: `mismatches.push({ kind: 'spatial', ... })` (scripts/check_template.mjs:106),
+     called from `checkSpatial` (:84); `--fail-on spatial` treats `kind===opts.failOn` as hard
+     (:249-255). Confirmed hard by injecting a required thing into `d2-scribe-alcove-2`
+     (hazard pressure-plate): produced 1 spatial MISMATCH and exit status FAIL.
+   - Template-driven no-op: with `encounter_roster` filtered to `kind:"npc"` only, the same
+     offending state yields 0 mismatches / PASS (the `taxing.size===0` early return, :98);
+     also returns early when `required_things` is empty (:100).
+   - No false positive on shipped data: `--mode spatial --fail-on spatial` against each of
+     floors 1-6 exported via `window.pristineFloor(d)` → "0 mismatch(es) — spatial 0" PASS
+     for all six; the shipped `state_20261010.json` (floor 1) also PASSes `--mode all`.
+
+3. Relight — PASS (no exploit, terminal path preserved, guards aligned).
+   Behavioural assertions against the live internals (all PASS):
+   - match at full grace: `tryRelight` returns false, NO match consumed, grace unchanged.
+   - guttering below max: `+1` grace capped at `graceForTier()`, guttering PERISTS, exactly
+     one match consumed, NO wax added.
+   - snuff (not guttering): relights, clears `snuffed`, consumes one match, adds no wax.
+   - snuff with 0 matches → false; lit candle → false.
+   - wax-cake pickup guard: `cause==='snuff'` does NOT clear, `cause==='wax'` DOES
+     (index.html:1329).
+   - No wax is ever written by `tryRelight` (index.html:1650-1668 contains no `G.wax=`) —
+     economy exploit impossible; matches are bounded by `MATR.max`, each buys at most one net
+     grace turn.
+   - `canRelight` (index.html:1158) is the exact boolean of `tryRelight`'s guards
+     (:1653-1654 guttering branch; :1661-1662 snuff branch): `matches>0 && ((guttering &&
+     grace<graceForTier) || (snuffed && !guttering))`. The HUD button (:1159) therefore
+     cannot show while `tryRelight` would fail → no dead "CANNOT RE-LIGHT" from a shown
+     button (:2341). (Journal button caveat filed as LOW.)
+   - snuff-vs-wax entry parity: `enterGuttering('wax')` on `wax<=0` (:1299, :1604, :1632) and
+     `enterGuttering('snuff')` on `snuffed && matches<=0` (:1605, :1632); `resolvePuzzle`
+     snuff path (:1630-1632) matches `resolveCreature` (:1603-1605).
+
+4. Ascend — PASS.
+   - Button visible only where `exits.up` exists: index.html:1164-1166; HTML at :192; handler
+     at :2345. `exits.up` is set only on the entry room of floors 2-6 (:727), and
+     `snapshotRooms` exposes it as `exitUp` metadata (:759). Mutually exclusive with the
+     Descend button (only the descending-stair room shows Descend, :1160-1163).
+   - `ascend()` re-derives the key from `floorKey`: index.html:1416
+     `G.key=!!G.floorKey[G.depth];`. Assertions PASS: ascend 6→5 with `floorKey[5]=true`
+     → `key=true`; with `floorKey[5]=false` → `key=false`; depth-1 ascend is a no-op.
+   - No descend interaction: `descend` (:1396-1410) writes `G.descendedFrom` and re-derives
+     the key at :1403; `ascend` reads `G.descendedFrom`/`prev.exitSlug` (:1415). Descend
+     4→5 re-derives `key=true` (assertion PASS). No shared mutable state beyond
+     `descendedFrom`, which is written before read.
+
+5. Cycle-2/3 HIGH fixes — NO REGRESSION.
+   - Snuff parity in `resolvePuzzle`: verified (see 3).
+   - Exit gate key source: `attemptExit` reads `G.floorKey[G.depth]` (index.html:1426); stair
+     gate (:1380) and descend (:1399) read the same; pickup writes it (:1344); HUD
+     (`haveKey`, :1130) and journal (:1809) read it. `G.key` is re-derived on descend (:1403)
+     and ascend (:1416). No stale-`G.key` read on a gate.
+   - worldState vertical-exit metadata: `exitUp`/`exitDown` emitted (index.html:758-759);
+     live check on floor 2 shows `d2-spire-entry-1 exitUp=d1-descending-stair-1` and
+     `d2-descending-stair-1 exitDown=d3-spire-entry-1`.
+
+6. New bugs / edge cases — one found (MEDIUM #1 above); others clean.
+   - Floor with <2 alcoves: index.html:667-669 falls back to a candle-nook key room; lore is
+     added unconditionally (:675) so it is still placed. Never exercised in 20,000 seeds.
+   - Binary template sync: embedded `window.TEMPLATE` == world_template.json (deep-equal) and
+     `scribe-alcove.things` is `[]` in both; world_template.txt prose updated for the key/lore
+     placement (lines 17, 20-25, 42-43, 108-109). The only drift is the now-false `dark-leap`
+     sentence (LOW).
+   - Parse/boot: `node --check` on the inline JS PASS; genuine `boot()` in a stubbed DOM runs
+     clean (default random seed; `?test=1` ⇒ test_seed 20261010).
+
+Standard checks (all OK): single self-contained file / vanilla JS; `node --check` clean;
+viewport meta present; touch + mouse both bound; no external `http(s)://`, `<script src=`,
+`import`, or `require` references; 7 screens with Pause music/SFX/HowTo/resume/back and
+Settings music/SFX/reset/credits; game-feel gated by `juiceEnabled`/`reducedMotion`;
+`window.AUDIO_SPEC` + `window.audioTest` exposed.
+
+================================================================================
+SUMMARY
+================================================================================
+CRITICAL: 0 | HIGH: 0 | MEDIUM: 2 | LOW: 4 — 8 issues total.
+The structural change (hazard-free key room, `checkPlacement`, flag-keyed relight, Ascend
+button) is functionally correct and does not regress any cycle-2/3 HIGH. The build is clean
+of CRITICAL and HIGH, but NOT clean of MEDIUM: MEDIUM #1 is a NEW content regression
+(`dark-leap` is never generated because only one non-key alcove remains per floor), and
+MEDIUM #2 is the carried hazard-room-role conformance deviation the change left in place.

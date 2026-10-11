@@ -1,0 +1,164 @@
+TEST REPORT — Torre Nosferatu
+Agent: puppeteer_agent (Playwright-cli fallback / Firefox headless)
+Game: /home/fluke/Holotron/20261011_004054/index.html  (mtime 2026-10-11 01:14)
+World template: /home/fluke/Holotron/20261011_004054/world_template.json (mtime 01:14, current)
+Timestamp: 2026-10-11 01:16:55  |  FINAL verification, REVIEW CYCLE 3  |  suffix 011655
+
+Environment
+-----------
+- No Chromium / no Puppeteer available (verified). Browser work performed with the playwright-cli
+  fallback: Firefox headless, cached at ~/.cache/ms-playwright/firefox-1542.
+- Served via `python3 -m http.server 8123 --bind 127.0.0.1 --directory 20261011_004054`.
+- Each viewport ran in its own browser context. Desktop contexts: hasTouch=false, real mouse events.
+  Mobile context: browser.newContext({hasTouch:true, viewport 375x667}) + page.touchscreen.tap.
+- Every UI interaction is hit-tested first (bounding-rect centre -> document.elementFromPoint)
+  before the click/tap, so a PASS means the coordinate actually landed on the target element.
+
+The same 13-checks-per-viewport battery as cycles 1-2 was re-run on the current file.
+
+===============================================================================
+STANDARD RUNTIME BATTERY
+===============================================================================
+
+Viewport: desktop 1920x1080 (mouse)
+  PASS  title_loads                     titleActive=true  ("Torre Nosferatu — Dread Weather")
+  PASS  howto_open                      hit=true 176x48 target=btn-howto howtoActive=true
+  PASS  howto_back                      hit=true 150x48 target=btn-howto-back titleActive=true
+  PASS  settings_open                   hit=true 118x48 target=btn-title-settings settingsActive=true
+  PASS  settings_music_toggle           hit=true 96x48  On(true)->Off(false) changed=true
+  PASS  settings_sfx_toggle             hit=true 96x48  On(true)->Off(false) changed=true
+  PASS  settings_back                   hit=true 150x48 target=btn-settings-back titleActive=true
+  PASS  start_transitions_to_gameplay   inGame=true hud=true pos=d1-spire-entry-1 wax=32
+  PASS  pause_open                      hit=true 112x48 target=btn-pause pauseActive=true
+  PASS  pause_resume                    hit=true 184x48 target=btn-resume inGame=true hud=true
+  PASS  canvas_renders_nonblank         nonblack=68/4096 avg=0.336 canvas=1920x1080
+  PASS  canvas_move_changes_state       dir=north @ (960,450) topId=game pos d1-spire-entry-1->d1-stair-corridor-1
+                                        wax 32->31 (delta -1) turn 0->1 (delta +1) modal=false
+  PASS  layout_no_overflow              offScreen=[] docX=false docY=false smallTargets=[]
+  console errors: []   console warnings: []   uncaught exceptions: []
+
+Viewport: desktop-small 800x600 (mouse)
+  PASS  title_loads                     titleActive=true
+  PASS  howto_open                      hit=true 176x48 howtoActive=true
+  PASS  howto_back                      hit=true 150x48 titleActive=true
+  PASS  settings_open                   hit=true 118x48 settingsActive=true
+  PASS  settings_music_toggle           hit=true 96x48 On->Off changed=true
+  PASS  settings_sfx_toggle             hit=true 96x48 On->Off changed=true
+  PASS  settings_back                   hit=true 150x48 titleActive=true
+  PASS  start_transitions_to_gameplay   inGame=true hud=true pos=d1-spire-entry-1 wax=32
+  PASS  pause_open                      hit=true 112x48 pauseActive=true
+  PASS  pause_resume                    hit=true 184x48 inGame=true hud=true
+  PASS  canvas_renders_nonblank         nonblack=82/4096 avg=0.541 canvas=800x600
+  PASS  canvas_move_changes_state       dir=south @ (400,350) topId=game pos d1-spire-entry-1->d1-stair-corridor-1
+                                        wax 32->31 turn 0->1 modal=false
+  PASS  layout_no_overflow              offScreen=[] docX=false docY=false smallTargets=[]
+  console errors: []   console warnings: []   uncaught exceptions: []
+
+Viewport: mobile 375x667 (REAL touch — hasTouch context + touchscreen.tap)
+  PASS  title_loads                     titleActive=true
+  PASS  howto_open                      hit=true 154x48 howtoActive=true
+  PASS  howto_back                      hit=true 150x48 titleActive=true
+  PASS  settings_open                   hit=true 118x48 settingsActive=true
+  PASS  settings_music_toggle           hit=true 96x48 On->Off changed=true
+  PASS  settings_sfx_toggle             hit=true 96x48 On->Off changed=true
+  PASS  settings_back                   hit=true 150x48 titleActive=true
+  PASS  start_transitions_to_gameplay   inGame=true hud=true pos=d1-spire-entry-1 wax=32
+  PASS  pause_open                      hit=true 112x48 pauseActive=true
+  PASS  pause_resume                    hit=true 161x48 inGame=true hud=true
+  PASS  canvas_renders_nonblank         nonblack=225/4096 avg=1.571 canvas=375x667
+  PASS  canvas_move_changes_state       dir=east @ (236,334) topId=game pos d1-spire-entry-1->d1-stair-corridor-1
+                                        wax 32->31 turn 0->1 modal=false
+  PASS  layout_no_overflow              offScreen=[] docX=false docY=false smallTargets=[]
+  console errors: []   console warnings: []   uncaught exceptions: []
+
+Mechanic-verification notes (per the "verify it actually fired" principle)
+-------------------------------------------------------------------------
+- Start is verified by state, not just a screen swap: window.testState().inGame flips false->true
+  and #hud gains the .active class.
+- Settings toggles verify the observable control state (button label On->Off AND the .on class),
+  proving the tap/click reached the handler and mutated the toggle.
+- Each gameplay move is a genuine canvas input at the neighbouring tile's screen coordinate; it
+  verifies BOTH the position change AND the wax decrement (32->31, delta -1) and turn increment
+  (0->1, delta +1), with no blocking modal. Hit-test at that tile returned topId=game (the canvas).
+- Canvas non-blank sampled by drawing the game canvas into a 64x64 probe and counting non-black
+  pixels (68-225 of 4096 at the three viewports, i.e. lit content present).
+- Hit-testing confirmed every interacted control's centre landed on the target element; every
+  button met the >=44px touch-target minimum (smallest observed 96x48; small_targets empty).
+- Touch path proven with the browser's real touchscreen API on a hasTouch context.
+
+Layout / overflow
+-----------------
+  375x667: no off-screen HUD element, no off-screen modal, no off-screen visible button, no
+           document horizontal/vertical overflow; all visible button targets >= 44px in both
+           dimensions. HUD and all modals (encounter/social/journal) fit within 375x667.
+           No viewport-specific issues.
+
+===============================================================================
+CYCLE-3 NEW CHECKS (specific to the cycle-2 changes)
+===============================================================================
+All new checks were driven live (real gameplay via window.move + DOM controls) on seed 20261010.
+
+N1. Hazards retagged kind:"hazard" — encounter presence/reachability + modal + creature placement
+    PASS. world_template.json and the game's embedded TEMPLATE.encounter_roster both declare the
+    five hazards with kind:"hazard": pressure-plate(f2), collapsing-floor(f3), light-trap(f4),
+    cursed-ward(f5), crumbling-stair(f6). Phase-2 encounter presence/reachability still validates
+    (checker systemic 0; systemState().encounters contains every hazard id).
+    Encounter modal DRIVEN for a hazard room: entering d2-scribe-alcove-1 (pressure-plate) opened
+    #modal-encounter with title "A pressure-plate shifts" and buttons [Press on, Turn back]; the
+    driver resolved it via "Turn back" (costs wax, no snuff). Four more hazard modals were also
+    driven — collapsing-floor@d3, light-trap@d4, cursed-ward@d5, crumbling-stair@d6 — each with the
+    correct title/desc/buttons.
+    Creature placement UNCHANGED: floor 1 shadow-hall encounter = bats; floor 2 shadow-hall = rats
+    (plus spiders f3, wolves f4, shades f5, light-eater f6). Confirmed from live worldState().
+
+N2. All five named hazards selectable on their floor (no dead data)
+    PASS. Live per-floor scan on seed 20261010:
+        floor 2  scribe-alcove -> pressure-plate (hazard)
+        floor 3  scribe-alcove -> collapsing-floor (hazard)  [x2 alcoves]
+        floor 4  scribe-alcove -> light-trap (hazard)
+        floor 5  scribe-alcove -> cursed-ward (hazard) + scribe-alcove -> dark-leap (puzzle)
+        floor 6  scribe-alcove -> crumbling-stair (hazard)   [x2 alcoves]
+    Each of the five hazards is present AND was actually entered (modal observed) on its declared
+    floor -> none is dead data.
+
+N3. Match ends guttering; using a match during guttering restores flame and does NOT add wax
+    PASS. Driven path: via the real Wait control, wax was burned 32->0 (turn 32), entering the
+    guttering dark (testState().guttering=true, wax=0, matches=2). Clicking the real #btn-usematch
+    control (-> tryRelight()) produced:
+        before: wax 0, matches 2, guttering true
+        after : wax 0, matches 1, guttering false, snuffed false
+        next turn: wax 0, guttering true again  (light is restored but fuel is not)
+    i.e. guttering ENDS, the flame returns, matches is spent, and wax is UNCHANGED (0) -> no wax
+    exploit. Static confirmation (index.html:1626-1636, tryRelight): G.matches--; G.snuffed=false;
+    G.guttering=false; — there is no write to G.wax anywhere in the function. Driven path used.
+
+N4. Exit/win path — full own-light win reachable; HUD key indicator agrees with the gate
+    PASS. Live end-to-end playthrough on seed 20261010: collected a floor-key on each floor,
+    descended via the declared 'down' vertical exit through depths 1->2->3->4->5->6 (ground floor),
+    then moved 'down' from the ground-floor descending-stair:
+        final: won=true, wonType="full", dead=false, depth=6, wax=23, turn=96
+    Full own-light win (not 'borrowed') reached.
+    Gate correctness: at floor-2 descending-stair BEFORE holding floor-2's key, window.move('down')
+    returned false (locked) and depth stayed 2; after collecting the key the gate opened.
+    HUD/gate parity across a descend/ascend round trip:
+        arrival floor 2  : floorKey={1:true}  HUD "no key"    -> agrees (depth 2 key not held)
+        after ascend f1  : floorKey={1:true}  HUD "KEY HELD"  -> agrees
+        after descend f2 : floorKey={1:true}  HUD "no key"    -> agrees
+    All three HUD states match (G.floorKey[G.depth] ? 'KEY HELD' : 'no key') exactly.
+
+N5. AUDIO_SPEC still defined; all scenarios vs thresholds
+    PASS — see audio_report_011655.txt. window.AUDIO_SPEC applicable:true with 6 scenarios; all
+    six clear their floors (bed rms 0.0956 band 0.0247; cues 0.0956-0.0964); controls good-bed
+    PASS / dead-bed MISS.
+
+===============================================================================
+SUMMARY
+===============================================================================
+Total standard checks: 39 (13 per viewport x 3 viewports)  |  PASS: 39  |  FAIL: 0
+New cycle-3 checks:    5 (N1-N5)                            |  PASS: 5   |  FAIL: 0
+Console errors: 0   Console warnings: 0   Uncaught exceptions: 0   New runtime bugs: 0
+Verdict: PASS — game boots, all screens render, all inputs fire, gameplay mutates state,
+         canvas renders, no layout overflow at any of the three required viewports; the cycle-2
+         hazard retag and generation changes introduce no regression; a full own-light win is
+         reachable on the pinned seed, the match-during-guttering path is exploit-free, and the
+         HUD key indicator stays in agreement with the gate.

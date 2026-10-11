@@ -81,6 +81,31 @@ function checkSpatial(tpl, state, mismatches) {
   }
 
   checkArchetypes(tpl, state, mismatches);
+  checkPlacement(tpl, state, mismatches);
+}
+
+// Invariant: a hazard's room is never required for progress — a room carrying a creature/hazard
+// encounter must NOT also hold a required thing (the key/lore). Template-driven: it fires only when
+// the template declares a creature/hazard encounter roster, so it is a no-op for games without one.
+function checkPlacement(tpl, state, mismatches) {
+  const world = state.world && state.world.rooms ? state.world : state;
+  const rooms = world.rooms;
+  if (!rooms || typeof rooms !== 'object') return;
+  const taxing = new Map();
+  for (const e of (Array.isArray(tpl.encounter_roster) ? tpl.encounter_roster : [])) {
+    if (e && (e.kind === 'creature' || e.kind === 'hazard')) taxing.set(e.id, e.kind);
+  }
+  if (taxing.size === 0) return; // no taxing encounters declared: scope not exercised
+  const required = new Set(Array.isArray(tpl.required_things) ? tpl.required_things : []);
+  if (required.size === 0) return;
+  for (const [slug, room] of Object.entries(rooms)) {
+    const enc = room && room.encounter;
+    if (!enc || !taxing.has(enc)) continue;
+    const hit = (room.things || []).filter(t => required.has(t));
+    if (hit.length) {
+      mismatches.push({ kind: 'spatial', detail: `room '${slug}' (${taxing.get(enc)} encounter '${enc}') also holds required thing(s) ${JSON.stringify(hit)} — a hazard room must not be required for progress` });
+    }
+  }
 }
 
 // Archetype role + per-archetype count bounds on the checked (active-floor) state.

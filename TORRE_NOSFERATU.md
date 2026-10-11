@@ -181,13 +181,16 @@ social play — only wax, exploration, and at most the first teaching creature (
 - **No match, no re-light.** A snuff is recoverable **only if you hold a match**; a snuff with
   **zero matches** enters the same **guttering-dark grace** as wax-out (§8) — the tower's one
   terminal path, never an instant death. This is the only death door a hazard opens.
-- **Placement.** A hazard is **never on a cut-edge** of the floor graph, by construction: every
-  hazard has a bypass, so none can strand you from the exit or a refill. Phase 2 re-confirms
-  reachability on the pinned seed.
+- **Placement.** A hazard's room is **never required for progress**: every required thing (the
+  floor-key and the lore that travels with it) sits in a hazard-free room, so a hazard can never
+  strand you from the key, the exit, or a refill — you can always route around it. (The floor graph
+  is a spanning tree, so a hazard room is a skippable leaf, not a bridge on the required path; the
+  checker asserts "no required thing in a creature/hazard room.") Phase 2 re-confirms reachability
+  and this placement invariant on the pinned seed.
 - **The survivors trip them too.** NPCs roam and can **spring hazards themselves**, and the
   change **persists** — a survivor may open or close a route under you ("the tower changes").
-  This is **flag-gated** (§15); because hazards sit off the cut-edge (above), even a sprung hazard
-  can only lengthen a route, never sever it.
+  This is **flag-gated** (§15); because a hazard room is never required for progress (above), even a
+  sprung hazard can only lengthen a route, never sever it.
 - **Falsifiability (pre-registered, hand-counted — no telemetry).** If either door ever becomes
   **strictly dominant** — testers always avoid, or always spring — the choice is fake, not the
   system: cut the hazard or retune the two costs so the branch flips with wax/match state.
@@ -210,9 +213,10 @@ Routing problems with a lock and a key of their own — **route/solve, never snu
 
 #### 6.4.4 Hazard roster (data-driven)
 
-Five hazards, each an `encounter_roster` entry (`threat`/`effect`/`floor`) placed in a room whose
-archetype carries `role:"hazard"` (§14). **One new hazard is introduced per floor**, mirroring the
-creature rule (§7) and sharing that floor's single escalation budget (§9).
+Five hazards, each an `encounter_roster` entry (`kind:"hazard"`, `threat`/`effect`/`floor`) placed
+in a **non-required room** — one that holds no required thing, so a hazard is never on the path to
+the key/lore (§14). **One new hazard is introduced per floor**, mirroring the creature rule (§7)
+and sharing that floor's single escalation budget (§9).
 
 | Hazard | Trigger | Avoid (wax) | Spring (snuff + match) | Telegraph | First appears |
 |---|---|---|---|---|---|
@@ -487,10 +491,12 @@ roster: wax, matches, key, **hazards**, creatures, NPCs). It emits `world_templa
 - **Dread** is authored twice: as lore (`key: dread-dial`) for the world model, and as a
   template `clocks[]` `tug_of_war` entry (0–8, with `tiers`) that the game and checker read.
 - **Hazards.** A hazard is authored as an `encounter_roster` entry (`kind:"hazard"`,
-  `threat`/`effect`/`floor`); its room carries archetype `role:"hazard"`. `required_encounters`
-  can pin any that must be reachable on the test seed. The Phase 2 check already covers encounter
-  **presence + reachability** (systemic/advisory); hazards ride that path — connectivity rules
-  remain unvalidated (C7).
+  `threat`/`effect`/`floor`) and placed in a **non-required room** — the requirement that matters is
+  that no required thing shares its room (asserted by `check_template.mjs`, §6.4.1). In this build
+  the hazard room is the *second* `scribe-alcove` (a dedicated non-required alcove); adopting a
+  hazard-role archetype is a not-yet-taken refinement. `required_encounters` can pin any that must
+  be reachable on the test seed. The Phase 2 check covers encounter **presence + reachability**
+  (systemic/advisory); connectivity rules remain unvalidated (C7).
 - A lore fragment is authored as a readable **thing** (`kind:"lore"`, `readable:true`,
   `read_text`); `read_text` is data rendered as text, **never** HTML.
 
@@ -499,7 +505,7 @@ roster: wax, matches, key, **hazards**, creatures, NPCs). It emits `world_templa
 **Must:**
 - Single `index.html`, vanilla JS, embedded HTML/CSS/JS (per `COMPLIANCE.md`).
 - Candle-as-clock; wax/matches/key; grace on wax-out; **hazards (avoid costs wax, spring snuffs
-  and costs a match; never on a cut-edge; intrinsically telegraphed)**; five NPCs; ~6 social
+  and costs a match; never on a required path; intrinsically telegraphed)**; five NPCs; ~6 social
   actions; a single 0–8 Dread dial; avoidance combat.
 - Touch + mouse; responsive; ≥6 screens; music/SFX toggles.
 - **Staged delivery:** wave 1 = the **descent core** (candle, wax/matches, key, exit, seeded

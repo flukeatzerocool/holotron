@@ -1,0 +1,249 @@
+{
+  "world": {
+    "seed": 20261010,
+    "start": "d2-spire-entry-1",
+    "depth": 2,
+    "rooms": {
+      "d2-spire-entry-1": {
+        "name": "The Spire Mouth",
+        "archetype": "spire-entry",
+        "exits": {
+          "south": "d2-stair-corridor-1"
+        },
+        "things": [],
+        "npc": null,
+        "encounter": null,
+        "exitUp": "d1-descending-stair-1"
+      },
+      "d2-stair-corridor-1": {
+        "name": "The Narrow Turn",
+        "archetype": "stair-corridor",
+        "exits": {
+          "north": "d2-spire-entry-1",
+          "south": "d2-stair-corridor-2",
+          "east": "d2-candle-nook-1",
+          "west": "d2-shadow-hall-1"
+        },
+        "things": [],
+        "npc": null,
+        "encounter": null
+      },
+      "d2-stair-corridor-2": {
+        "name": "Crooked Passage",
+        "archetype": "stair-corridor",
+        "exits": {
+          "north": "d2-stair-corridor-1",
+          "south": "d2-stair-corridor-3",
+          "east": "d2-scribe-alcove-1",
+          "west": "d2-scribe-alcove-2"
+        },
+        "things": [],
+        "npc": null,
+        "encounter": null
+      },
+      "d2-stair-corridor-3": {
+        "name": "Wainscot Walk",
+        "archetype": "stair-corridor",
+        "exits": {
+          "north": "d2-stair-corridor-2",
+          "south": "d2-candle-nook-2",
+          "west": "d2-survivor-camp-2"
+        },
+        "things": [],
+        "npc": null,
+        "encounter": null
+      },
+      "d2-candle-nook-1": {
+        "name": "The Guttering Shelf",
+        "archetype": "candle-nook",
+        "exits": {
+          "west": "d2-stair-corridor-1"
+        },
+        "things": [
+          "wax-cake",
+          "matches",
+          "oil-vial"
+        ],
+        "npc": null,
+        "encounter": null
+      },
+      "d2-candle-nook-2": {
+        "name": "Wax Coffer Room",
+        "archetype": "candle-nook",
+        "exits": {
+          "north": "d2-stair-corridor-3"
+        },
+        "things": [
+          "wax-cake",
+          "matches",
+          "oil-vial"
+        ],
+        "npc": null,
+        "encounter": null
+      },
+      "d2-scribe-alcove-1": {
+        "name": "Paper Hollow",
+        "archetype": "scribe-alcove",
+        "exits": {
+          "west": "d2-stair-corridor-2",
+          "south": "d2-survivor-camp-1"
+        },
+        "things": [
+          "floor-key",
+          "lore-fragment"
+        ],
+        "npc": null,
+        "encounter": null
+      },
+      "d2-scribe-alcove-2": {
+        "name": "Ink-Stained Cell",
+        "archetype": "scribe-alcove",
+        "exits": {
+          "east": "d2-stair-corridor-2",
+          "west": "d2-descending-stair-1"
+        },
+        "things": [],
+        "npc": null,
+        "encounter": "pressure-plate"
+      },
+      "d2-shadow-hall-1": {
+        "name": "Shadow Hall",
+        "archetype": "shadow-hall",
+        "exits": {
+          "east": "d2-stair-corridor-1"
+        },
+        "things": [],
+        "npc": null,
+        "encounter": "rats"
+      },
+      "d2-survivor-camp-1": {
+        "name": "Ember Camp",
+        "archetype": "survivor-camp",
+        "exits": {
+          "north": "d2-scribe-alcove-1"
+        },
+        "things": [],
+        "npc": "vlask",
+        "encounter": null
+      },
+      "d2-survivor-camp-2": {
+        "name": "The Resting Place",
+        "archetype": "survivor-camp",
+        "exits": {
+          "east": "d2-stair-corridor-3"
+        },
+        "things": [],
+        "npc": "sister-marta",
+        "encounter": null
+      },
+      "d2-descending-stair-1": {
+        "name": "Descending Stair",
+        "archetype": "descending-stair",
+        "exits": {
+          "east": "d2-scribe-alcove-2"
+        },
+        "things": [],
+        "npc": null,
+        "encounter": null,
+        "exitDown": "d3-spire-entry-1"
+      }
+    }
+  },
+  "systems": {
+    "seed": 20261010,
+    "dread": 0,
+    "clocks": {
+      "wax": {
+        "value": 32,
+        "min": 0,
+        "max": 40
+      },
+      "dread": {
+        "value": 0,
+        "min": 0,
+        "max": 8
+      }
+    },
+    "npcs": [
+      {
+        "id": "vlask",
+        "name": "Vlask",
+        "disposition": "suspicious",
+        "numeric": -1,
+        "floor": 2,
+        "room": "d2-survivor-camp-2"
+      },
+      {
+        "id": "sister-marta",
+        "name": "Sister Marta",
+        "disposition": "neutral",
+        "numeric": 0,
+        "floor": 2,
+        "room": "d2-survivor-camp-2"
+      },
+      {
+        "id": "ilona",
+        "name": "Ilona",
+        "disposition": "suspicious",
+        "numeric": -1,
+        "floor": 3,
+        "room": "d3-survivor-camp-1"
+      },
+      {
+        "id": "petr",
+        "name": "Petr",
+        "disposition": "friendly",
+        "numeric": 1,
+        "floor": 2,
+        "room": "d2-survivor-camp-2"
+      },
+      {
+        "id": "nadja",
+        "name": "Nadja",
+        "disposition": "wary",
+        "numeric": -1,
+        "floor": 3,
+        "room": "d3-survivor-camp-1"
+      }
+    ],
+    "socialActions": [
+      "share-light",
+      "ally",
+      "bargain",
+      "trade",
+      "steal",
+      "threaten"
+    ],
+    "encounters": [
+      "bats",
+      "rats",
+      "spiders",
+      "wolves",
+      "shades",
+      "light-eater",
+      "collapsing-floor",
+      "light-trap",
+      "pressure-plate",
+      "cursed-ward",
+      "crumbling-stair",
+      "dark-leap",
+      "vlask",
+      "sister-marta",
+      "ilona",
+      "petr",
+      "nadja"
+    ],
+    "socialLog": [
+      {
+        "id": "steal",
+        "dreadBefore": 0,
+        "dreadAfter": 1
+      },
+      {
+        "id": "share-light",
+        "dreadBefore": 1,
+        "dreadAfter": 0
+      }
+    ]
+  }
+}

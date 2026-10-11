@@ -1,0 +1,137 @@
+PHASE 2 REPORT — WORLD-MODEL CHECK (Holotron)
+Agent: puppeteer_agent (browser work agent-driven via playwright-cli/Firefox; dependency-free checker run as a script)
+Game: /home/fluke/Holotron/20261011_004054/index.html  (mtime 2026-10-11 02:08:12)
+Template: /home/fluke/Holotron/20261011_004054/world_template.json  (mtime 2026-10-11 02:04:51, current)
+States written: state_20261010.json (floor-1 pristine, overwritten), state_20261010_d2.json (pristineFloor(2), new)
+Timestamp: 2026-10-11 02:14:20  |  post-structural-change re-verification, REVIEW CYCLE 3  |  suffix 020912
+Checker: scripts/check_template.mjs (extended this cycle: +25 lines, checkPlacement hazard-room invariant)
+
+===============================================================================
+1. DETERMINISM
+===============================================================================
+- window.TEMPLATE.test_seed = 20261010 (non-null).
+- Pinned BEFORE any app script via context.addInitScript(s => { window.SEED = s; }, 20261010).
+- Post-load verification: window.SEED === 20261010 === TEMPLATE.test_seed.
+- Determinism ESTABLISHED. Boot snapshot taken BEFORE any move (title screen only).
+
+===============================================================================
+2. EXTRACTION
+===============================================================================
+- Hooks present: worldState=function, systemState=function, social=function, move=function,
+  testState=function, pristineWorldState=function, pristineFloor=function, pristineSystemState=function,
+  TEMPLATE=object, SEED=number, audioTest=function, AUDIO_SPEC=object. No fail-closed condition.
+- Floor-1 (active at boot): depth 1, start d1-spire-entry-1, 8 rooms; ALL declare an archetype
+  (archetype scope exercised). Tally: spire-entry 1 | stair-corridor 3 | candle-nook 2 | shadow-hall 1 |
+  descending-stair 1 — every count within declared bounds; start room archetype = entry (spire-entry).
+- Clocks normalized (.value): wax {value:32,min:0,max:40}, dread {value:0,min:0,max:8}.
+- Wrote state_20261010.json = {"world": <worldState>, "systems": <systemState incl. socialLog>}.
+
+socialLog synthesis (behavioral, cold first so dread leaves its 0-floor)
+-------------------------------------------------------------------------
+- steal        dreadBefore=0 -> dreadAfter=1   (declared +1, sign matches)
+- share-light  dreadBefore=1 -> dreadAfter=0   (declared -1, sign matches)
+- Both observations appended to systems.socialLog. No vacuous pass.
+
+NPC reachability (B7 gate)
+--------------------------
+- 5/5 NPCs placed on the seed: vlask(f2), sister-marta(f2), petr(f2), ilona(f3), nadja(f3) — all in a room.
+- required_encounters [bats, vlask, rats] all present in systemState().encounters.
+- At least one NPC reachable on test_seed: CONFIRMED (5 placed).
+
+===============================================================================
+3. STATE A — GAME FLOOR-1 (pristine)
+===============================================================================
+Command:
+  node scripts/check_template.mjs --template 20261011_004054/world_template.json \
+       --state 20261011_004054/state_20261010.json --fail-on spatial
+
+Output:
+  (no MISMATCH lines)
+  0 mismatch(es) — spatial 0, systemic 0 (mode=all, fail-on=spatial)
+  PASS — no spatial mismatch
+Exit code: 0
+
+===============================================================================
+4. STATE B — NEW pristineFloor(2) HAZARD-FLOOR STATE (non-vacuity)
+===============================================================================
+- At boot, before any move, read-only hook window.pristineFloor(2) -> world; systems = systemState().
+- Floor 2: start d2-spire-entry-1, 12 rooms; archetypes: spire-entry 1 | stair-corridor 3 | candle-nook 2 |
+  scribe-alcove 2 | shadow-hall 1 | survivor-camp 2 | descending-stair 1 (all counts in bounds).
+- HAZARD PRESENT: d2-scribe-alcove-2 carries encounter 'pressure-plate' (kind:"hazard"); d2-shadow-hall-1
+  carries 'rats' (creature). Required things are placed in hazard-free rooms only:
+    d2-scribe-alcove-1 : floor-key, lore-fragment   (the key room; encounter = null)
+    d2-candle-nook-1/2 : wax-cake, matches, oil-vial
+  The new placement assertion therefore ITERATES over a real creature/hazard room (pressure-plate) and
+  confirms it holds no required thing -> the check is EXERCISED, not vacuous.
+Command:
+  node scripts/check_template.mjs --template 20261011_004054/world_template.json \
+       --state 20261011_004054/state_20261010_d2.json --fail-on spatial
+
+Output:
+  (no MISMATCH lines)
+  0 mismatch(es) — spatial 0, systemic 0 (mode=all, fail-on=spatial)
+  PASS — no spatial mismatch
+Exit code: 0
+
+===============================================================================
+5. ANTI-VACUITY CONTROL (proves the placement check can FAIL)
+===============================================================================
+- Built a violating copy of the d2 state: removed 'floor-key' from d2-scribe-alcove-1 and moved it into
+  the hazard room d2-scribe-alcove-2 (encounter 'pressure-plate'). Saved /tmp/opencode/pwtest/state_violating_d2.json.
+Command:
+  node scripts/check_template.mjs --template 20261011_004054/world_template.json \
+       --state /tmp/opencode/pwtest/state_violating_d2.json --fail-on spatial
+
+Output:
+  MISMATCH [spatial] room 'd2-scribe-alcove-2' (hazard encounter 'pressure-plate') also holds required
+    thing(s) ["floor-key"] — a hazard room must not be required for progress
+
+  1 mismatch(es) — spatial 1, systemic 0 (mode=all, fail-on=spatial)
+  FAIL — 1 spatial mismatch(es)
+Exit code: 1  -> CONFIRMED: the placement assertion fails spatial with the exact mismatch.
+The legitimate d2 state passing with spatial 0 is therefore a real, non-vacuous result.
+
+===============================================================================
+6. CONTROL FIXTURES (run before trusting green)
+===============================================================================
+Invocation (documented pairing: golden_template.json as the TEMPLATE for all four states):
+  C1 node scripts/check_template.mjs --template test_worlds/golden_template.json --state test_worlds/golden_state.json            --fail-on spatial
+  C2 node scripts/check_template.mjs --template test_worlds/golden_template.json --state test_worlds/malformed.json               --fail-on spatial
+  C3 node scripts/check_template.mjs --template test_worlds/golden_template.json --state test_worlds/malformed_archetypes.json    --fail-on spatial
+  C4 node scripts/check_template.mjs --template test_worlds/golden_template.json --state test_worlds/malformed_systems.json       --fail-on spatial
+
+C1 golden_state.json            -> 0 mismatch(es) — spatial 0, systemic 0   PASS   exit 0   [required: exit 0]
+C2 malformed.json               -> 12 mismatch(es) — spatial 4, systemic 8  FAIL   exit 1   [required: >=2 spatial, exit 1]
+     spatial lines:
+       MISMATCH [spatial] dangling exit: hall north -> 'ghost-room' (no such room)
+       MISMATCH [spatial] unreachable room: 'island'
+       MISMATCH [spatial] required thing 'lamp' is not placed on any reachable room
+       MISMATCH [spatial] required thing 'key' is not placed on any reachable room
+C3 malformed_archetypes.json    -> 3 mismatch(es) — spatial 3, systemic 0   FAIL   exit 1   [required: >=2 spatial, exit 1]
+     spatial lines:
+       MISMATCH [spatial] room 'common-room': archetype 'audience' is undeclared
+       MISMATCH [spatial] archetype 'corridor': 1 room(s), expected 2..4
+       MISMATCH [spatial] archetype 'social': 0 room(s), expected 1..2
+C4 malformed_systems.json       -> 7 mismatch(es) — spatial 0, systemic 7   PASS*  exit 0   [required: >=2 systemic, exit 0 under --fail-on spatial]
+     systemic lines (advisory):
+       MISMATCH [systemic] clock 'dread': value 9 out of [0,8]
+       MISMATCH [systemic] npc 'innkeeper': disposition 'vivacious' not in [...]
+       MISMATCH [systemic] npc 'innkeeper': numeric 5 out of [-2,2]
+       MISMATCH [systemic] social action 'threaten' missing from systemState
+       MISMATCH [systemic] action 'share-light': Dread moved 0->3 (sign 1), declared -1 (sign -1)
+       MISMATCH [systemic] encounter 'innkeeper' missing from systemState
+       MISMATCH [systemic] required encounter 'innkeeper' not present/reachable in systemState
+
+All four fixtures behaved exactly as required. The checker is NOT vacuously green.
+
+===============================================================================
+VERDICT
+===============================================================================
+SPATIAL (hard): PASS in BOTH states — floor-1 0 spatial (exit 0); pristineFloor(2) 0 spatial (exit 0).
+SYSTEMIC (advisory): PASS — 0 systemic mismatches in both states (advisory only, never gates).
+ANTI-VACUITY CONTROL: the placement invariant fails (spatial 1, exit 1) on the doctored hazard state ->
+  the green d2 result is real.
+UNVERIFIED conditions: none (all hooks present; test_seed non-null; socialLog produced; NPC reachable).
+
+PHASE 2 VERDICT: PASS — floor-1 spatial 0 (exit 0) AND pristine-d2 spatial 0 (exit 0); systemic advisory 0;
+control fixtures and the new anti-vacuity placement probe confirm the checker discriminates.

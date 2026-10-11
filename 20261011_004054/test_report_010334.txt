@@ -1,0 +1,108 @@
+TEST REPORT — Torre Nosferatu
+Agent: puppeteer_agent (Playwright-cli fallback / Firefox headless)
+Game: /home/fluke/Holotron/20261011_004054/index.html  (edited by bugfix_agent, mtime 00:57)
+World template: /home/fluke/Holotron/20261011_004054/world_template.json
+Timestamp: 2026-10-11 01:03:34  |  REVIEW CYCLE 2  |  suffix 010334
+
+Environment
+-----------
+- No Chromium / no Puppeteer available (verified). Browser work performed with the playwright-cli
+  fallback: Firefox headless, cached at ~/.cache/ms-playwright/firefox-1542.
+- Served via `python3 -m http.server 8123 --bind 127.0.0.1` from the game directory.
+- Each viewport ran in its own browser context. Desktop contexts: hasTouch=false, real mouse events.
+  Mobile context: browser.newContext({hasTouch:true, viewport 375x667}) + page.touchscreen.tap, so
+  the touch path was driven by GENUINE touch events (not synthetic dispatchEvent).
+- Every UI interaction is hit-tested first (bounding-rect centre -> document.elementFromPoint)
+  before the click/tap, so a PASS means the coordinate actually landed on the target element.
+
+Compared with cycle 1, the same 13 checks/viewport battery was re-run on the edited file.
+
+===============================================================================
+STANDARD RUNTIME BATTERY
+===============================================================================
+
+Viewport: desktop 1920x1080 (mouse)
+  PASS  title_loads                     titleActive=true  ("Torre Nosferatu — Dread Weather")
+  PASS  howto_open                      hit=true 176x48 target=btn-howto howtoActive=true
+  PASS  howto_back                      hit=true 150x48 target=btn-howto-back titleActive=true
+  PASS  settings_open                   hit=true 118x48 target=btn-title-settings settingsActive=true
+  PASS  settings_music_toggle           hit=true 96x48  On(true)->Off(false) changed=true
+  PASS  settings_sfx_toggle             hit=true 96x48  On(true)->Off(false) changed=true
+  PASS  settings_back                   hit=true 150x48 target=btn-settings-back titleActive=true
+  PASS  start_transitions_to_gameplay   inGame=true hud=true pos=d1-spire-entry-1 wax=32
+  PASS  pause_open                      hit=true 112x48 target=btn-pause pauseActive=true
+  PASS  pause_resume                    hit=true 184x48 target=btn-resume inGame=true hud=true
+  PASS  canvas_renders_nonblank         nonblack=72/4096 avg=0.363 canvas=1920x1080
+  PASS  canvas_move_changes_state       dir=east @ (1050,540) topId=game pos d1-spire-entry-1->d1-stair-corridor-1
+                                        wax 32->31 (delta -1) turn 0->1 (delta +1) modal=false
+  PASS  layout_no_overflow              offScreen=[] docX=false docY=false smallTargets=[]
+  console errors: []   console warnings: []   uncaught exceptions: []
+
+Viewport: desktop-small 800x600 (mouse)
+  PASS  title_loads                     titleActive=true
+  PASS  howto_open                      hit=true 176x48 howtoActive=true
+  PASS  howto_back                      hit=true 150x48 titleActive=true
+  PASS  settings_open                   hit=true 118x48 settingsActive=true
+  PASS  settings_music_toggle           hit=true 96x48 On->Off changed=true
+  PASS  settings_sfx_toggle             hit=true 96x48 On->Off changed=true
+  PASS  settings_back                   hit=true 150x48 titleActive=true
+  PASS  start_transitions_to_gameplay   inGame=true hud=true pos=d1-spire-entry-1 wax=32
+  PASS  pause_open                      hit=true 112x48 pauseActive=true
+  PASS  pause_resume                    hit=true 184x48 inGame=true hud=true
+  PASS  canvas_renders_nonblank         nonblack=129/4096 avg=0.906 canvas=800x600
+  PASS  canvas_move_changes_state       dir=east @ (450,300) topId=game pos d1-spire-entry-1->d1-stair-corridor-1
+                                        wax 32->31 turn 0->1 modal=false
+  PASS  layout_no_overflow              offScreen=[] docX=false docY=false smallTargets=[]
+  console errors: []   console warnings: []   uncaught exceptions: []
+
+Viewport: mobile 375x667 (REAL touch — hasTouch context + touchscreen.tap)
+  PASS  title_loads                     titleActive=true
+  PASS  howto_open                      hit=true 154x48 howtoActive=true
+  PASS  howto_back                      hit=true 150x48 titleActive=true
+  PASS  settings_open                   hit=true 118x48 settingsActive=true
+  PASS  settings_music_toggle           hit=true 96x48 On->Off changed=true
+  PASS  settings_sfx_toggle             hit=true 96x48 On->Off changed=true
+  PASS  settings_back                   hit=true 150x48 titleActive=true
+  PASS  start_transitions_to_gameplay   inGame=true hud=true pos=d1-spire-entry-1 wax=32
+  PASS  pause_open                      hit=true 112x48 pauseActive=true
+  PASS  pause_resume                    hit=true 161x48 inGame=true hud=true
+  PASS  canvas_renders_nonblank         nonblack=221/4096 avg=1.760 canvas=375x667
+  PASS  canvas_move_changes_state       dir=east @ (236,334) topId=game pos d1-spire-entry-1->d1-stair-corridor-1
+                                        wax 32->31 turn 0->1 modal=false
+  PASS  layout_no_overflow              offScreen=[] docX=false docY=false smallTargets=[]
+  console errors: []   console warnings: []   uncaught exceptions: []
+
+Mechanic-verification notes (per the "verify it actually fired" principle)
+--------------------------------------------------------------------------
+- Start is verified by state, not just a screen swap: window.testState().inGame flips false->true
+  and #hud gains the .active class.
+- Settings toggles verify the observable control state (button label On->Off AND the .on class),
+  proving the tap/click reached the handler and mutated the toggle.
+- The gameplay move is a genuine canvas input at the neighbouring tile's screen coordinate
+  (centre +/- one tile, tile = max(48, min(W,H)/12)); it verifies BOTH the position change
+  (d1-spire-entry-1 -> d1-stair-corridor-1) AND the wax decrement (32->31, delta -1) and
+  turn increment (0->1, delta +1), with no blocking modal. Hit-test at that tile returned
+  topId=game (the canvas), so the event landed on the canvas, not a HUD overlay.
+- Canvas non-blank sampled by drawing the game canvas into a 64x64 probe and counting
+  non-black pixels (72-221 of 4096 at the three viewports, i.e. lit content present).
+- Hit-testing confirmed every interacted control's centre landed on the element
+  (elementFromPoint === the target or its descendant); every button met the >=44px touch target
+  minimum (smallest observed 96x48; small_targets list empty at all viewports).
+- Touch path proven with the browser's real touchscreen API on a hasTouch context.
+
+Layout / overflow
+-----------------
+  375x667: no off-screen HUD element, no off-screen modal, no off-screen visible button,
+           no document horizontal/vertical overflow; all visible button targets >= 44px in both
+           dimensions. No viewport-specific issues.
+
+===============================================================================
+SUMMARY
+===============================================================================
+Total checks: 39 (13 per viewport x 3 viewports)  |  PASS: 39  |  FAIL: 0
+Console errors: 0   Console warnings: 0   Uncaught exceptions: 0   New runtime bugs: 0
+Verdict: PASS — edited game boots, all screens render, all inputs fire, gameplay mutates state,
+         canvas renders, no layout overflow at any of the three required viewports.
+
+Cycle-2 regression check (bugfix delta): NO regression from the floor-1 generation change or the
+vertical-exit metadata change. AUDIO_SPEC is now defined (Phase 2b no longer UNVERIFIED).

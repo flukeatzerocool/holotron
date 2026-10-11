@@ -1,0 +1,32 @@
+RUNTIME ERRORS — Torre Nosferatu
+Agent: puppeteer_agent (Playwright-cli fallback / Firefox headless)
+Game under test: /home/fluke/Holotron/20261011_004054/index.html
+Run timestamp: 2026-10-11 01:03:34  (REVIEW CYCLE 2, suffix 010334)
+Browser: Firefox (playwright-cli 0.1.19, cached firefox-1542)
+Server: python3 -m http.server 8123 --bind 127.0.0.1  (dir 20261011_004054)
+Viewports exercised: 1920x1080 (desktop), 800x600 (desktop-small), 375x667 (mobile/touch)
+
+Console errors / warnings captured (page load through full input battery):  NONE
+Uncaught exceptions captured (window.onerror / pageerror):                 NONE
+Failed interaction mechanics:                                             NONE
+Viewport-specific layout/overflow issues:                                NONE
+
+Details
+-------
+- desktop        (1920x1080): 0 console errors, 0 console warnings, 0 uncaught exceptions, 0 issues
+- desktop-small  (800x600):   0 console errors, 0 console warnings, 0 uncaught exceptions, 0 issues
+- mobile         (375x667):   0 console errors, 0 console warnings, 0 uncaught exceptions, 0 issues
+  (mobile driven with a REAL touch context: browser.newContext({hasTouch:true}) + page.touchscreen.tap;
+   the previous cycle's context could not be retested with touchscreen.tap, so this cycle created a
+   dedicated hasTouch context and used genuine touchscreen taps for every mobile interaction.)
+
+Cycle-2 delta (after bugfix_agent edits)
+----------------------------------------
+- Re-tested the freshly edited index.html (mtime 00:57); no cycle-1 results were reused.
+- The bugfix pass changed floor-1 generation (depth 1: <=1 teaching creature, no puzzles/social rooms)
+  and added vertical-exit metadata to worldState(). Neither change produced a runtime error:
+  all screens still render, all inputs still fire, gameplay still mutates state, canvas still renders.
+- The previously UNVERIFIED audio contract is now fixed: window.AUDIO_SPEC is defined (see
+  audio_report_010334.txt). No new runtime regression from that change.
+
+RESULT: NO RUNTIME ERRORS. No new runtime bug of any severity (CRITICAL/HIGH/MEDIUM/LOW) found.

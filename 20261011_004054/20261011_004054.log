@@ -1,0 +1,26 @@
+# Holotron run log — 20261011_004054
+
+[004054] Run folder created. Standalone review_agent invocation (not full pipeline).
+[004054] Target: gameotron_output/20261010_095651/index.html
+[004054] Reference: TORRE_NOSFERATU.md (creative direction brief; §10 screens, §15 must-haves)
+[004054] Phase: review_agent (static code review) → buglist_HHmmss.txt
+[004054] DONE: review_agent produced buglist_004054.txt
+[004054] Counts: CRITICAL 0 / HIGH 5 / MEDIUM 8 / LOW 8 = 21 total
+[004054] Cycle 1 exit condition: HIGH/MEDIUM present → bugfix path
+[004054] Working copy made: 20261011_004054/index.html + world_template.json/.txt + gdd.md (source run left pristine)
+[004930] Cycle 1 puppeteer_agent: runtime 39/39 PASS, 0 new bugs; Phase 2 PASS (0 spatial/systemic, exit 0); audio UNVERIFIED (AUDIO_SPEC missing)
+[005000] Cycle 1 bugfix_agent: fixed 5 HIGH, 8 MEDIUM, 6 LOW (2 LOW intentional no-change)
+[010334] Cycle 2 review_agent: 0 CRIT / 2 HIGH / 4 MEDIUM / 6 LOW (regressions+oversights from cycle 1)
+[010334] Cycle 2 puppeteer_agent: runtime 39/39 PASS; Phase 2 PASS exit 0; audio PASS 6/6
+[011000] Cycle 2 bugfix_agent: fixed 2 HIGH, 4 MEDIUM (1 partial), 5 LOW; synced world_template.json/.txt
+[011655] Cycle 3 review_agent: 0 CRIT / 0 HIGH / 1 MEDIUM (deferred hazard room-role) / 4 LOW
+[011655] Cycle 3 puppeteer_agent: runtime 39/39 PASS; Phase 2 PASS exit 0; audio PASS 6/6; 5 cycle-specific checks PASS
+[012853] Phase 5.5 juice_agent: 3 additive juice features (mask-edge danger flash, entity hit-flash, low-wax HUD/flame warning); node --check OK, checker exit 0, headless smoke 0 console errors
+[013000] RUN COMPLETE. Loop ended at max 3 cycles with 0 CRITICAL/HIGH; deployment NOT run (opt-in; requires explicit request + confirmation).
+[020000] BUILD: user approved Plan v2 (Modified path) + grill-me READY_WITH_RISKS (85/100). Executed Parts 1+2.
+[020000] Part 1: generator (2 alcoves floors 2-6; key room holds key+lore, no creature/hazard; hazard in 2nd alcove); template scribe-alcove things->[] in 3 copies; TORRE reword; check_template checkPlacement assertion; window.pristineFloor hook.
+[020000] Part 2: relight flag-keyed (+1 grace, no-op at full grace, guttering persists); wax pickup ends guttering when !snuffed; Ascend button; gdd §2.8/227/489 aligned.
+[020912] Review cycle: review_agent 0C/0H/2M/4L; puppeteer runtime 39/39, Phase2 PASS (floor1 + pristine floor2), anti-vacuity FAILS as required, audio PASS, Part-2 behavioral 5/5.
+[021500] Fixed review findings: dark-leap dead-data regression (key room now hosts routing puzzle) revived; TORRE §6.4.4/§14 contradiction resolved; journal/canRelight shared guard; snuff-cause wax-pickup drift fixed; CHANGELOG correction entry added.
+[021500] Final local evidence: syntax OK; invariant OK all 6 floors; checker floor1+floor2 spatial 0; fixtures golden 0/malformed 1/archetypes 1/systems 0; anti-vacuity injection exit 1; autoplay greedy 6/6 complete.
+[021500] NOTE: post-fix behavioral re-run (browser) NOT repeated — recommended before deploy.

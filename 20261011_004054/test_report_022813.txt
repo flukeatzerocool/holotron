@@ -1,0 +1,110 @@
+TEST REPORT — Torre Nosferatu
+Agent: puppeteer_agent (Playwright-cli fallback / Firefox headless)
+Game: /home/fluke/Holotron/20261011_004054/index.html  (mtime 2026-10-11 02:20:22)
+Template: /home/fluke/Holotron/20261011_004054/world_template.json  (mtime 2026-10-11 02:04:51)
+Timestamp: 2026-10-11 02:31  |  FINAL runtime + world-model verification  |  suffix 022813
+Pinned seed: window.SEED = 20261010 (TEMPLATE.test_seed), set before app scripts via context.addInitScript.
+
+===============================================================================
+1. STANDARD BATTERY — 14 checks x 3 viewports = 42/42 PASS
+===============================================================================
+All screens driven through the real UI, hit-tested with elementFromPoint (touch on mobile, mouse on
+desktop), with real state change asserted (not just a screen swap). No overflow at 375x667.
+
+desktop 1920x1080 (mouse)
+  PASS title_loads                  title active; "Torre Nosferatu — Dread Weather"
+  PASS seed_pinned                  window.SEED=20261010
+  PASS howto_open                   hit=true (176x48) -> scr-howto active
+  PASS howto_back                   hit=true -> scr-title active
+  PASS settings_open                hit=true (118x48) -> scr-settings active
+  PASS settings_music_toggle        On -> Off
+  PASS settings_sfx_toggle          On -> Off
+  PASS settings_back                hit=true -> scr-title active
+  PASS start_transitions_to_gameplay hit=true; inGame=true hud=true pos=d1-spire-entry-1 wax=32
+  PASS pause_open                   hit=true (112x48) -> scr-pause active
+  PASS pause_resume                 hit=true; inGame=true, scr-pause cleared
+  PASS canvas_renders_nonblank      nonblack=88/4096 avg=0.361 canvas=1920x1080
+  PASS canvas_move_changes_state    dir=east @(1050,540) topId=game pos d1-spire-entry-1->d1-stair-corridor-1
+                                    wax 32->31 turn 0->1
+  PASS layout_no_overflow           off=[] docX=false docY=false smallTargets=[]
+
+desktop-small 800x600 (mouse)
+  PASS title_loads / seed_pinned / howto_open / howto_back / settings_open /
+       settings_music_toggle / settings_sfx_toggle / settings_back /
+       start_transitions_to_gameplay / pause_open / pause_resume
+  PASS canvas_renders_nonblank      nonblack=150/4096 avg=0.861 canvas=800x600
+  PASS canvas_move_changes_state    dir=east @(450,300) topId=game pos d1-spire-entry-1->d1-stair-corridor-1
+                                    wax 32->31 turn 0->1
+  PASS layout_no_overflow           off=[] docX=false docY=false smallTargets=[]
+
+mobile 375x667 (touch — real touchscreen taps)
+  PASS title_loads / seed_pinned / howto_open / howto_back / settings_open /
+       settings_music_toggle / settings_sfx_toggle / settings_back /
+       start_transitions_to_gameplay / pause_open / pause_resume
+  PASS canvas_renders_nonblank      nonblack=257/4096 avg=1.946 canvas=375x667
+  PASS canvas_move_changes_state    dir=east @(236,334) topId=game pos d1-spire-entry-1->d1-stair-corridor-1
+                                    wax 32->31 turn 0->1
+  PASS layout_no_overflow           off=[] docX=false docY=false smallTargets=[]
+
+  Console errors/exceptions: 0/0/0. Only 1 warning on mobile: a juggler/driver internal stylesheet
+  timing notice (chrome://juggler/...), not emitted by the game.
+
+===============================================================================
+2. NEW FIX CHECKS (the last fix round)
+===============================================================================
+
+[FIX-1] dark-leap placed on floor 5 (seed 20261010) — PASS
+  Floor 5 has BOTH the hazard and the routing puzzle, each in its own alcove:
+    non-key alcove  d5-scribe-alcove-2 : encounter 'cursed-ward' (hazard), things []      (no key)
+    KEY alcove      d5-scribe-alcove-1 : encounter 'dark-leap'  (puzzle), things
+                                       ["floor-key","lore-fragment"]
+  Placement invariant holds: the key room's encounter is a routing puzzle (kind:"puzzle"), never a
+  creature/hazard — so no taxing encounter gates the required things. dark-leap is no longer dead
+  data; it is the encounter that actually resolves in the key alcove.
+
+[FIX-2] Relight at full grace is a no-op — PASS
+  - Burned wax to 0 via the real Wait control -> guttering=true, grace=5 (full; graceForTier=5 at
+    dread 0), matches=2.
+  - At full grace: #btn-usematch display='none' (hidden), width 0 (not consumable); forcing
+    .click() left matches 2->2 and grace 5->5 (no-op).
+  - After two Wait turns grace=3 (<full): #btn-usematch display='block', visible=true.
+  - Clicking the real button -> matches 2->1, grace 3->4 (+1), guttering STILL true, wax unchanged
+    (0). Exactly the declared behavior (a match buys one grace turn; light != fuel).
+
+[FIX-3] Wax pickup during guttering — PASS
+  On a wax-out guttering run (wax=0, guttering=true, snuffed=false), moved west into d1-candle-nook-1
+  holding a wax-cake:
+    before: wax=0  guttering=true  grace=4
+    after : wax=13 guttering=false grace=0   -> guttering ended, wax>0.
+  (Condition requires !snuffed; a pure wax-out satisfies it.)
+
+[FIX-4] Ascend: descend to floor 2, then Ascend back to floor 1 — PASS
+  - Pre-key: at d1-descending-stair-1, window.move('down') returned false, depth stayed 1 (gate locked).
+  - Collected the floor-1 key (d1-candle-nook-1): floorKey={1:true}, HUD keyVal="KEY HELD".
+  - Real #btn-descend (display=block) clicked -> depth=2, pos=d2-spire-entry-1 (the entry),
+    exitUp=d1-descending-stair-1, HUD keyVal="no key" (floor-2 key not held yet).
+  - #btn-ascend appeared at the entry (display=block); clicked -> depth=1, pos=d1-descending-stair-1,
+    floorKey={1:true}, HUD keyVal="KEY HELD", key=true. HUD key matches the floor's own key.
+
+[FIX-5] Floor 1 unchanged (pristineFloor(1)) — PASS
+  - start d1-spire-entry-1, 8 rooms.
+  - creatures: batRooms=1 (bats), otherCreature=0  -> exactly 1 creature (bats) on floor 1.
+  - alcove=0 (floor 1 is the puzzle-free tutorial).
+  - key+lore both in the candle-nook (keyLoreOk=true).
+  - exit room d1-descending-stair-1 reachable.
+  - archetypes: spire-entry 1 | stair-corridor 3 | candle-nook 2 | shadow-hall 1 | descending-stair 1.
+
+[FIX-6] AUDIO_SPEC still defined; scenarios pass — PASS (advisory) — see audio_report_022813.txt
+  window.AUDIO_SPEC defined (applicable:true, 6 scenarios). 6/6 scenarios above their floors.
+  Controls: good-bed PASS / dead-bed MISS.
+
+===============================================================================
+3. SUMMARY
+===============================================================================
+STANDARD BATTERY: PASS — 42/42 (14 checks x 3 viewports), 0 console errors, 0 uncaught exceptions,
+                  0 failed mechanics, 0 layout/overflow issues.
+NEW FIX CHECKS : PASS — 6/6 (FIX-1..FIX-6).
+NEW RUNTIME BUG: NONE of any severity.
+PHASE 2        : PASS — see phase2_report_022813.txt (floor-1 spatial 0 exit 0; pristine floor-2
+                 spatial 0 exit 0; anti-vacuity spatial 1 exit 1; 4/4 fixtures correct).
+AUDIO          : PASS (advisory) — see audio_report_022813.txt.

@@ -1,0 +1,61 @@
+AUDIO REPORT — PHASE 2b (advisory)
+Agent: puppeteer_agent (Playwright-cli fallback / Firefox headless)
+Game: /home/fluke/Holotron/20261011_004054/index.html
+Timestamp: 2026-10-11 00:49:33  |  REVIEW CYCLE 1  |  suffix 004054
+
+Defaults applied (used when no threshold declared):
+  bed: rms >= 0.02 AND bandRms (>~300 Hz) >= 0.003
+  cue: rms >= 0.01
+
+===============================================================================
+GAME UNDER TEST — hook inventory
+===============================================================================
+  window.AudioContext : function        (present — this is a Web Audio game)
+  window.audioTest    : function        (present — OfflineAudioContext renderer)
+  window.AUDIO_SPEC   : undefined       (ABSENT)
+
+Decision path:
+  "AudioContext but no window.audioTest => UNVERIFIED"   -> audioTest IS present, so not this.
+  "Read window.AUDIO_SPEC; enumerate scenarios ... {applicable:false} => N/A"
+  -> AUDIO_SPEC is absent, so no scenario list / thresholds can be enumerated. Per the
+     fail-closed rule this is UNVERIFIED (advisory). It is NOT N/A (an AudioContext exists)
+     and it is NOT a pass.
+
+GAME AUDIO VERDICT: UNVERIFIED (advisory) — AUDIO_SPEC absent; cannot enumerate declared
+scenarios or thresholds. Independently CONFIRMS the static review HIGH finding
+"window.AUDIO_SPEC is never defined although the game is a Web Audio game."
+
+Advisory probe (game's actual offline scenarios vs the FIXED DEFAULT floors)
+---------------------------------------------------------------------------
+The game's Audio.offline() supports tick/creature/wax/guttering/victory/bed. Rendered each
+via window.audioTest(id, 1) and compared to the default floors:
+
+  scenario    kind   rms      bandRms    default floor            result
+  bed         bed    0.09564  0.02474    rms>=0.02 & band>=0.003  PASS
+  tick        cue    0.09565  0.02474    rms>=0.01                PASS
+  creature    cue    0.09564  0.02474    rms>=0.01                PASS
+  wax         cue    0.09570  0.02489    rms>=0.01                PASS
+  guttering   cue    0.09640  0.02502    rms>=0.01                PASS
+  victory     cue    0.09591  0.02549    rms>=0.01                PASS
+
+Interpretation (advisory): the rendered audio is audibly healthy and clears the default
+floors comfortably — the gap is contract completeness (missing AUDIO_SPEC), not dead audio.
+
+===============================================================================
+CONTROL FIXTURES (proof the audio check is not vacuously green)
+===============================================================================
+Served scripts/audio-check via python3 -m http.server 8124; driven with playwright-cli.
+Both fixtures declare AUDIO_SPEC {applicable:true, scenarios:[bed], thresholds: bed/cue}.
+
+  good-bed.html  -> bed rms=0.12247 bandRms=0.08514  PASS  (clear the floor)   [required PASS]
+  dead-bed.html  -> bed rms=0.00707 bandRms=0.00091  MISS  (below the floor)   [required MISS]
+
+good-bed PASSES and dead-bed MISSES exactly as required -> the check is sound.
+
+===============================================================================
+VERDICT
+===============================================================================
+AUDIO VERDICT: UNVERIFIED (advisory).
+- window.AUDIO_SPEC is undefined  => [AUDIO][advisory] contract gap (confirms static HIGH).
+- window.audioTest + AudioContext are present and render healthy audio.
+- Neither finding triggers a bugfix-triggering severity; advisory only.

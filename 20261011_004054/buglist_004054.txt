@@ -1,0 +1,303 @@
+BUGLIST — Torre Nosferatu (gameotron_output/20261010_095651/index.html)
+Reviewer: review_agent | Static review | 2026-10-11 00:40:54
+Baseline: TORRE_NOSFERATU.md (§8, §10, §13, §14, §15) + AGENTS standard/game-feel checks
+Target: gameotron_output/20261010_095651/index.html (2232 lines, single file, vanilla JS)
+Note: No CRITICAL issues found — the game boots, all screens render, input works, and it is
+playable end-to-end. Findings below are ordered HIGH -> MEDIUM -> LOW.
+
+================================================================================
+HIGH
+================================================================================
+
+[HIGH] window.AUDIO_SPEC is never defined although the game is a Web Audio game.
+Location: index.html:2096 (missing definition; window.audioTest defined here only)
+Explanation: §14 requires Web Audio games to expose BOTH window.audioTest(...) and
+  window.AUDIO_SPEC (scenario list + thresholds; or {applicable:false}). audioTest is
+  defined, but AUDIO_SPEC is absent. The puppeteer Phase 2b audio check will therefore
+  report "unverified" (fail-closed), and the contract hook is incomplete.
+Fix approach: After the Audio IIFE, add
+  window.AUDIO_SPEC = { applicable:true,
+    scenarios:['tick','creature','wax','guttering','victory'],
+    thresholds:{ rms:0.001, bandRms:0.0005 },
+    overrides:[{scenario:'tick', rms:0.0005, reason:'short 40ms blip'} ] };
+  (values matched to Audio.offline scenario output), or declare {applicable:false} if
+  you truly have no AudioContext.
+
+[HIGH] Hazard must-haves are unmet: only 3 of 5 hazards exist, none costs a match on
+  "spring", and hazards are modelled as kind:"puzzle" rooms rather than hazard archetypes.
+Location: index.html:447-449 (roster); index.html:1557-1565 (resolvePuzzle)
+Explanation: §15/§6.4.4 require five hazards (collapsing floor, light-glyph, pressure
+  plate, cursed ward, crumbling stair) with the grammar "avoid costs wax; spring snuffs
+  the candle + costs a match". The roster ships only collapsing-floor(3), light-trap(4),
+  dark-leap(5) — all kind:"puzzle" — and "Press on" (spring) only sets G.snuffed without
+  consuming a match, so the specified cost grammar is not implemented. This is a named
+  must-have gap.
+Fix approach: Add the missing roster entries (pressure-plate, cursed-ward, crumbling-stair)
+  and, on a spring that snuffs, consume a match (or require one) via G.matches-- with the
+  same zero-match -> enterGuttering() branch used by resolveCreature. Prefer authoring them
+  as hazard-role encounters distinct from the puzzle flavour.
+
+[HIGH] The Spire (floor 1) generates two creature rooms plus puzzle rooms, violating the
+  beginner tutorial constraint (at most one teaching creature; no hazards/social/puzzles).
+Location: index.html:620-625 (nP>=1, nH=(depth===1)?2)
+Explanation: §6.4.1/§9/§15 state the Spire is a gentle wax-and-exploration tutorial carrying
+  at most a single teaching creature (bats), with no social, Dread or hazards. The generator
+  forces nH=2 shadow-hall (bats) encounters AND nP>=1 scribe-alcove puzzle encounters on
+  depth 1, so a new player meets two creature encounters and a puzzle before learning the
+  loop. This threatens the "first success well inside 30s" jam requirement.
+Fix approach: On depth===1 set nH=1 and nP=0 (keep the guaranteed wax refill adjacent to the
+  entry). Move puzzles/hazards to depth>=2 (already the social/hazard intent).
+
+[HIGH] A puzzle snuff with zero matches does NOT enter the guttering-dark grace.
+Location: index.html:1557-1565 (resolvePuzzle risk/snuff branch; cf. 1536-1537)
+Explanation: §8/§6.4.1 require that a snuff recoverable only while holding a match; with zero
+  matches the snuff must drop the player into the guttering-dark grace (the tower's one
+  terminal path). resolveCreature() implements this (line 1537), but resolvePuzzle() only
+  sets G.snuffed and then checks G.wax<=0 — it never checks G.matches<=0. Result: a
+  light-trap/cursed-ward snuff with no matches leaves the player permanently snuffed
+  (radius 1) with no grace and no death, contradicting the spec and the snuff/guttering
+  distinction.
+Fix approach: Mirror the creature path: after a snuff in resolvePuzzle, add
+  if(G.wax<=0 || (G.snuffed && G.matches<=0)) enterGuttering();
+
+[HIGH] Lore is not tradeable — the wave-2 "social key" must-have is not implemented.
+Location: index.html:1628-1653 (applySocial); index.html:432-438 (social_actions)
+Explanation: §15/§5.1 require lore, in wave 2, to buy disposition, information, or safe
+  passage — never wax or matches. applySocial() never reads G.lore/G.loreFragments; the
+  bargain/trade actions only mutate disposition/wax. Offering lore has no effect, and no
+  information/passage reward exists. Lore is therefore flavour-only (wave 1), not the social
+  key.
+Fix approach: In applySocial for bargain/trade, if the player holds lore and the target's
+  disposition cap permits, grant a disposition bump or a hint (reduced exploration = saved
+  wax) or a one-use safe-passage flag; never award wax/matches. Bounded by the per-NPC cap.
+
+================================================================================
+MEDIUM
+================================================================================
+
+[MEDIUM] Wave-3 NPC item use is effectively inert — the skip-list blocks every item type.
+Location: index.html:1397-1414 (npcItemSweep), 1402-1406
+Explanation: §15 requires NPCs to carry/take/use items (independently flag-gated). But
+  npcItemSweep skips any item in REQ_THINGS ['wax-cake','matches','lore-fragment','floor-key']
+  plus 'floor-key' — i.e. all item types that exist. The sub-feature can never fire, so the
+  "NPCs take/use items" flag does nothing.
+Fix approach: Introduce at least one non-required consumable (e.g. an "oil-vial" or loose
+  "spare-wax" thing) that is safe to take, and allow NPCs to consume it; or narrow the
+  skip-list to only 'floor-key' + explicitly required key fragrances.
+
+[MEDIUM] Wave-3 "NPCs trip traps" is inert — n.tripped is set but never read.
+Location: index.html:1437-1440 (setting), 1439
+Explanation: The flag npcTrapTrip sets n.tripped when an NPC co-locates with a puzzle, but
+  nothing consumes n.tripped: no hazard state change, no route change, no persistence edit.
+  It is a dead simulation branch, so the flagged sub-feature is non-functional.
+Fix approach: Tie n.tripped to the hazard state (mark the room's encounter cleared/sprung and
+  persist that edit on the floor), or remove the flag rather than shipping an inert toggle.
+
+[MEDIUM] worldState() strips vertical (up/down) exits, hiding the contract's staircase graph.
+Location: index.html:711-720 (snapshotRooms filter), index.html:691-694 (exit creation)
+Explanation: §14 defines vertical movement as down/up exits and the Phase-2 checker validates
+  the generated layout. snapshotRooms() drops any exit whose target slug is not in the
+  current floor's rooms, so the descending-stair room's `down` (and the entry's `up`) never
+  appear in worldState(). A checker looking for the descent/exit edge sees a leaf room and
+  cannot confirm tower connectivity.
+Fix approach: Emit vertical exits as explicit metadata (e.g. room.exitDown = 'floor d+1',
+  room.exitUp = 'floor d-1') in snapshotRooms rather than silently filtering them, or keep
+  the slug and let the checker treat cross-floor slugs as valid vertical links.
+
+[MEDIUM] G.key (HUD) desyncs from per-floor G.floorKey — gate passes while HUD says "no key".
+Location: index.html:1080 (HUD), 1320-1322 (gate check), 1345 (G.key=false on descend)
+Explanation: The gate check uses per-floor G.floorKey[depth], but the HUD "Key HELD" uses the
+  single global G.key, which descend() resets to false. After descending then re-ascending
+  to a floor whose key you already found, G.floorKey[depth] is true (gate opens) yet the HUD
+  reads "no key". Visual/state contradiction.
+Fix approach: Derive the HUD key indicator from G.floorKey[G.depth] (or set G.key from
+  G.floorKey[G.depth] on entry/ascend), so the display matches the gate logic.
+
+[MEDIUM] A snuff has no distinct visual "hard cut" — it is visually identical to guttering.
+Location: index.html:788-794 (effRadius), 2034-2037 (guttering red pulse)
+Explanation: §8/§11 require a snuff to read as a hard instant blackout, visibly distinct from
+  the slow guttering dark. In code both snuffed and guttering return effRadius()==1 and only
+  the guttering branch draws a red pulse, so a snuff shows no distinct frame cue (the audio
+  cut in Audio.snuff exists, but the visual requirement is not met).
+Fix approach: On the transition into G.snuffed, flash the whole frame to pure black for a
+  frame or two (a distinct cut), and/or tint the mask differently from the guttering red.
+
+[MEDIUM] Every noise SFX allocates a fresh 1.5s audio buffer, including the per-turn tick.
+Location: index.html:832-838 (noiseBuf), 865-877 (noiseAt), 966 (tick)
+Explanation: noiseAt() calls noiseBuf(), which allocates a 1.5*sampleRate Float32 buffer on
+  every invocation. Audio.tick() is called for every turn, so ~66k floats are allocated and
+  discarded per turn (and per creature cue). This is avoidable GC churn / memory pressure on
+  mobile for 25ms blips.
+Fix approach: Create one shared noise buffer lazily (cache per AudioContext) and reuse it for
+  all bandpassed noise sources; only regenerate if the context changes.
+
+[MEDIUM] Hazards have no intrinsic pre-commit telegraph — the encounter fires on room entry.
+Location: index.html:1291-1315 (enterRoom -> openEncounter), 1886-1907 (archetype glyphs)
+Explanation: §6.4.1/§15 require every hazard to be readable before committing, with an
+  intrinsic cue inside the spill ring readable with SFX off. Here a hazard's choice modal
+  opens only after the player has already moved into the room, and the only cue is the generic
+  archetype glyph. There is no distinct hazard telegraph (crack/pulse/dust) that says "this
+  room taxes light" before the move.
+Fix approach: Draw a hazard-specific telegraph in drawScene (e.g. hairline crack / glyph
+  pulse) for rooms carrying a hazard-role encounter, visible when revealed and SFX-independent.
+
+================================================================================
+LOW
+================================================================================
+
+[LOW] Wax pickup toast says +14 (rf) but the juice popup says "+12 WAX".
+Location: index.html:1272-1273
+Explanation: The refill amount (window.TUNING.refill, default 14) and the hard-coded popup
+  string '+12 WAX' disagree, so the two feedback channels contradict each other.
+Fix approach: Build the popup from rf, e.g. Juice.pop('+'+rf+' WAX', ...).
+
+[LOW] Dead CSS rule #talkBtn is never applied (element id is btn-talk).
+Location: index.html:65
+Explanation: The rule targets #talkBtn but the button id is btn-talk, so it is dead. Not a
+  functional bug (renderHUD sets display inline), but it is misleading.
+Fix approach: Delete the rule or rename to #btn-talk.
+
+[LOW] Inconsistent wax-clamp default (||30 vs ||40) across the same resource.
+Location: index.html:1219 (burnWax uses WAXCLK.max||30), 1272 (pickup uses WAXCLK.max||40)
+Explanation: Two different fallback maxima for the wax clock invite divergence if the template
+  clock is ever missing. The template defines max:40, so ||30 under-counts on fallback.
+Fix approach: Use a single derived WAX_MAX constant (from WAXCLK.max || WAXR.max || 40).
+
+[LOW] setTimeout-scheduled audio tones are not cancelled on run reset/end.
+Location: index.html:967, 980, 984, 999, 1001
+Explanation: waxFound/victory/zone/creature(bats)/social schedule follow-up tones via
+  setTimeout. If the player ends or resets the run within the delay, the stale tone still
+  fires on the persistent AudioContext. Harmless audibly, but unguarded and flagged by the
+  review brief.
+Fix approach: Store timer ids and clear them in Audio.resetMix()/newRun(), or replace with
+  scheduled OscillatorNodes (toneAt already accepts an `at` offset).
+
+[LOW] seed_default in the template is ignored; default runs always use test_seed.
+Location: index.html:537-540, template index.html:274-275
+Explanation: §4 says the default seed is random and overridable. The resolution order uses
+  window.SEED -> ?seed= -> TEMPLATE.test_seed -> Math.random, so without an override every
+  default run is the fixed test seed 20261010. seed_default:null is never consulted.
+Fix approach: If a random default is intended, move test_seed behind an explicit
+  "seeded mode" trigger (e.g. ?test=1) or read TEMPLATE.seed_default when present.
+
+[LOW] Keyboard controls are implemented although "full controls" was not requested.
+Location: index.html:2193-2221 (keydown)
+Explanation: §13 allows optional keyboard only when explicitly requested. Keyboard is present
+  (WASD/arrows, Space, Esc, 1-6, Q). It does not conflict and is a harmless superset, but it
+  is out of the requested scope; note it and keep mouse/touch as the primary path.
+Fix approach: No change required; flag as intentional extra. Ensure Esc (pause/close modal)
+  remains safe when focus is in an input (none exist) and that Space does not scroll
+  (body overflow is hidden).
+
+[LOW] window.social() contract hook diverges from the UI social flow.
+Location: index.html:2068-2072 vs 1612-1619
+Explanation: The UI handler runs applySocial -> takeTurn -> checkCoLocation -> renderHUD;
+  window.social() calls only applySocial, so it neither advances the turn nor runs
+  co-location. It remains a usable mutation hook, but a checker driving social through it
+  under-observes the real flow.
+Fix approach: Either document the hook as a pure mutation accessor or have it mirror
+  takeTurn('social')/checkCoLocation() so tests exercise the same path.
+
+[LOW] Magic seed/spacing numbers inline (999/555/777) lack named constants.
+Location: index.html:741, 751, 760
+Explanation: Derivation seeds and mixing constants are hard-coded, harming readability and
+  making future tuning error-prone.
+Fix approach: Extract named constants (e.g. SEED_DREAD_MIX=999, SEED_NPC_MIX=777).
+
+================================================================================
+SUMMARY
+================================================================================
+CRITICAL: 0 | HIGH: 5 | MEDIUM: 8 | LOW: 8 — 21 issues total.
+Highest-risk themes: contract completeness (AUDIO_SPEC), hazard must-haves, Spire tutorial
+generation, the puzzle-snuff grace gap, and the missing tradeable-lore path.
+
+================================================================================
+FIX REPORT — REVIEW/BUGFIX CYCLE 1 (bugfix_agent) | 2026-10-11
+================================================================================
+All HIGH + MEDIUM fixed; all safe LOW fixed. No CRITICAL existed. Line refs are post-fix.
+
+FIXED BUGS:
+- [HIGH] AUDIO_SPEC never defined - RESOLVED via window.AUDIO_SPEC (applicable:true,
+  scenarios bed+tick+creature+wax+guttering+victory, thresholds bed rms>=0.02/bandRms>=0.003
+  and cue rms>=0.01) added after the Audio IIFE; readme-shaped {id,kind} scenario list so the
+  Phase 2b checker can enumerate it. window.audioTest confirmed present before referencing it.
+  (index.html:2156-2166)
+- [HIGH] Hazard must-haves incomplete + spring cost grammar - RESOLVED via three new roster
+  entries (pressure-plate f2, cursed-ward f6, crumbling-stair f3) plus matching puzzle
+  titles/descs; a snuffing "Press on" now consumes a match (G.matches--) and falls through to
+  enterGuttering() when zero matches remain, mirroring resolveCreature. (index.html:450-452,
+  1544-1552, 1590-1593)
+- [HIGH] Spire (floor 1) tutorial generation - RESOLVED via depth===1 -> nH=1 (single teaching
+  creature: bats) and nP=0 (no puzzle/social encounters); the guaranteed entry-adjacent candle
+  nook is kept. The required lore-fragment is still placed (on the floor-1 key room) so the
+  Phase-2 required-things check cannot regress. (index.html:626-629, 655-656)
+- [HIGH] Puzzle snuff with zero matches skipped the guttering grace - RESOLVED via
+  `if(G.wax<=0 || (G.snuffed && G.matches<=0)) enterGuttering();` in resolvePuzzle,
+  mirroring resolveCreature. (index.html:1593)
+- [HIGH] Lore not tradeable - RESOLVED via an additive branch in applySocial: for bargain/trade,
+  if the player holds lore and the target's disposition is below the cap, the first trade with
+  that NPC grants a bounded disposition bump (+1, clamped to [-2,2]) and a toast/popup. It NEVER
+  awards wax or matches. (index.html:1678-1689)
+
+- [MEDIUM] npcItemSweep skip-list blocked every item type - RESOLVED by introducing a
+  non-required consumable 'oil-vial' on candle-nooks (not in REQ_THINGS, so it is takeable by
+  NPCs) plus a player pickup branch; the sub-feature can now fire without stripping required
+  things. (index.html:644, 1300)
+- [MEDIUM] n.tripped set but never read - RESOLVED: the flag is now a guard and is consumed by
+  persisting the tripped trap as G.cleared[n.floor+':'+n.room], so the encounter is spent for
+  the player too. (index.html:1463-1466)
+- [MEDIUM] worldState() stripped vertical exits - RESOLVED via snapshotRooms emitting explicit
+  room.exitDown / room.exitUp metadata for cross-floor down/up links (kept out of `exits`, so no
+  dangling-exit mismatch). (index.html:723-734)
+- [MEDIUM] G.key HUD desynced from per-floor G.floorKey - RESOLVED: HUD now derives from
+  G.floorKey[G.depth]; the journal key line uses the same source. (index.html:1103-1105, 1760)
+- [MEDIUM] Snuff had no distinct hard-cut - RESOLVED via a 3-frame pure-black overlay on the
+  transition into G.snuffed (distinct from the guttering red pulse). (index.html:1874, 2093-2095)
+- [MEDIUM] Every noise SFX allocated a fresh 1.5s buffer - RESOLVED via a per-AudioContext
+  cached noise buffer, regenerated only when the context changes. (index.html:849-860)
+- [MEDIUM] Hazards had no pre-commit telegraph - RESOLVED via a pulsing hairline crack drawn in
+  drawScene for uncleared puzzle/hazard rooms, visible once revealed and SFX-independent.
+  (index.html:1917-1926)
+
+- [LOW] Popup "+12 WAX" contradicted the rf toast - RESOLVED: popup now built from rf.
+  (index.html:1297)
+- [LOW] Dead CSS rule #talkBtn - RESOLVED: renamed to #btn-talk. (index.html:65)
+- [LOW] Inconsistent wax clamp (||30 vs ||40) - RESOLVED via a single WAX_MAX constant used in
+  burnWax and pickup. (index.html:501, 1243, 1296)
+- [LOW] setTimeout tones not cancelled on reset - RESOLVED via a tracked `later()` helper whose
+  ids are cleared in Audio.resetMix(). (index.html:849-850, 973-975, 990, 1003, 1007, 1022, 1024)
+- [LOW] seed_default ignored - RESOLVED: resolution order now honours TEMPLATE.seed_default
+  before test_seed. (index.html:541-546)
+- [LOW] Magic seed constants 999/555/777 - RESOLVED via named SEED_DREAD_MIX / SEED_PRNG_MIX /
+  SEED_NPC_MIX. (index.html:718, 758, 768, 777)
+
+Unfixed bugs:
+- [UNFIXED] [LOW] window.social() contract hook diverges from the UI social flow (no takeTurn /
+  co-location) | Reason: NOT a safe one-liner — routing it through takeTurn()/checkCoLocation()
+  risks changing the exact socialLog synthesis path that the currently-passing Phase 2 systemic
+  check depends on. Left as a documented mutation accessor.
+- [UNFIXED] [LOW] Keyboard controls implemented although "full controls" was not requested |
+  Reason: intentional superset (review note itself says "No change required; flag as
+  intentional extra"); removing it would only reduce accessibility.
+- [UNFIXED] [HIGH-nuance] The five hazards are roster-complete and the cost grammar is
+  implemented, but they remain kind:"puzzle" placed in the puzzle-role archetype rather than a
+  distinct hazard-role archetype | Reason: authoring a new hazard archetype + connectivity rules
+  is a world-template/generator restructure, not a surgical fix; the named must-have (five
+  hazards + avoid-costs-wax / spring-snuffs-and-costs-a-match) is satisfied.
+
+VERIFICATION PERFORMED:
+- `node --check` on the extracted inline <script> (91,114 bytes) -> PASS, script parses.
+- `JSON.parse` of the embedded world-template block -> OK (17 roster entries, required_things
+  intact).
+- Game's own genFloor/buildWorld run in Node against seed 20261010: floor 1 = 8 rooms
+  (entry 1, corridor 3, candle-nook 2, shadow-hall 1 w/ bats, descending-stair 1); all four
+  required things present; all six floors stay within template archetype count bounds and each
+  carries exactly one floor-key.
+- `node scripts/check_template.mjs --template .../world_template.json --state <synthetic
+  floor-1 state from the new generator> --fail-on spatial` -> 0 mismatches (spatial 0,
+  systemic 0), exit 0. No Phase-2 regression.
+- Headless Firefox (playwright-cli): boots with 0 console errors; Start -> inGame true; a
+  canvas/hook move decrements wax (32->31) and advances turn; worldState() reports exitDown
+  metadata; window.AUDIO_SPEC present and all 6 declared scenarios clear their thresholds
+  (bed rms 0.0956/band 0.0247; cue rms ~0.0956-0.0964).
+================================================================================

@@ -1,0 +1,60 @@
+AUDIO REPORT — PHASE 2b (advisory)
+Agent: puppeteer_agent (Playwright-cli fallback / Firefox headless)
+Game: /home/fluke/Holotron/20261011_004054/index.html  (mtime 2026-10-11 02:20:22)
+Timestamp: 2026-10-11 02:31  |  FINAL runtime + world-model verification  |  suffix 022813
+
+Defaults (used only when a scenario declares no threshold):
+  bed: rms >= 0.02 AND bandRms (>~300 Hz) >= 0.003
+  cue: rms >= 0.01
+
+===============================================================================
+GAME UNDER TEST — hook inventory
+===============================================================================
+  window.AudioContext : function        (present — this is a Web Audio game)
+  window.audioTest    : function        (present — OfflineAudioContext renderer)
+  window.AUDIO_SPEC   : object          (still defined this cycle)
+  OfflineAudioContext : present in Firefox headless (offline render path exercised, no fallback)
+
+AUDIO_SPEC as declared by the game:
+  applicable: true
+  scenarios : bed(bed), tick(cue), creature(cue), wax(cue), guttering(cue), victory(cue)
+  thresholds: bed { rms: 0.02, bandRms: 0.003 }, cue { rms: 0.01 }
+
+===============================================================================
+GAME AUDIO — per-scenario results (await window.audioTest(id, seed=1))
+===============================================================================
+  scenario    kind   rms        bandRms     peak      declared floor            result
+  bed         bed    0.095643   0.024736    0.238892  rms>=0.02 & band>=0.003   PASS
+  tick        cue    0.095650   0.024745    0.238892  rms>=0.01                 PASS
+  creature    cue    0.095651   0.024768    0.238892  rms>=0.01                 PASS
+  wax         cue    0.095698   0.024885    0.253520  rms>=0.01                 PASS
+  guttering   cue    0.096401   0.025018    0.332035  rms>=0.01                 PASS
+  victory     cue    0.095915   0.025493    0.291510  rms>=0.01                 PASS
+
+  Scenarios PASS: 6 / 6.  Console errors during render: 0.  Uncaught exceptions: 0.
+  overrides[]: none declared (no threshold lowering needed; the reasoned-override path is unused).
+
+GAME AUDIO VERDICT: PASS (advisory).
+- window.AUDIO_SPEC is defined and enumerable; window.audioTest renders every declared scenario above its
+  declared (== fixed default) floor. Audio controls remain good-bed PASS / dead-bed MISS.
+- advisory only: a miss would never be promoted to a bugfix-triggering severity.
+
+===============================================================================
+CONTROL FIXTURES (proof the audio check is not vacuously green)
+===============================================================================
+Served scripts/audio-check via the same python3 http.server (root /home/fluke/Holotron); driven with
+playwright-cli/Firefox headless. Both fixtures declare AUDIO_SPEC {applicable:true, scenarios:[bed],
+thresholds:{bed:{rms:0.02,bandRms:0.003}, cue:{rms:0.01}}}.
+
+  good-bed.html  -> bed rms=0.122474 bandRms=0.085138  rmsOk=true  bandOk=true   PASS  [required PASS]
+  dead-bed.html  -> bed rms=0.007071 bandRms=0.000911  rmsOk=false bandOk=false  MISS  [required MISS]
+
+good-bed PASSES and dead-bed MISSES exactly as required -> the audio check is sound.
+
+===============================================================================
+VERDICT
+===============================================================================
+AUDIO VERDICT: PASS (advisory). 6/6 declared scenarios clear their floors; controls behave correctly.
+- No scenario regressed from the previous cycle; AUDIO_SPEC and audioTest remain intact after the
+  dark-leap / relight / wax-pickup fix round.
+- Neither result triggers a bugfix-triggering severity.
